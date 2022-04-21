@@ -2,9 +2,9 @@
 
 ## Supported datasets
 
-- [ ] Tongji Hospital
-- [ ] HM Hospital
-- [ ] Synthetic dataset
+- [x] Tongji Hospital
+- [x] HM Hospital
+- [ ] Synthea dataset
 
 ## Folder structure
 
@@ -12,14 +12,13 @@
 dataset/
     README.md
     tongji/
-        README.md
         preprocess.ipynb
         raw_data/
             ...
         processed_data/
-            train_{task}/
-            val_{task}/
-            test_{task}/
+            train_x_demographic.pkl
+            train_x_labtest.pkl
+            train_y_{task}.pkl
     hm/
         ...
 ```
