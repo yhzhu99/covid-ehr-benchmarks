@@ -135,3 +135,4 @@ processed_data/
 *.xls
 test.py
 test.ipynb
+checkpoints/
