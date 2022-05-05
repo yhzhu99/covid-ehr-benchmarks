@@ -1,5 +1,34 @@
 # covid_emr
 
+## Model Zoo
+
+### Machine Learning Models
+
+- [ ] Logistic regression (LR)
+- [ ] Random forest (RF)
+- [ ] Decision tree (DT)
+- [ ] Gradient Boosting Decision Tree (GBDT)
+- [ ] XGBoost
+
+### Deep Learning Models
+
+- [ ] Multi-layer perceptron (MLP)
+- [ ] Recurrent neural network (RNN)
+- [ ] Long-short term memory network (LSTM)
+- [ ] Gated recurrent units (GRU)
+- [ ] Temporal convolutional networks
+- [ ] Transformer
+
+### EHR Predictive Models
+
+- [ ] RETAIN
+- [ ] StageNet
+- [ ] Dr. Agent
+- [ ] AdaCare
+- [ ] ConCare
+- [ ] GRASP
+- [ ] (CovidCare)
+
 ## 各数据上，特征的记录频率统计
 
 > 区分出高频、低频特征
