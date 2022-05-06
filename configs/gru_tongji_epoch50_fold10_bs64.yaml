@@ -1,0 +1,5 @@
+model: GRU
+dataset: tongji_hospital
+epochs: 50
+fold: 10
+batch_size: 64
