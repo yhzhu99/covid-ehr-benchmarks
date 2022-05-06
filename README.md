@@ -31,13 +31,24 @@ TODO: check the meaning of `max_seq_length`, and whether `num_inputs = num_chann
 
 ### EHR Predictive Models
 
-- [ ] RETAIN
+- [x] RETAIN
 - [x] StageNet
 - [ ] Dr. Agent
 - [x] AdaCare
 - [x] ConCare
 - [ ] GRASP
 - [ ] (CovidCare)
+
+#### RETAIN
+
+```python
+model = models.RETAIN(76)
+x = torch.randn(batch_size, 48, 76)
+lengths = torch.ones_like(x[:,0,0])
+output, alpha, beta = model(x, lengths)
+```
+
+TODO: See PyHealth Version [RETAIN](https://github.com/zzachw/PyHealth/blob/master/pyhealth/models/sequence/retain.py), [Current one](https://github.com/ast0414/pytorch-retain/blob/master/retain.py)
 
 #### AdaCare
 
