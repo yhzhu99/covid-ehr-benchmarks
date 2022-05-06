@@ -61,11 +61,13 @@ TODO: 不需要attention matrix的输出
 ```python
 model = models.StageNet(input_dim=76, hidden_dim=384, conv_size=10, output_dim=1, levels=3, dropconnect=0.5, dropout=0.5, dropres=0.3)
 x = torch.randn(batch_size, 48, 76)
-time = torch.randn(32, 48)
+time = torch.randn(batch_size, 48)
 output = model(x, time, device)
 ```
 
 TODO: check `time` tensor
+
+See [stagenet in pyhealth](https://github.com/zzachw/PyHealth/blob/master/pyhealth/models/sequence/stagenet.py)
 
 ## 各数据上，特征的记录频率统计
 
