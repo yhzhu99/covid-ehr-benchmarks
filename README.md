@@ -29,6 +29,23 @@
 - [ ] GRASP
 - [ ] (CovidCare)
 
+#### AdaCare
+
+```python
+model = models.AdaCare()
+"""
+default AdaCare hyperparameter:
+
+hidden_dim=128, kernel_size=2, kernel_num=64, input_dim=76, output_dim=1, dropout=0.5, r_v=4, r_c=4, activation='sigmoid', device='cuda')
+
+In mimic-iii dataset, the input shape is T=48, H=76
+"""
+x = torch.randn(batch_size, 48, 76)
+output, inputse_att = model(x, device)
+```
+
+TODO: 不需要attention matrix的输出
+
 ## 各数据上，特征的记录频率统计
 
 > 区分出高频、低频特征
