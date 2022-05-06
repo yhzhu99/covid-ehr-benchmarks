@@ -13,11 +13,11 @@
 ### Deep Learning Models
 
 - [ ] Multi-layer perceptron (MLP)
-- [ ] Recurrent neural network (RNN)
-- [ ] Long-short term memory network (LSTM)
-- [ ] Gated recurrent units (GRU)
-- [ ] Temporal convolutional networks
-- [ ] Transformer
+- [x] Recurrent neural network (RNN)
+- [x] Long-short term memory network (LSTM)
+- [x] Gated recurrent units (GRU)
+- [x] Temporal convolutional networks
+- [x] Transformer
 
 #### Temporal convolutional networks
 
@@ -32,10 +32,10 @@ TODO: check the meaning of `max_seq_length`, and whether `num_inputs = num_chann
 ### EHR Predictive Models
 
 - [ ] RETAIN
-- [ ] StageNet
+- [x] StageNet
 - [ ] Dr. Agent
-- [ ] AdaCare
-- [ ] ConCare
+- [x] AdaCare
+- [x] ConCare
 - [ ] GRASP
 - [ ] (CovidCare)
 
@@ -55,6 +55,17 @@ output, inputse_att = model(x, device)
 ```
 
 TODO: 不需要attention matrix的输出
+
+#### StageNet
+
+```python
+model = models.StageNet(input_dim=76, hidden_dim=384, conv_size=10, output_dim=1, levels=3, dropconnect=0.5, dropout=0.5, dropres=0.3)
+x = torch.randn(batch_size, 48, 76)
+time = torch.randn(32, 48)
+output = model(x, time, device)
+```
+
+TODO: check `time` tensor
 
 ## 各数据上，特征的记录频率统计
 
