@@ -19,6 +19,16 @@
 - [ ] Temporal convolutional networks
 - [ ] Transformer
 
+#### Temporal convolutional networks
+
+```python
+model = models.TemporalConvNet(num_inputs=76, num_channels=76, num_classes=1, max_seq_length=48)
+x = torch.randn(batch_size, 48, 76)
+output = model(x)
+```
+
+TODO: check the meaning of `max_seq_length`, and whether `num_inputs = num_channels`
+
 ### EHR Predictive Models
 
 - [ ] RETAIN
