@@ -107,6 +107,39 @@ output = model(x, demo)
 
 TODO: check `_mortality` / `_los` 2 models, and `loss_fn`
 
+### GRASP
+
+```python
+device = torch.device("cpu")
+batch_size = 64
+
+input_dim = 76
+hidden_dim = 32
+output_dim = 1
+cluster_num = 32  # should be smaller than batch_size
+dropout = 0.5
+block = "GRU"
+
+model = models.MAPLE(
+    device=device,
+    input_dim=input_dim,
+    hidden_dim=hidden_dim,
+    output_dim=output_dim,
+    cluster_num=cluster_num,
+    dropout=dropout,
+    block=block,
+)
+
+x = torch.randn(batch_size, 48, 76)
+demo = torch.randn(batch_size, 12)
+lengths = torch.randint(1, 20, (batch_size,))
+# print(lengths)
+output, _ = model(x, 0, lengths)
+```
+
+- [Link](https://github.com/choczhang/GRASP/blob/main/MAPLE-code.ipynb)
+- TODO: check the model/training pipeline
+
 
 ## TODOs
 
@@ -121,7 +154,7 @@ TODO: check `_mortality` / `_los` 2 models, and `loss_fn`
 
 **分工:**
 
-- [ ] tj: zyh (预计 0508 中午前完成)
+- [ ] tj: zyh
 - [ ] hm: wwq
 - [ ] some basic observation (需要 code and document, 以jupyter notebook format就蛮好的): wwq
 
@@ -164,7 +197,7 @@ ehr models:
 **分工:**
 
 - 具体的model分配见上
-- ml models的整个pipeline: zyh (预计 0511 完成)
+- ml models的整个pipeline: zyh
 - balanced metrics: wwq
 
 **备注:**
@@ -188,7 +221,7 @@ ehr models:
 
 **分工:**
 
-- [ ] 在上述规范后的x/y tensor shape上，能完整跑multi-target task的pipeline的basic architecture: zyh约0509完成
+- [ ] 在上述规范后的x/y tensor shape上，能完整跑multi-target task的pipeline的basic architecture: zyh
 - [ ] 后续的模块化/抽象封装/继承等future work都不着急
 
 ### Done
