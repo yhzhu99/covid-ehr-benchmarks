@@ -80,6 +80,31 @@ TODO: check `time` tensor
 
 See [stagenet in pyhealth](https://github.com/zzachw/PyHealth/blob/master/pyhealth/models/sequence/stagenet.py)
 
+### Dr.Agent
+
+```python
+model = models.Agent(
+    cell="gru",
+    use_baseline=True,
+    n_actions=10,
+    n_units=32,
+    n_input=76,
+    demo_dim=12,
+    fusion_dim=20,
+    n_hidden=32,
+    n_output=1,
+    dropout=0.3,
+    lamda=1.0,
+    device=device,
+).to(device)
+x = torch.randn(batch_size, 48, 76)
+demo = torch.randn(batch_size, 12)
+lengths = torch.ones_like(x[:, 0, 0])
+output = model(x, demo)
+```
+
+TODO: check `_mortality` / `_los` 2 models, and `loss_fn`
+
 
 ## TODOs
 
