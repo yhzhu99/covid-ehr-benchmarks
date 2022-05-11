@@ -103,6 +103,8 @@ lengths = torch.ones_like(x[:, 0, 0])
 output = model(x, demo)
 ```
 
+[Link](https://github.com/v1xerunt/Dr.Agent/blob/master/train_mortality.py)
+
 TODO: check `_mortality` / `_los` 2 models, and `loss_fn`
 
 
