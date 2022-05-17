@@ -8,8 +8,10 @@ import torch
 import xgboost as xgb
 from autogluon.tabular import TabularPredictor
 from catboost import CatBoostRegressor
+from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeRegressor
 
 from app.utils import metrics
 
@@ -19,7 +21,7 @@ Tasks:
 - los
 
 Models:
-- logistic regression (sklearn)
+- logistic regression (sklearn) !TOFIX
 - random forest (sklearn)
 - xgboost (xgboost)
 - catboost (catboost)
@@ -47,8 +49,17 @@ def train(x, y, x_lab_len, method):
     if method == "xgboost":
         model = xgb.XGBRegressor(verbosity=0, n_estimators=100, learning_rate=0.1)
         model.fit(x_train, y_train, eval_metric="auc")
-    elif method == "logistic_regression":
-        model = LogisticRegression(solver="liblinear")
+    # elif method == "logistic_regression":
+    #     model = LogisticRegression(solver="liblinear")
+    #     model.fit(x_train, y_train)
+    elif method == "gbdt":
+        method = GradientBoostingRegressor(random_state=42)
+        model = method.fit(x_train, y_train)
+    elif method == "random_forest":
+        method = RandomForestRegressor(random_state=42, max_depth=2)
+        model = method.fit(x_train, y_train)
+    elif method == "decision_tree":
+        model = DecisionTreeRegressor(random_state=42)
         model.fit(x_train, y_train)
     elif method == "catboost":
         model = CatBoostRegressor(
@@ -102,5 +113,6 @@ if __name__ == "__main__":
 
     x_lab = np.array(x_lab)
     y_los = np.array(y_los)
+    print(y_los)
 
-    evaluation_scores = train(x_lab, y_los, x_lab_length, "xgboost")
+    evaluation_scores = train(x_lab, y_los, x_lab_length, "random_forest")

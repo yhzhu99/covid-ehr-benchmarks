@@ -5,10 +5,17 @@
 ### Machine Learning Models
 
 - [ ] Logistic regression (LR)
-- [ ] Random forest (RF)
-- [ ] Decision tree (DT)
-- [ ] Gradient Boosting Decision Tree (GBDT)
-- [ ] XGBoost
+- [x] Random forest (RF)
+- [x] Decision tree (DT)
+- [x] Gradient Boosting Decision Tree (GBDT)
+- [x] XGBoost
+- [x] CatBoost
+
+#### Logistic regression (LR)
+
+ERROR!
+
+它其实是一个分类模型，在sklearn中只接收int类型的label
 
 ### Deep Learning Models
 
