@@ -67,6 +67,12 @@ output, inputse_att = model(x, device)
 
 TODO: 不需要attention matrix的输出
 
+#### ConCare
+
+```python
+model = models.Concare(input_dim=25, hidden_dim=hidden_dim, demo_dim=2, d_model=64, MHD_num_head=4, d_ff=256, output_dim=1, device=device).to(device) # tongji dataset
+```
+
 #### StageNet
 
 ```python
