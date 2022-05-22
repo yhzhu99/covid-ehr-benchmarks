@@ -10,7 +10,7 @@ from autogluon.tabular import TabularPredictor
 from catboost import CatBoostRegressor
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold, StratifiedKFold, train_test_split
 from sklearn.tree import DecisionTreeRegressor
 
 from app.utils import metrics
@@ -30,39 +30,20 @@ Models:
 """
 
 
-def train(x, y, x_lab_len, method):
-    x = x.numpy()
-    y = y.numpy()
-    x_lab_len = x_lab_len.numpy()
-    x_flat = []
-    y_flat = []
-
-    for i in range(len(x)):
-        cur_visits = x_lab_len[i]
-        for j in range(int(cur_visits)):
-            x_flat.append(x[i][j])
-            y_flat.append(y[i][j][1])
-    x = np.array(x_flat)
-    y = np.array(y_flat)
+def train(x, y, method):
     print("point here", x.shape, y.shape)
-    x_train, x_test, y_train, y_test = train_test_split(
-        x, y, test_size=0.8, random_state=42
-    )
     if method == "xgboost":
-        model = xgb.XGBRegressor(verbosity=0, n_estimators=100, learning_rate=0.1)
-        model.fit(x_train, y_train, eval_metric="auc")
-    # elif method == "logistic_regression":
-    #     model = LogisticRegression(solver="liblinear")
-    #     model.fit(x_train, y_train)
+        model = xgb.XGBRegressor(verbosity=0, n_estimators=1000, learning_rate=0.1)
+        model.fit(x, y, eval_metric="auc")
     elif method == "gbdt":
         method = GradientBoostingRegressor(random_state=42)
-        model = method.fit(x_train, y_train)
+        model = method.fit(x, y)
     elif method == "random_forest":
         method = RandomForestRegressor(random_state=42, max_depth=2)
-        model = method.fit(x_train, y_train)
+        model = method.fit(x, y)
     elif method == "decision_tree":
         model = DecisionTreeRegressor(random_state=42)
-        model.fit(x_train, y_train)
+        model.fit(x, y)
     elif method == "catboost":
         model = CatBoostRegressor(
             iterations=2,
@@ -72,9 +53,19 @@ def train(x, y, x_lab_len, method):
             verbose=None,
             allow_writing_files=False,
         )
-        model.fit(x_train, y_train)
-    y_pred = model.predict(x_test)
-    evaluation_scores = metrics.print_metrics_regression(y_test, y_pred)
+        model.fit(x, y)
+    return model
+
+
+def validate(x, y, model):
+    y_pred = model.predict(x)
+    evaluation_scores = metrics.print_metrics_regression(y, y_pred)
+    return evaluation_scores
+
+
+def test(x, y, model):
+    y_pred = model.predict(x)
+    evaluation_scores = metrics.print_metrics_regression(y, y_pred)
     return evaluation_scores
 
 
@@ -89,4 +80,19 @@ if __name__ == "__main__":
         open("./dataset/tongji/processed_data/visits_length.pkl", "rb")
     )
 
-    evaluation_scores = train(x, y, x_lab_length, "xgboost")
+    x = x.numpy()
+    y = y.numpy()
+    x_lab_length = x_lab_length.numpy()
+    x_flat = []
+    y_flat = []
+    for i in range(len(x)):
+        cur_visits = x_lab_length[i]
+        for j in range(int(cur_visits)):
+            x_flat.append(x[i][j])
+            y_flat.append(y[i][j])
+    x = np.array(x_flat)
+    y = np.array(y_flat)
+    y_outcome = y[:, 0]
+    y_los = y[:, 1]
+    model = train(x, y_los, "xgboost")
+    val_evaluation_scores = validate(x, y_los, model)
