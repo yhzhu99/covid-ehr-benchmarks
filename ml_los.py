@@ -29,6 +29,8 @@ Models:
 - autogluon (automl models)
 """
 
+RANDOM_SEED = 42
+
 
 def train(x, y, method):
     print("point here", x.shape, y.shape)
@@ -36,13 +38,13 @@ def train(x, y, method):
         model = xgb.XGBRegressor(verbosity=0, n_estimators=1000, learning_rate=0.1)
         model.fit(x, y, eval_metric="auc")
     elif method == "gbdt":
-        method = GradientBoostingRegressor(random_state=42)
+        method = GradientBoostingRegressor(random_state=RANDOM_SEED)
         model = method.fit(x, y)
     elif method == "random_forest":
-        method = RandomForestRegressor(random_state=42, max_depth=2)
+        method = RandomForestRegressor(random_state=RANDOM_SEED, max_depth=2)
         model = method.fit(x, y)
     elif method == "decision_tree":
-        model = DecisionTreeRegressor(random_state=42)
+        model = DecisionTreeRegressor(random_state=RANDOM_SEED)
         model.fit(x, y)
     elif method == "catboost":
         model = CatBoostRegressor(
@@ -94,5 +96,61 @@ if __name__ == "__main__":
     y = np.array(y_flat)
     y_outcome = y[:, 0]
     y_los = y[:, 1]
-    model = train(x, y_los, "xgboost")
-    val_evaluation_scores = validate(x, y_los, model)
+
+    num_folds = 4
+    kfold_test = StratifiedKFold(
+        n_splits=num_folds, shuffle=True, random_state=RANDOM_SEED
+    )
+    method = "xgboost"
+    all_history = {}
+    test_performance = {"test_mad": [], "test_mse": [], "test_mape": []}
+    for fold_test, (train_and_val_idx, test_idx) in enumerate(
+        kfold_test.split(np.arange(len(x)), y_outcome)
+    ):
+        print("====== Test Fold {} ======".format(fold_test + 1))
+        kfold_val = StratifiedKFold(
+            n_splits=num_folds - 1, shuffle=True, random_state=RANDOM_SEED
+        )
+        all_history["test_fold_{}".format(fold_test + 1)] = {}
+        for fold_val, (train_idx, val_idx) in enumerate(
+            kfold_val.split(
+                np.arange(len(train_and_val_idx)), y_outcome[train_and_val_idx]
+            )
+        ):
+            history = {"val_mad": [], "val_mse": [], "val_mape": []}
+            model = train(x[train_idx], y_los[train_idx], method)
+            val_evaluation_scores = validate(x[val_idx], y_los[val_idx], model)
+            history["val_mad"].append(val_evaluation_scores["mad"])
+            history["val_mse"].append(val_evaluation_scores["mse"])
+            history["val_mape"].append(val_evaluation_scores["mape"])
+
+            test_evaluation_scores = test(x[test_idx], y_los[test_idx], model)
+            test_performance["test_mad"].append(test_evaluation_scores["mad"])
+            test_performance["test_mse"].append(test_evaluation_scores["mse"])
+            test_performance["test_mape"].append(test_evaluation_scores["mape"])
+            print(
+                f"Performance on test set {fold_test+1}: \
+                MAD = {test_evaluation_scores['mape']}, \
+                MSE = {test_evaluation_scores['mse']}, \
+                MAPE = {test_evaluation_scores['mape']}"
+            )
+            all_history["test_fold_{}".format(fold_test + 1)][
+                "fold{}".format(fold_val + 1)
+            ] = history
+
+    # Calculate average performance on 10-fold test set
+    # print(test_performance)
+    test_mad_list = np.array(test_performance["test_mad"])
+    test_mse_list = np.array(test_performance["test_mse"])
+    test_mape_list = np.array(test_performance["test_mape"])
+    print(
+        "MAD: mean={:.3f}, std={:.3f}".format(test_mad_list.mean(), test_mad_list.std())
+    )
+    print(
+        "MSE: mean={:.3f}, std={:.3f}".format(test_mse_list.mean(), test_mse_list.std())
+    )
+    print(
+        "MAPE: mean={:.3f}, std={:.3f}".format(
+            test_mape_list.mean(), test_mape_list.std()
+        )
+    )
