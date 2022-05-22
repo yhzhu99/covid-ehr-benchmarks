@@ -31,15 +31,17 @@ Models:
 
 
 def train(x, y, x_lab_len, method):
+    x = x.numpy()
+    y = y.numpy()
+    x_lab_len = x_lab_len.numpy()
     x_flat = []
     y_flat = []
 
-    i = 0
     for i in range(len(x)):
         cur_visits = x_lab_len[i]
-        for j in range(cur_visits):
+        for j in range(int(cur_visits)):
             x_flat.append(x[i][j])
-            y_flat.append(y[i][j])
+            y_flat.append(y[i][j][1])
     x = np.array(x_flat)
     y = np.array(y_flat)
     print("point here", x.shape, y.shape)
@@ -78,41 +80,13 @@ def train(x, y, x_lab_len, method):
 
 if __name__ == "__main__":
     data_path = "./dataset/tongji/processed_data/"
-    file_name = "./ckpt/gru.pth"
 
-    batch_size = 64
-    num_epochs = 100
-    device = torch.device("cuda:0" if torch.cuda.is_available() == True else "cpu")
-    # device = torch.device('cpu')
-    print("available device: {}".format(device))
+    x = pickle.load(open("./dataset/tongji/processed_data/x.pkl", "rb"))
 
-    x_lab = pickle.load(
-        open("./dataset/tongji/processed_data/train_x_labtest.pkl", "rb")
+    y = pickle.load(open("./dataset/tongji/processed_data/y.pkl", "rb"))
+
+    x_lab_length = pickle.load(
+        open("./dataset/tongji/processed_data/visits_length.pkl", "rb")
     )
-    x_lab = np.array(x_lab, dtype=object)
-    x_lab = [torch.Tensor(_) for _ in x_lab]
 
-    x_demo = pickle.load(
-        open("./dataset/tongji/processed_data/train_x_demographic.pkl", "rb")
-    )
-    x_demo = np.array(x_demo)
-
-    y_outcome = pickle.load(
-        open("./dataset/tongji/processed_data/train_y_outcome.pkl", "rb")
-    )
-    y_outcome = np.array(y_outcome)
-
-    y_los = pickle.load(open("./dataset/tongji/processed_data/train_y_LOS.pkl", "rb"))
-    y_los = np.array(y_los, dtype=object)
-    y_los = [torch.Tensor(_) for _ in y_los]
-
-    x_lab_length = [len(_) for _ in x_lab]
-    x_lab_length = np.array(x_lab_length)
-    x_lab = torch.nn.utils.rnn.pad_sequence((x_lab), batch_first=True)
-    y_los = torch.nn.utils.rnn.pad_sequence(y_los, batch_first=True)
-
-    x_lab = np.array(x_lab)
-    y_los = np.array(y_los)
-    print(y_los)
-
-    evaluation_scores = train(x_lab, y_los, x_lab_length, "random_forest")
+    evaluation_scores = train(x, y, x_lab_length, "xgboost")
