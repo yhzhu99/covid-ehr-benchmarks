@@ -33,7 +33,6 @@ RANDOM_SEED = 42
 
 
 def train(x, y, method):
-    print("point here", x.shape, y.shape)
     if method == "xgboost":
         model = xgb.XGBRegressor(verbosity=0, n_estimators=1000, learning_rate=0.1)
         model.fit(x, y, eval_metric="auc")
@@ -61,13 +60,14 @@ def train(x, y, method):
 
 def validate(x, y, model):
     y_pred = model.predict(x)
-    evaluation_scores = metrics.print_metrics_regression(y, y_pred)
+    # print(y_pred[0:10], y[0:10])
+    evaluation_scores = metrics.print_metrics_regression(y, y_pred, verbose=0)
     return evaluation_scores
 
 
 def test(x, y, model):
     y_pred = model.predict(x)
-    evaluation_scores = metrics.print_metrics_regression(y, y_pred)
+    evaluation_scores = metrics.print_metrics_regression(y, y_pred, verbose=0)
     return evaluation_scores
 
 
@@ -97,7 +97,7 @@ if __name__ == "__main__":
     y_outcome = y[:, 0]
     y_los = y[:, 1]
 
-    num_folds = 4
+    num_folds = 10
     kfold_test = StratifiedKFold(
         n_splits=num_folds, shuffle=True, random_state=RANDOM_SEED
     )
@@ -124,16 +124,19 @@ if __name__ == "__main__":
             history["val_mse"].append(val_evaluation_scores["mse"])
             history["val_mape"].append(val_evaluation_scores["mape"])
 
+            # print("y!", y_outcome[test_idx])
+
             test_evaluation_scores = test(x[test_idx], y_los[test_idx], model)
             test_performance["test_mad"].append(test_evaluation_scores["mad"])
             test_performance["test_mse"].append(test_evaluation_scores["mse"])
             test_performance["test_mape"].append(test_evaluation_scores["mape"])
             print(
                 f"Performance on test set {fold_test+1}: \
-                MAD = {test_evaluation_scores['mape']}, \
+                MAD = {test_evaluation_scores['mad']}, \
                 MSE = {test_evaluation_scores['mse']}, \
                 MAPE = {test_evaluation_scores['mape']}"
             )
+            # print(history)
             all_history["test_fold_{}".format(fold_test + 1)][
                 "fold{}".format(fold_val + 1)
             ] = history
@@ -143,6 +146,10 @@ if __name__ == "__main__":
     test_mad_list = np.array(test_performance["test_mad"])
     test_mse_list = np.array(test_performance["test_mse"])
     test_mape_list = np.array(test_performance["test_mape"])
+
+    # print(test_mad_list)
+
+    print("====================== RESULT ======================")
     print(
         "MAD: mean={:.3f}, std={:.3f}".format(test_mad_list.mean(), test_mad_list.std())
     )
