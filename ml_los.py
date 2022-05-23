@@ -1,6 +1,7 @@
 import math
 import pathlib
 import pickle
+import random
 
 import numpy as np
 import pandas as pd
@@ -47,11 +48,12 @@ def train(x, y, method):
         model.fit(x, y)
     elif method == "catboost":
         model = CatBoostRegressor(
-            iterations=2,
-            learning_rate=1,
-            depth=2,
+            iterations=10,  # performance is better when iterations = 100
+            learning_rate=0.1,
+            depth=3,
             loss_function="RMSE",
             verbose=None,
+            silent=True,
             allow_writing_files=False,
         )
         model.fit(x, y)
@@ -60,13 +62,13 @@ def train(x, y, method):
 
 def validate(x, y, model):
     y_pred = model.predict(x)
-    # print(y_pred[0:10], y[0:10])
     evaluation_scores = metrics.print_metrics_regression(y, y_pred, verbose=0)
     return evaluation_scores
 
 
 def test(x, y, model):
     y_pred = model.predict(x)
+    # print(y_pred[0:10], y[0:10])
     evaluation_scores = metrics.print_metrics_regression(y, y_pred, verbose=0)
     return evaluation_scores
 
@@ -101,7 +103,7 @@ if __name__ == "__main__":
     kfold_test = StratifiedKFold(
         n_splits=num_folds, shuffle=True, random_state=RANDOM_SEED
     )
-    method = "xgboost"
+    method = "decision_tree"
     all_history = {}
     test_performance = {"test_mad": [], "test_mse": [], "test_mape": []}
     for fold_test, (train_and_val_idx, test_idx) in enumerate(
@@ -117,6 +119,11 @@ if __name__ == "__main__":
                 np.arange(len(train_and_val_idx)), y_outcome[train_and_val_idx]
             )
         ):
+            # random sample indices
+            train_idx = random.sample(list(train_idx), len(train_idx))
+            val_idx = random.sample(list(val_idx), len(val_idx))
+            test_idx = random.sample(list(test_idx), len(test_idx))
+
             history = {"val_mad": [], "val_mse": [], "val_mape": []}
             model = train(x[train_idx], y_los[train_idx], method)
             val_evaluation_scores = validate(x[val_idx], y_los[val_idx], model)
