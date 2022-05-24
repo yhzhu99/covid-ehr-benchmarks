@@ -11,7 +11,12 @@ from autogluon.tabular import TabularPredictor
 from catboost import CatBoostRegressor
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import KFold, StratifiedKFold, train_test_split
+from sklearn.model_selection import (
+    KFold,
+    StratifiedKFold,
+    StratifiedShuffleSplit,
+    train_test_split,
+)
 from sklearn.tree import DecisionTreeRegressor
 
 from app.utils import metrics
@@ -110,43 +115,41 @@ if __name__ == "__main__":
         kfold_test.split(np.arange(len(x)), y_outcome)
     ):
         print("====== Test Fold {} ======".format(fold_test + 1))
-        kfold_val = StratifiedKFold(
-            n_splits=num_folds - 1, shuffle=True, random_state=RANDOM_SEED
+
+        sss = StratifiedShuffleSplit(
+            n_splits=1, test_size=1 / (num_folds - 1), random_state=RANDOM_SEED
         )
+        train_idx, val_idx = next(
+            sss.split(x[train_and_val_idx], y_outcome[train_and_val_idx])
+        )
+        # print(len(train_idx), len(val_idx))
+
         all_history["test_fold_{}".format(fold_test + 1)] = {}
-        for fold_val, (train_idx, val_idx) in enumerate(
-            kfold_val.split(
-                np.arange(len(train_and_val_idx)), y_outcome[train_and_val_idx]
-            )
-        ):
-            # random sample indices
-            train_idx = random.sample(list(train_idx), len(train_idx))
-            val_idx = random.sample(list(val_idx), len(val_idx))
-            test_idx = random.sample(list(test_idx), len(test_idx))
 
-            history = {"val_mad": [], "val_mse": [], "val_mape": []}
-            model = train(x[train_idx], y_los[train_idx], method)
-            val_evaluation_scores = validate(x[val_idx], y_los[val_idx], model)
-            history["val_mad"].append(val_evaluation_scores["mad"])
-            history["val_mse"].append(val_evaluation_scores["mse"])
-            history["val_mape"].append(val_evaluation_scores["mape"])
+        history = {"val_mad": [], "val_mse": [], "val_mape": []}
+        model = train(x[train_idx], y_los[train_idx], method)
+        val_evaluation_scores = validate(x[val_idx], y_los[val_idx], model)
+        history["val_mad"].append(val_evaluation_scores["mad"])
+        history["val_mse"].append(val_evaluation_scores["mse"])
+        history["val_mape"].append(val_evaluation_scores["mape"])
+        print(
+            f"Performance on val set {fold_test+1}: \
+            MAD = {val_evaluation_scores['mad']}, \
+            MSE = {val_evaluation_scores['mse']}, \
+            MAPE = {val_evaluation_scores['mape']}"
+        )
 
-            # print("y!", y_outcome[test_idx])
-
-            test_evaluation_scores = test(x[test_idx], y_los[test_idx], model)
-            test_performance["test_mad"].append(test_evaluation_scores["mad"])
-            test_performance["test_mse"].append(test_evaluation_scores["mse"])
-            test_performance["test_mape"].append(test_evaluation_scores["mape"])
-            print(
-                f"Performance on test set {fold_test+1}: \
-                MAD = {test_evaluation_scores['mad']}, \
-                MSE = {test_evaluation_scores['mse']}, \
-                MAPE = {test_evaluation_scores['mape']}"
-            )
-            # print(history)
-            all_history["test_fold_{}".format(fold_test + 1)][
-                "fold{}".format(fold_val + 1)
-            ] = history
+        test_evaluation_scores = test(x[test_idx], y_los[test_idx], model)
+        test_performance["test_mad"].append(test_evaluation_scores["mad"])
+        test_performance["test_mse"].append(test_evaluation_scores["mse"])
+        test_performance["test_mape"].append(test_evaluation_scores["mape"])
+        print(
+            f"Performance on test set {fold_test+1}: \
+            MAD = {test_evaluation_scores['mad']}, \
+            MSE = {test_evaluation_scores['mse']}, \
+            MAPE = {test_evaluation_scores['mape']}"
+        )
+        all_history["test_fold_{}".format(fold_test + 1)] = history
 
     # Calculate average performance on 10-fold test set
     # print(test_performance)
@@ -154,9 +157,7 @@ if __name__ == "__main__":
     test_mse_list = np.array(test_performance["test_mse"])
     test_mape_list = np.array(test_performance["test_mape"])
 
-    # print(test_mad_list)
-
-    print("====================== RESULT ======================")
+    print("====================== TEST RESULT ======================")
     print(
         "MAD: mean={:.3f}, std={:.3f}".format(test_mad_list.mean(), test_mad_list.std())
     )
