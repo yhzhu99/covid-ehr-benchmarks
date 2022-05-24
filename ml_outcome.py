@@ -49,7 +49,9 @@ def flatten_dataset(x, y, indices, visits_length):
 
 def train(x, y, method):
     if method == "xgboost":
-        model = xgb.XGBClassifier(verbosity=0, n_estimators=1000, learning_rate=0.1)
+        model = xgb.XGBClassifier(
+            verbosity=0, n_estimators=1000, learning_rate=0.1, use_label_encoder=False
+        )
         model.fit(x, y, eval_metric="auc")
     elif method == "gbdt":
         method = GradientBoostingClassifier(
@@ -176,20 +178,20 @@ if __name__ == "__main__":
             test_accuracy_list = np.array(test_performance["test_accuracy"])
             test_auroc_list = np.array(test_performance["test_auroc"])
             test_auprc_list = np.array(test_performance["test_auprc"])
-
-            print("====================== TEST RESULT ======================")
-            print(
-                "Accuracy: mean={:.3f}, std={:.3f}".format(
-                    test_accuracy_list.mean(), test_accuracy_list.std()
-                )
+    if mode == "test":
+        print("====================== TEST RESULT ======================")
+        print(
+            "Accuracy: mean={:.3f}, std={:.3f}".format(
+                test_accuracy_list.mean(), test_accuracy_list.std()
             )
-            print(
-                "AUROC: mean={:.3f}, std={:.3f}".format(
-                    test_auroc_list.mean(), test_auroc_list.std()
-                )
+        )
+        print(
+            "AUROC: mean={:.3f}, std={:.3f}".format(
+                test_auroc_list.mean(), test_auroc_list.std()
             )
-            print(
-                "AUPRC: mean={:.3f}, std={:.3f}".format(
-                    test_auprc_list.mean(), test_auprc_list.std()
-                )
+        )
+        print(
+            "AUPRC: mean={:.3f}, std={:.3f}".format(
+                test_auprc_list.mean(), test_auprc_list.std()
             )
+        )

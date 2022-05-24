@@ -107,7 +107,7 @@ if __name__ == "__main__":
 
     num_folds = 10
     method = "decision_tree"
-    mode = "val"  # val / test
+    mode = "test"  # val / test
 
     all_history = {}
     test_performance = {"test_mad": [], "test_mse": [], "test_mape": []}
@@ -171,20 +171,20 @@ if __name__ == "__main__":
             test_mad_list = np.array(test_performance["test_mad"])
             test_mse_list = np.array(test_performance["test_mse"])
             test_mape_list = np.array(test_performance["test_mape"])
-
-            print("====================== TEST RESULT ======================")
-            print(
-                "MAD: mean={:.3f}, std={:.3f}".format(
-                    test_mad_list.mean(), test_mad_list.std()
-                )
+    if mode == "test":
+        print("====================== TEST RESULT ======================")
+        print(
+            "MAD: mean={:.3f}, std={:.3f}".format(
+                test_mad_list.mean(), test_mad_list.std()
             )
-            print(
-                "MSE: mean={:.3f}, std={:.3f}".format(
-                    test_mse_list.mean(), test_mse_list.std()
-                )
+        )
+        print(
+            "MSE: mean={:.3f}, std={:.3f}".format(
+                test_mse_list.mean(), test_mse_list.std()
             )
-            print(
-                "MAPE: mean={:.3f}, std={:.3f}".format(
-                    test_mape_list.mean(), test_mape_list.std()
-                )
+        )
+        print(
+            "MAPE: mean={:.3f}, std={:.3f}".format(
+                test_mape_list.mean(), test_mape_list.std()
             )
+        )
