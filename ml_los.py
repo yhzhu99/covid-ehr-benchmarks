@@ -119,18 +119,24 @@ if __name__ == "__main__":
         sss = StratifiedShuffleSplit(
             n_splits=1, test_size=1 / (num_folds - 1), random_state=RANDOM_SEED
         )
+
+        sub_x = x[train_and_val_idx]
+        sub_x_lab_length = x_lab_length[train_and_val_idx]
+        sub_y = y[train_and_val_idx]
+        sub_y_los = sub_y[:, :, 1]
+        sub_y_outcome = sub_y[:, 0, 0]
+
         train_idx, val_idx = next(
-            sss.split(
-                np.arange(len(x[train_and_val_idx])), y_outcome[train_and_val_idx]
-            )
+            sss.split(np.arange(len(train_and_val_idx)), sub_y_outcome)
         )
 
-        x_train, y_train = flatten_dataset(x, y, train_idx, x_lab_length)
-        print("train shape:", train_idx, x_train.shape, y_train.shape)
-        x_val, y_val = flatten_dataset(x, y, val_idx, x_lab_length)
-        print("val_idx shape:", val_idx, x_val.shape, y_val.shape)
+        x_train, y_train = flatten_dataset(sub_x, sub_y, train_idx, sub_x_lab_length)
+        x_val, y_val = flatten_dataset(sub_x, sub_y, val_idx, sub_x_lab_length)
         x_test, y_test = flatten_dataset(x, y, test_idx, x_lab_length)
-        print("test_idx shape:", test_idx, x_test.shape, y_test.shape)
+
+        print((np.sum(y_train == 0)), (np.sum(y_train == 1)))
+        print((np.sum(y_val == 0)), (np.sum(y_val == 1)))
+        print((np.sum(y_test == 0)), (np.sum(y_test == 1)))
 
         all_history["test_fold_{}".format(fold_test + 1)] = {}
 
