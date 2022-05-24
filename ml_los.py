@@ -106,12 +106,15 @@ if __name__ == "__main__":
     y_outcome = y[:, 0, 0]
 
     num_folds = 10
+    method = "decision_tree"
+    mode = "val"  # val / test
+
+    all_history = {}
+    test_performance = {"test_mad": [], "test_mse": [], "test_mape": []}
+
     kfold_test = StratifiedKFold(
         n_splits=num_folds, shuffle=True, random_state=RANDOM_SEED
     )
-    method = "decision_tree"
-    all_history = {}
-    test_performance = {"test_mad": [], "test_mse": [], "test_mape": []}
     for fold_test, (train_and_val_idx, test_idx) in enumerate(
         kfold_test.split(np.arange(len(x)), y_outcome)
     ):
@@ -136,46 +139,52 @@ if __name__ == "__main__":
 
         all_history["test_fold_{}".format(fold_test + 1)] = {}
 
-        history = {"val_mad": [], "val_mse": [], "val_mape": []}
         model = train(x_train, y_train, method)
-        val_evaluation_scores = validate(x_val, y_val, model)
-        history["val_mad"].append(val_evaluation_scores["mad"])
-        history["val_mse"].append(val_evaluation_scores["mse"])
-        history["val_mape"].append(val_evaluation_scores["mape"])
-        print(
-            f"Performance on val set {fold_test+1}: \
-            MAD = {val_evaluation_scores['mad']}, \
-            MSE = {val_evaluation_scores['mse']}, \
-            MAPE = {val_evaluation_scores['mape']}"
-        )
 
-        test_evaluation_scores = test(x_test, y_test, model)
-        test_performance["test_mad"].append(test_evaluation_scores["mad"])
-        test_performance["test_mse"].append(test_evaluation_scores["mse"])
-        test_performance["test_mape"].append(test_evaluation_scores["mape"])
-        print(
-            f"Performance on test set {fold_test+1}: \
-            MAD = {test_evaluation_scores['mad']}, \
-            MSE = {test_evaluation_scores['mse']}, \
-            MAPE = {test_evaluation_scores['mape']}"
-        )
-        all_history["test_fold_{}".format(fold_test + 1)] = history
+        if mode == "val":
+            history = {"val_mad": [], "val_mse": [], "val_mape": []}
+            val_evaluation_scores = validate(x_val, y_val, model)
+            history["val_mad"].append(val_evaluation_scores["mad"])
+            history["val_mse"].append(val_evaluation_scores["mse"])
+            history["val_mape"].append(val_evaluation_scores["mape"])
+            all_history["test_fold_{}".format(fold_test + 1)] = history
+            print(
+                f"Performance on val set {fold_test+1}: \
+                MAD = {val_evaluation_scores['mad']}, \
+                MSE = {val_evaluation_scores['mse']}, \
+                MAPE = {val_evaluation_scores['mape']}"
+            )
 
-    # Calculate average performance on 10-fold test set
-    # print(test_performance)
-    test_mad_list = np.array(test_performance["test_mad"])
-    test_mse_list = np.array(test_performance["test_mse"])
-    test_mape_list = np.array(test_performance["test_mape"])
+        elif mode == "test":
+            test_evaluation_scores = test(x_test, y_test, model)
+            test_performance["test_mad"].append(test_evaluation_scores["mad"])
+            test_performance["test_mse"].append(test_evaluation_scores["mse"])
+            test_performance["test_mape"].append(test_evaluation_scores["mape"])
+            print(
+                f"Performance on test set {fold_test+1}: \
+                MAD = {test_evaluation_scores['mad']}, \
+                MSE = {test_evaluation_scores['mse']}, \
+                MAPE = {test_evaluation_scores['mape']}"
+            )
 
-    print("====================== TEST RESULT ======================")
-    print(
-        "MAD: mean={:.3f}, std={:.3f}".format(test_mad_list.mean(), test_mad_list.std())
-    )
-    print(
-        "MSE: mean={:.3f}, std={:.3f}".format(test_mse_list.mean(), test_mse_list.std())
-    )
-    print(
-        "MAPE: mean={:.3f}, std={:.3f}".format(
-            test_mape_list.mean(), test_mape_list.std()
-        )
-    )
+            # Calculate average performance on 10-fold test set
+            test_mad_list = np.array(test_performance["test_mad"])
+            test_mse_list = np.array(test_performance["test_mse"])
+            test_mape_list = np.array(test_performance["test_mape"])
+
+            print("====================== TEST RESULT ======================")
+            print(
+                "MAD: mean={:.3f}, std={:.3f}".format(
+                    test_mad_list.mean(), test_mad_list.std()
+                )
+            )
+            print(
+                "MSE: mean={:.3f}, std={:.3f}".format(
+                    test_mse_list.mean(), test_mse_list.std()
+                )
+            )
+            print(
+                "MAPE: mean={:.3f}, std={:.3f}".format(
+                    test_mape_list.mean(), test_mape_list.std()
+                )
+            )
