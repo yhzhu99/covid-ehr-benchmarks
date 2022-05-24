@@ -41,7 +41,7 @@ RANDOM_SEED = 42
 def flatten_dataset(x, y, indices, visits_length):
     x_flat = []
     y_flat = []
-    for i in range(len(indices)):
+    for i in indices:
         for v in range(visits_length[i]):
             x_flat.append(x[i][v])
             y_flat.append(y[i][v][1])
@@ -133,10 +133,6 @@ if __name__ == "__main__":
         x_train, y_train = flatten_dataset(sub_x, sub_y, train_idx, sub_x_lab_length)
         x_val, y_val = flatten_dataset(sub_x, sub_y, val_idx, sub_x_lab_length)
         x_test, y_test = flatten_dataset(x, y, test_idx, x_lab_length)
-
-        print((np.sum(y_train == 0)), (np.sum(y_train == 1)))
-        print((np.sum(y_val == 0)), (np.sum(y_val == 1)))
-        print((np.sum(y_test == 0)), (np.sum(y_test == 1)))
 
         all_history["test_fold_{}".format(fold_test + 1)] = {}
 
