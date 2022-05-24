@@ -38,6 +38,16 @@ Models:
 RANDOM_SEED = 42
 
 
+def flatten_dataset(x, y, indices, visits_length):
+    x_flat = []
+    y_flat = []
+    for i in range(len(indices)):
+        for v in range(visits_length[i]):
+            x_flat.append(x[i][v])
+            y_flat.append(y[i][v][1])
+    return np.array(x_flat), np.array(y_flat)
+
+
 def train(x, y, method):
     if method == "xgboost":
         model = xgb.XGBRegressor(verbosity=0, n_estimators=1000, learning_rate=0.1)
@@ -92,17 +102,8 @@ if __name__ == "__main__":
     x = x.numpy()
     y = y.numpy()
     x_lab_length = x_lab_length.numpy()
-    x_flat = []
-    y_flat = []
-    for i in range(len(x)):
-        cur_visits = x_lab_length[i]
-        for j in range(int(cur_visits)):
-            x_flat.append(x[i][j])
-            y_flat.append(y[i][j])
-    x = np.array(x_flat)
-    y = np.array(y_flat)
-    y_outcome = y[:, 0]
-    y_los = y[:, 1]
+    y_los = y[:, :, 1]
+    y_outcome = y[:, 0, 0]
 
     num_folds = 10
     kfold_test = StratifiedKFold(
@@ -115,20 +116,27 @@ if __name__ == "__main__":
         kfold_test.split(np.arange(len(x)), y_outcome)
     ):
         print("====== Test Fold {} ======".format(fold_test + 1))
-
         sss = StratifiedShuffleSplit(
             n_splits=1, test_size=1 / (num_folds - 1), random_state=RANDOM_SEED
         )
         train_idx, val_idx = next(
-            sss.split(x[train_and_val_idx], y_outcome[train_and_val_idx])
+            sss.split(
+                np.arange(len(x[train_and_val_idx])), y_outcome[train_and_val_idx]
+            )
         )
-        # print(len(train_idx), len(val_idx))
+
+        x_train, y_train = flatten_dataset(x, y, train_idx, x_lab_length)
+        print("train shape:", train_idx, x_train.shape, y_train.shape)
+        x_val, y_val = flatten_dataset(x, y, val_idx, x_lab_length)
+        print("val_idx shape:", val_idx, x_val.shape, y_val.shape)
+        x_test, y_test = flatten_dataset(x, y, test_idx, x_lab_length)
+        print("test_idx shape:", test_idx, x_test.shape, y_test.shape)
 
         all_history["test_fold_{}".format(fold_test + 1)] = {}
 
         history = {"val_mad": [], "val_mse": [], "val_mape": []}
-        model = train(x[train_idx], y_los[train_idx], method)
-        val_evaluation_scores = validate(x[val_idx], y_los[val_idx], model)
+        model = train(x_train, y_train, method)
+        val_evaluation_scores = validate(x_val, y_val, model)
         history["val_mad"].append(val_evaluation_scores["mad"])
         history["val_mse"].append(val_evaluation_scores["mse"])
         history["val_mape"].append(val_evaluation_scores["mape"])
@@ -139,7 +147,7 @@ if __name__ == "__main__":
             MAPE = {val_evaluation_scores['mape']}"
         )
 
-        test_evaluation_scores = test(x[test_idx], y_los[test_idx], model)
+        test_evaluation_scores = test(x_test, y_test, model)
         test_performance["test_mad"].append(test_evaluation_scores["mad"])
         test_performance["test_mse"].append(test_evaluation_scores["mse"])
         test_performance["test_mape"].append(test_evaluation_scores["mape"])
