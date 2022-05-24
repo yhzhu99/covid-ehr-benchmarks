@@ -40,10 +40,10 @@ TODO: check the meaning of `max_seq_length`, and whether `num_inputs = num_chann
 
 - [x] RETAIN
 - [x] StageNet
-- [ ] Dr. Agent
+- [x] Dr. Agent
 - [x] AdaCare
 - [x] ConCare
-- [ ] GRASP
+- [x] GRASP
 - [ ] (CovidCare)
 
 #### RETAIN
@@ -93,7 +93,7 @@ TODO: check `time` tensor
 
 See [stagenet in pyhealth](https://github.com/zzachw/PyHealth/blob/master/pyhealth/models/sequence/stagenet.py)
 
-### Dr.Agent
+#### Dr.Agent
 
 ```python
 model = models.Agent(
@@ -120,7 +120,7 @@ output = model(x, demo)
 
 TODO: check `_mortality` / `_los` 2 models, and `loss_fn`
 
-### GRASP
+#### GRASP
 
 ```python
 device = torch.device("cpu")
