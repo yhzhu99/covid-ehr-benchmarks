@@ -131,6 +131,10 @@ dmypy.json
 raw_data/
 processed_data/
 *.csv
+*.CSV
+*.profile_default
+*.png
+*.pdf
 *.xlsx
 *.xls
 test.py
