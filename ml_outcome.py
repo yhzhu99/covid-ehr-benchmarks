@@ -108,7 +108,7 @@ if __name__ == "__main__":
     y_outcome = y[:, 0, 0]
 
     num_folds = 10
-    method = "xgboost"
+    method = "catboost"
     mode = "test"  # val / test
 
     all_history = {}
@@ -145,7 +145,6 @@ if __name__ == "__main__":
 
         if mode == "val":
             history = {
-                "val_loss": [],
                 "val_accuracy": [],
                 "val_auroc": [],
                 "val_auprc": [],
@@ -157,7 +156,7 @@ if __name__ == "__main__":
             all_history["test_fold_{}".format(fold_test + 1)] = history
             print(
                 f"Performance on val set {fold_test+1}: \
-                Accuracy = {val_evaluation_scores['acc']}, \
+                ACC = {val_evaluation_scores['acc']}, \
                 AUROC = {val_evaluation_scores['auroc']}, \
                 AUPRC = {val_evaluation_scores['auprc']}"
             )
@@ -169,7 +168,7 @@ if __name__ == "__main__":
             test_performance["test_auprc"].append(test_evaluation_scores["auprc"])
             print(
                 f"Performance on test set {fold_test+1}: \
-                Accuracy = {test_evaluation_scores['acc']}, \
+                ACC = {test_evaluation_scores['acc']}, \
                 AUROC = {test_evaluation_scores['auroc']}, \
                 AUPRC = {test_evaluation_scores['auprc']}"
             )
@@ -181,17 +180,17 @@ if __name__ == "__main__":
     if mode == "test":
         print("====================== TEST RESULT ======================")
         print(
-            "Accuracy: mean={:.3f}, std={:.3f}".format(
+            "ACC: {:.3f} ({:.3f})".format(
                 test_accuracy_list.mean(), test_accuracy_list.std()
             )
         )
         print(
-            "AUROC: mean={:.3f}, std={:.3f}".format(
+            "AUROC: {:.3f} ({:.3f})".format(
                 test_auroc_list.mean(), test_auroc_list.std()
             )
         )
         print(
-            "AUPRC: mean={:.3f}, std={:.3f}".format(
+            "AUPRC: {:.3f} ({:.3f})".format(
                 test_auprc_list.mean(), test_auprc_list.std()
             )
         )

@@ -106,7 +106,7 @@ if __name__ == "__main__":
     y_outcome = y[:, 0, 0]
 
     num_folds = 10
-    method = "decision_tree"
+    method = "catboost"
     mode = "test"  # val / test
 
     all_history = {}
@@ -150,7 +150,7 @@ if __name__ == "__main__":
             all_history["test_fold_{}".format(fold_test + 1)] = history
             print(
                 f"Performance on val set {fold_test+1}: \
-                MAD = {val_evaluation_scores['mad']}, \
+                MAE = {val_evaluation_scores['mad']}, \
                 MSE = {val_evaluation_scores['mse']}, \
                 MAPE = {val_evaluation_scores['mape']}"
             )
@@ -162,7 +162,7 @@ if __name__ == "__main__":
             test_performance["test_mape"].append(test_evaluation_scores["mape"])
             print(
                 f"Performance on test set {fold_test+1}: \
-                MAD = {test_evaluation_scores['mad']}, \
+                MAE = {test_evaluation_scores['mad']}, \
                 MSE = {test_evaluation_scores['mse']}, \
                 MAPE = {test_evaluation_scores['mape']}"
             )
@@ -173,18 +173,8 @@ if __name__ == "__main__":
             test_mape_list = np.array(test_performance["test_mape"])
     if mode == "test":
         print("====================== TEST RESULT ======================")
+        print("MAE: {:.3f} ({:.3f})".format(test_mad_list.mean(), test_mad_list.std()))
+        print("MSE: {:.3f} ({:.3f})".format(test_mse_list.mean(), test_mse_list.std()))
         print(
-            "MAD: mean={:.3f}, std={:.3f}".format(
-                test_mad_list.mean(), test_mad_list.std()
-            )
-        )
-        print(
-            "MSE: mean={:.3f}, std={:.3f}".format(
-                test_mse_list.mean(), test_mse_list.std()
-            )
-        )
-        print(
-            "MAPE: mean={:.3f}, std={:.3f}".format(
-                test_mape_list.mean(), test_mape_list.std()
-            )
+            "MAPE: {:.3f} ({:.3f})".format(test_mape_list.mean(), test_mape_list.std())
         )
