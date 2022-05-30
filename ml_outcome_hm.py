@@ -103,7 +103,7 @@ if __name__ == "__main__":
     y_outcome = y[:, 0, 0]
 
     num_folds = 10
-    method = "catboost"
+    method = "xgboost"
     mode = "test"  # val / test
 
     all_history = {}
@@ -112,66 +112,66 @@ if __name__ == "__main__":
     kfold_test = StratifiedKFold(
         n_splits=num_folds, shuffle=True, random_state=RANDOM_SEED
     )
-    for fold_test, (train_and_val_idx, test_idx) in enumerate(
-        kfold_test.split(np.arange(len(x)), y_outcome)
-    ):
-        print("====== Test Fold {} ======".format(fold_test + 1))
-        sss = StratifiedShuffleSplit(
-            n_splits=1, test_size=1 / (num_folds - 1), random_state=RANDOM_SEED
+
+    fold_test = 0
+    train_and_val_idx, test_idx = next(kfold_test.split(np.arange(len(x)), y_outcome))
+
+    sss = StratifiedShuffleSplit(
+        n_splits=1, test_size=1 / (num_folds - 1), random_state=RANDOM_SEED
+    )
+
+    sub_x = x[train_and_val_idx]
+    sub_x_lab_length = x_lab_length[train_and_val_idx]
+    sub_y = y[train_and_val_idx]
+    sub_y_los = sub_y[:, :, 1]
+    sub_y_outcome = sub_y[:, 0, 0]
+
+    train_idx, val_idx = next(
+        sss.split(np.arange(len(train_and_val_idx)), sub_y_outcome)
+    )
+
+    x_train, y_train = flatten_dataset(sub_x, sub_y, train_idx, sub_x_lab_length)
+    x_val, y_val = flatten_dataset(sub_x, sub_y, val_idx, sub_x_lab_length)
+    x_test, y_test = flatten_dataset(x, y, test_idx, x_lab_length)
+
+    all_history["test_fold_{}".format(fold_test + 1)] = {}
+
+    model = train(x_train, y_train, method)
+
+    if mode == "val":
+        history = {
+            "val_accuracy": [],
+            "val_auroc": [],
+            "val_auprc": [],
+        }
+        val_evaluation_scores = validate(x_val, y_val, model)
+        history["val_accuracy"].append(val_evaluation_scores["acc"])
+        history["val_auroc"].append(val_evaluation_scores["auroc"])
+        history["val_auprc"].append(val_evaluation_scores["auprc"])
+        all_history["test_fold_{}".format(fold_test + 1)] = history
+        print(
+            f"Performance on val set {fold_test+1}: \
+            ACC = {val_evaluation_scores['acc']}, \
+            AUROC = {val_evaluation_scores['auroc']}, \
+            AUPRC = {val_evaluation_scores['auprc']}"
         )
 
-        sub_x = x[train_and_val_idx]
-        sub_x_lab_length = x_lab_length[train_and_val_idx]
-        sub_y = y[train_and_val_idx]
-        sub_y_los = sub_y[:, :, 1]
-        sub_y_outcome = sub_y[:, 0, 0]
-
-        train_idx, val_idx = next(
-            sss.split(np.arange(len(train_and_val_idx)), sub_y_outcome)
+    elif mode == "test":
+        test_evaluation_scores = test(x_test, y_test, model)
+        test_performance["test_accuracy"].append(test_evaluation_scores["acc"])
+        test_performance["test_auroc"].append(test_evaluation_scores["auroc"])
+        test_performance["test_auprc"].append(test_evaluation_scores["auprc"])
+        print(
+            f"Performance on test set {fold_test+1}: \
+            ACC = {test_evaluation_scores['acc']}, \
+            AUROC = {test_evaluation_scores['auroc']}, \
+            AUPRC = {test_evaluation_scores['auprc']}"
         )
 
-        x_train, y_train = flatten_dataset(sub_x, sub_y, train_idx, sub_x_lab_length)
-        x_val, y_val = flatten_dataset(sub_x, sub_y, val_idx, sub_x_lab_length)
-        x_test, y_test = flatten_dataset(x, y, test_idx, x_lab_length)
-
-        all_history["test_fold_{}".format(fold_test + 1)] = {}
-
-        model = train(x_train, y_train, method)
-
-        if mode == "val":
-            history = {
-                "val_accuracy": [],
-                "val_auroc": [],
-                "val_auprc": [],
-            }
-            val_evaluation_scores = validate(x_val, y_val, model)
-            history["val_accuracy"].append(val_evaluation_scores["acc"])
-            history["val_auroc"].append(val_evaluation_scores["auroc"])
-            history["val_auprc"].append(val_evaluation_scores["auprc"])
-            all_history["test_fold_{}".format(fold_test + 1)] = history
-            print(
-                f"Performance on val set {fold_test+1}: \
-                ACC = {val_evaluation_scores['acc']}, \
-                AUROC = {val_evaluation_scores['auroc']}, \
-                AUPRC = {val_evaluation_scores['auprc']}"
-            )
-
-        elif mode == "test":
-            test_evaluation_scores = test(x_test, y_test, model)
-            test_performance["test_accuracy"].append(test_evaluation_scores["acc"])
-            test_performance["test_auroc"].append(test_evaluation_scores["auroc"])
-            test_performance["test_auprc"].append(test_evaluation_scores["auprc"])
-            print(
-                f"Performance on test set {fold_test+1}: \
-                ACC = {test_evaluation_scores['acc']}, \
-                AUROC = {test_evaluation_scores['auroc']}, \
-                AUPRC = {test_evaluation_scores['auprc']}"
-            )
-
-            # Calculate average performance on 10-fold test set
-            test_accuracy_list = np.array(test_performance["test_accuracy"])
-            test_auroc_list = np.array(test_performance["test_auroc"])
-            test_auprc_list = np.array(test_performance["test_auprc"])
+        # Calculate average performance on 10-fold test set
+        test_accuracy_list = np.array(test_performance["test_accuracy"])
+        test_auroc_list = np.array(test_performance["test_auroc"])
+        test_auprc_list = np.array(test_performance["test_auprc"])
     if mode == "test":
         print("====================== TEST RESULT ======================")
         print(
