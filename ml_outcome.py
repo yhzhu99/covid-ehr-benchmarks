@@ -91,9 +91,9 @@ def test(x, y, model):
 
 
 if __name__ == "__main__":
-    data_path = "./dataset/hm/processed_data/"
-    x = pickle.load(open(data_path + "_x.pkl", "rb"))
-    y = pickle.load(open(data_path + "_y.pkl", "rb"))
+    data_path = "./dataset/tongji/processed_data/"
+    x = pickle.load(open(data_path + "x.pkl", "rb"))
+    y = pickle.load(open(data_path + "y.pkl", "rb"))
     x_lab_length = pickle.load(open(data_path + "visits_length.pkl", "rb"))
 
     x = x.numpy()
