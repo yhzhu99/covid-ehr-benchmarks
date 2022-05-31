@@ -2,13 +2,16 @@ import numpy as np
 import torch
 
 
-def flatten_dataset(x, y, indices, visits_length):
+def flatten_dataset(x, y, indices, visits_length, case="los"):
     x_flat = []
     y_flat = []
     for i in indices:
         for v in range(visits_length[i]):
             x_flat.append(x[i][v])
-            y_flat.append(y[i][v][1])
+            if case == "los":
+                y_flat.append(y[i][v][1])
+            elif case == "outcome":
+                y_flat.append(y[i][v][0])
     return np.array(x_flat), np.array(y_flat)
 
 
