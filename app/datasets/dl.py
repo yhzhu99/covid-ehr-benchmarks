@@ -31,3 +31,7 @@ class Dataset(data.Dataset):
 
     def __len__(self):
         return len(self.y)
+
+
+def get_dataset(x, y, x_lab_length):
+    return Dataset(x, y, x_lab_length)

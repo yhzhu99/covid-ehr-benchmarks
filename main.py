@@ -12,6 +12,6 @@ if __name__ == "__main__":
         "gru_tongji_los_ep100_kf10_bs64.yaml",
         "transformer_hm_multitask_ep100_kf10_bs64.yaml.yml",
     ]
-    my_pipeline = OmegaConf.load("configs/" + configs_options[1])
+    my_pipeline = OmegaConf.load("configs/" + configs_options[0])
     cfg = create_app(my_pipeline)
     print("===[End]===")
