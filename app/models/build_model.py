@@ -33,14 +33,14 @@ def build_classifier_from_cfg(cfg):
         return LosHead(
             hidden_dim=cfg.hidden_dim,
             output_dim=cfg.output_dim,
-            act_layer=cfg.act_layer,
+            act_layer=eval(cfg.act_layer),
             drop=cfg.drop,
         )
     elif cfg.task == "outcome":
         return OutcomeHead(
             hidden_dim=cfg.hidden_dim,
             output_dim=cfg.output_dim,
-            act_layer=cfg.act_layer,
+            act_layer=eval(cfg.act_layer),
             drop=cfg.drop,
         )
     else:

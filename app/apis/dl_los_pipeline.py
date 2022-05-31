@@ -30,7 +30,7 @@ from torch.utils.data import (
 
 from app import datasets
 from app.datasets.ml import flatten_dataset, numpy_dataset
-from app.models import build_model
+from app.models import build_model_from_cfg
 from app.utils import RANDOM_SEED, metrics
 
 
@@ -96,17 +96,10 @@ def start_pipeline(cfg, device):
     # Load data
     x, y, x_lab_length = datasets.load_data(dataset_type)
     dataset = datasets.get_dataset(x, y, x_lab_length)
-    model = Transformer(
-        lab_dim=25,
-        demo_dim=2,
-        max_visits=max_visits,
-        hidden_dim=hidden_dim,
-        output_dim=1,
-        act_layer=nn.GELU,
-        drop=0.0,
-    ).to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
-    criterion = predict_all_visits_mse_loss
-    train_loader = DataLoader(train_dataset, batch_size=128)
-    train_loss = train_epoch(model, device, train_loader, criterion, optimizer)
-    val_loss = val_epoch(model, device, train_loader, criterion)
+    model = build_model_from_cfg(cfg)
+    print(model.parameters())
+    # optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    # criterion = predict_all_visits_mse_loss
+    # train_loader = DataLoader(dataset, batch_size=128)
+    # train_loss = train_epoch(model, device, train_loader, criterion, optimizer)
+    # val_loss = val_epoch(model, device, train_loader, criterion)
