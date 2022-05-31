@@ -1,7 +1,7 @@
 model_type: ml
 model: catboost
 mode: test # val
-dataset: tongji
-task: outcome
+dataset: hm
+task: los
 num_folds: 10
-train_fold: 10
+train_fold: 1

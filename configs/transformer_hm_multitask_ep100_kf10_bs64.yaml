@@ -1,8 +1,9 @@
+model_type: dl
 model: transformer
 dataset: hm
 task: multitask
 epochs: 100
-split_folds: 10
+num_folds: 10
 train_fold: 1
 batch_size: 64
 hidden_dim: 128
