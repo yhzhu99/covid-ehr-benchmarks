@@ -18,8 +18,8 @@ from sklearn.model_selection import (
 )
 from sklearn.tree import DecisionTreeRegressor
 
-from app import dataset
-from app.dataset.ml import flatten_dataset, numpy_dataset
+from app import datasets
+from app.datasets.ml import flatten_dataset, numpy_dataset
 from app.utils import RANDOM_SEED, metrics
 
 
@@ -72,7 +72,7 @@ def start_pipeline(cfg):
         cfg.train_fold,
     )
     # Load data
-    x, y, x_lab_length = dataset.load_data(dataset_type)
+    x, y, x_lab_length = datasets.load_data(dataset_type)
     x, y_outcome, y_los, x_lab_length = numpy_dataset(x, y, x_lab_length)
 
     all_history = {}

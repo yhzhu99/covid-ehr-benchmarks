@@ -1,10 +1,9 @@
-import pandas as pd
 import datetime as dt
-
+import os
 from pathlib import Path
 
-import os
-  
+import pandas as pd
+
 ######################################### WRANGLING LABORATORY TABLE DATA #########################################
 V2_data_folder = Path("./raw_data/")
 
@@ -14,7 +13,7 @@ V2_laboratory = V2_data_folder / "04_实验室检查.csv"
 data = []
 
 # try: # open file in read mode
-fp = open("dataset/hm/raw_data/04_实验室检查.csv", "r", newline="\r\n", encoding = "latin1")
+fp = open("datasets/hm/raw_data/04_实验室检查.csv", "r", newline="\r\n", encoding="latin1")
 
 for line in fp:
     line = line.replace(";", ",")
@@ -25,11 +24,13 @@ fp.close()
 
 
 # try: # open file in writing mode
-f = open("dataset/hm/raw_data/hm_labtest.csv", "w", newline="\n", encoding = "utf-8")
-for line in data :
-    commas_num = line.count(',')
+f = open("datasets/hm/raw_data/hm_labtest.csv", "w", newline="\n", encoding="utf-8")
+for line in data:
+    commas_num = line.count(",")
 
-    if commas_num <= 7:  # Removing lines with more than 7 fields # Condition for data to be deleted
+    if (
+        commas_num <= 7
+    ):  # Removing lines with more than 7 fields # Condition for data to be deleted
         f.write(line)
 # finally:
 f.close()

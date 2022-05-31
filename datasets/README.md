@@ -9,7 +9,7 @@
 ## Folder structure
 
 ```shell
-dataset/
+datasets/
     README.md
     tongji/
         preprocess.ipynb
