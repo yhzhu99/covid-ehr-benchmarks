@@ -29,6 +29,7 @@ from torch.utils.data import (
 )
 
 from app import datasets
+from app.datasets.dl import Dataset
 from app.datasets.ml import flatten_dataset, numpy_dataset
 from app.models import (
     build_model_from_cfg,
@@ -103,8 +104,97 @@ def start_pipeline(cfg, device):
     dataset = datasets.get_dataset(x, y, x_lab_length)
     model = build_model_from_cfg(cfg)
     print(model)
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
-    criterion = predict_all_visits_mse_loss
-    train_loader = DataLoader(dataset, batch_size=128)
-    train_loss = train_epoch(model, device, train_loader, criterion, optimizer)
-    val_loss = val_epoch(model, device, train_loader, criterion)
+    all_history = {}
+    test_performance = {
+        "test_loss": [],
+        "test_mad": [],
+        "test_mse": [],
+        "test_mape": [],
+    }
+    kfold_test = StratifiedKFold(
+        n_splits=num_folds, shuffle=True, random_state=RANDOM_SEED
+    )
+    skf = kfold_test.split(np.arange(len(dataset)), dataset.y[:, 0, 0])
+    for fold_test in range(train_fold):
+        train_and_val_idx, test_idx = next(skf)
+        print("====== Test Fold {} ======".format(fold_test + 1))
+        sss = StratifiedShuffleSplit(
+            n_splits=1, test_size=1 / (num_folds - 1), random_state=RANDOM_SEED
+        )
+
+        test_sampler = SubsetRandomSampler(test_idx)
+        test_loader = DataLoader(
+            dataset, batch_size=cfg.batch_size, sampler=test_sampler
+        )
+        sub_dataset = Dataset(
+            dataset.x[train_and_val_idx],
+            dataset.y[train_and_val_idx],
+            dataset.x_lab_length[train_and_val_idx],
+        )
+        all_history["test_fold_{}".format(fold_test + 1)] = {}
+
+        train_idx, val_idx = next(
+            sss.split(np.arange(len(train_and_val_idx)), sub_dataset.y[:, 0, 0])
+        )
+
+        train_sampler = SubsetRandomSampler(train_idx)
+        val_sampler = SubsetRandomSampler(val_idx)
+        train_loader = DataLoader(
+            dataset, batch_size=cfg.batch_size, sampler=train_sampler
+        )
+        val_loader = DataLoader(dataset, batch_size=cfg.batch_size, sampler=val_sampler)
+        model = build_model_from_cfg(cfg)
+        optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+        criterion = predict_all_visits_mse_loss
+        history = {
+            "train_loss": [],
+            "val_loss": [],
+            "val_mad": [],
+            "val_mse": [],
+            "val_mape": [],
+        }
+        best_val_performance = 1e8
+        for epoch in range(cfg.epochs):
+            train_loss = train_epoch(model, device, train_loader, criterion, optimizer)
+            val_loss, val_evaluation_scores = val_epoch(
+                model, device, val_loader, criterion
+            )
+            # save performance history on validation set
+            print(
+                "Epoch:{}/{} AVG Training Loss:{:.3f} AVG Val Loss:{:.3f}".format(
+                    epoch + 1, cfg.epochs, train_loss, val_loss
+                )
+            )
+            history["train_loss"].append(train_loss)
+            history["val_loss"].append(val_loss)
+            history["val_mad"].append(val_evaluation_scores["mad"])
+            history["val_mse"].append(val_evaluation_scores["mse"])
+            history["val_mape"].append(val_evaluation_scores["mape"])
+            # if mad is lower, than set the best mad, save the model, and test it on the test set
+            if val_evaluation_scores["mad"] < best_val_performance:
+                best_val_performance = val_evaluation_scores["mad"]
+                torch.save(model.state_dict(), f"checkpoints/{cfg.name}.pth")
+        all_history["test_fold_{}".format(fold_test + 1)] = history
+        print(
+            f"Best performance on val set {fold_test+1}: \
+            MAE = {best_val_performance}"
+        )
+        model = build_model_from_cfg(cfg)
+        model.load_state_dict(torch.load(f"checkpoints/{cfg.name}.pth"))
+        test_loss, test_evaluation_scores = val_epoch(
+            model, device, test_loader, criterion
+        )
+        test_performance["test_loss"].append(test_loss)
+        test_performance["test_mad"].append(test_evaluation_scores["mad"])
+        test_performance["test_mse"].append(test_evaluation_scores["mse"])
+        test_performance["test_mape"].append(test_evaluation_scores["mape"])
+        print(
+            f"Performance on test set {fold_test+1}: MAE = {test_evaluation_scores['mad']}, MSE = {test_evaluation_scores['mse']}, MAPE = {test_evaluation_scores['mape']}"
+        )
+    # Calculate average performance on 10-fold test set
+    test_mad_list = np.array(test_performance["test_mad"])
+    test_mse_list = np.array(test_performance["test_mse"])
+    test_mape_list = np.array(test_performance["test_mape"])
+    print("MAE: {:.3f} ({:.3f})".format(test_mad_list.mean(), test_mad_list.std()))
+    print("MSE: {:.3f} ({:.3f})".format(test_mse_list.mean(), test_mse_list.std()))
+    print("MAPE: {:.3f} ({:.3f})".format(test_mape_list.mean(), test_mape_list.std()))
