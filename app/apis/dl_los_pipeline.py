@@ -50,7 +50,7 @@ def train_epoch(model, device, dataloader, loss_fn, optimizer):
             batch_y.float(),
             batch_x_lab_length.float(),
         )
-        batch_y = batch_y[:, :, 0]  # 0: outcome, 1: los
+        batch_y = batch_y[:, :, 1]  # 0: outcome, 1: los
         batch_y = batch_y.unsqueeze(-1)
         optimizer.zero_grad()
         output = model(batch_x)
@@ -77,18 +77,17 @@ def val_epoch(model, device, dataloader, loss_fn):
                 batch_y.float(),
                 batch_x_lab_length.float(),
             )
-            batch_y = batch_y[:, :, 0]  # 0: outcome, 1: los
+            batch_y = batch_y[:, :, 1]  # 0: outcome, 1: los
             batch_y = batch_y.unsqueeze(-1)
             output = model(batch_x)
             loss = loss_fn(output, batch_y, batch_x_lab_length)
             val_loss.append(loss.item())
+            output = torch.squeeze(output)
+            batch_y = torch.squeeze(batch_y)
             for i in range(len(batch_y)):
                 y_pred.extend(output[i][: batch_x_lab_length[i].long()].tolist())
                 y_true.extend(batch_y[i][: batch_x_lab_length[i].long()].tolist())
-    y_true = np.array(y_true)
-    y_pred = np.array(y_pred)
-    y_pred = np.stack([1 - y_pred, y_pred], axis=1)
-    evaluation_scores = metrics.print_metrics_binary(y_true, y_pred, verbose=0)
+    evaluation_scores = metrics.print_metrics_regression(y_true, y_pred, verbose=1)
     return np.array(val_loss).mean(), evaluation_scores
 
 
