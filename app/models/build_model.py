@@ -19,6 +19,14 @@ class Model(nn.Module):
 
 
 def build_backbone_from_cfg(cfg):
+    if cfg.model == "gru":
+        return GRU(
+            lab_dim=cfg.lab_dim,
+            demo_dim=cfg.demo_dim,
+            max_visits=cfg.max_visits,
+            hidden_dim=cfg.hidden_dim,
+            output_dim=cfg.output_dim,
+        )
     if cfg.model == "transformer":
         return Transformer(
             lab_dim=cfg.lab_dim,
@@ -34,15 +42,15 @@ def build_classifier_from_cfg(cfg):
         return LosHead(
             hidden_dim=cfg.hidden_dim,
             output_dim=cfg.output_dim,
-            act_layer=eval(cfg.act_layer),
-            drop=cfg.drop,
+            # act_layer=eval(cfg.act_layer),
+            # drop=cfg.drop,
         )
     elif cfg.task == "outcome":
         return OutcomeHead(
             hidden_dim=cfg.hidden_dim,
             output_dim=cfg.output_dim,
-            act_layer=eval(cfg.act_layer),
-            drop=cfg.drop,
+            # act_layer=eval(cfg.act_layer),
+            # drop=cfg.drop,
         )
     else:
         raise ValueError("Unknown task: {}".format(cfg.task))
