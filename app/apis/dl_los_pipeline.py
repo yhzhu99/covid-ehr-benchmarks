@@ -30,10 +30,11 @@ from torch.utils.data import (
 
 from app import datasets
 from app.datasets.ml import flatten_dataset, numpy_dataset
+from app.models import build_model
 from app.utils import RANDOM_SEED, metrics
 
 
-def train_epoch(model, device, dataloader, loss_fn, optimizer):
+def train_epoch(model, dataloader, loss_fn, optimizer):
     train_loss = []
     model.train()
     for step, data in enumerate(dataloader):
@@ -54,7 +55,7 @@ def train_epoch(model, device, dataloader, loss_fn, optimizer):
     return np.array(train_loss).mean()
 
 
-def val_epoch(model, device, dataloader, loss_fn):
+def val_epoch(model, dataloader, loss_fn):
     """
     val / test
     """
@@ -85,5 +86,27 @@ def val_epoch(model, device, dataloader, loss_fn):
     return np.array(val_loss).mean(), evaluation_scores
 
 
-def start_pipeline(cfg):
-    pass
+def start_pipeline(cfg, device):
+    dataset_type, method, num_folds, train_fold = (
+        cfg.dataset,
+        cfg.model,
+        cfg.num_folds,
+        cfg.train_fold,
+    )
+    # Load data
+    x, y, x_lab_length = datasets.load_data(dataset_type)
+    dataset = datasets.get_dataset(x, y, x_lab_length)
+    model = Transformer(
+        lab_dim=25,
+        demo_dim=2,
+        max_visits=max_visits,
+        hidden_dim=hidden_dim,
+        output_dim=1,
+        act_layer=nn.GELU,
+        drop=0.0,
+    ).to(device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    criterion = predict_all_visits_mse_loss
+    train_loader = DataLoader(train_dataset, batch_size=128)
+    train_loss = train_epoch(model, device, train_loader, criterion, optimizer)
+    val_loss = val_epoch(model, device, train_loader, criterion)
