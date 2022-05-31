@@ -50,6 +50,11 @@ def build_classifier_from_cfg(cfg):
             # act_layer=eval(cfg.act_layer),
             # drop=cfg.drop,
         )
+    elif cfg.task == "multitask":
+        return MultitaskHead(
+            hidden_dim=cfg.hidden_dim,
+            output_dim=cfg.output_dim,
+        )
     else:
         raise ValueError("Unknown task: {}".format(cfg.task))
 
