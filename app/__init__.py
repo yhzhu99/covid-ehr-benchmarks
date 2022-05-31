@@ -1,6 +1,9 @@
 from omegaconf import OmegaConf
 
 from app import core, dataset, models, utils
+from app.utils import init_random
+
+init_random()
 
 
 def create_app(my_pipeline):
