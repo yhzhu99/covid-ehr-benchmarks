@@ -21,19 +21,17 @@ class Model(nn.Module):
 def build_backbone_from_cfg(cfg):
     if cfg.model == "gru":
         return GRU(
-            lab_dim=cfg.lab_dim,
             demo_dim=cfg.demo_dim,
+            lab_dim=cfg.lab_dim,
             max_visits=cfg.max_visits,
             hidden_dim=cfg.hidden_dim,
-            output_dim=cfg.output_dim,
         )
     if cfg.model == "transformer":
         return Transformer(
-            lab_dim=cfg.lab_dim,
             demo_dim=cfg.demo_dim,
+            lab_dim=cfg.lab_dim,
             max_visits=cfg.max_visits,
             hidden_dim=cfg.hidden_dim,
-            output_dim=cfg.output_dim,
         )
 
 
