@@ -25,8 +25,6 @@ def build_encoder_from_cfg(cfg):
             max_visits=cfg.max_visits,
             hidden_dim=cfg.hidden_dim,
             output_dim=cfg.output_dim,
-            act_layer=cfg.act_layer,
-            drop=cfg.drop,
         )
 
 

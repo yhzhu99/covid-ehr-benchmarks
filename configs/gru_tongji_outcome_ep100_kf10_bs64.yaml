@@ -7,3 +7,4 @@ num_folds: 10
 train_fold: 10
 batch_size: 64
 hidden_dim: 64
+output_dim: 1
