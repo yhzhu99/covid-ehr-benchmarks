@@ -5,10 +5,11 @@ import random
 
 import numpy as np
 import pandas as pd
+import torch
 import xgboost as xgb
 from autogluon.tabular import TabularPredictor
-from catboost import CatBoostRegressor
-from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
+from catboost import CatBoostClassifier, CatBoostRegressor
+from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import (
     KFold,
@@ -16,7 +17,7 @@ from sklearn.model_selection import (
     StratifiedShuffleSplit,
     train_test_split,
 )
-from sklearn.tree import DecisionTreeRegressor
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 from app import datasets
 from app.datasets.ml import flatten_dataset, numpy_dataset
@@ -25,23 +26,26 @@ from app.utils import RANDOM_SEED, metrics
 
 def train(x, y, method):
     if method == "xgboost":
-        model = xgb.XGBRegressor(verbosity=0, n_estimators=1000, learning_rate=0.1)
+        model = xgb.XGBClassifier(
+            verbosity=0, n_estimators=1000, learning_rate=0.1, use_label_encoder=False
+        )
         model.fit(x, y, eval_metric="auc")
     elif method == "gbdt":
-        method = GradientBoostingRegressor(random_state=RANDOM_SEED)
+        method = GradientBoostingClassifier(
+            n_estimators=100, learning_rate=1.0, max_depth=1, random_state=RANDOM_SEED
+        )
         model = method.fit(x, y)
     elif method == "random_forest":
-        method = RandomForestRegressor(random_state=RANDOM_SEED, max_depth=2)
+        method = RandomForestClassifier(random_state=RANDOM_SEED, max_depth=2)
         model = method.fit(x, y)
     elif method == "decision_tree":
-        model = DecisionTreeRegressor(random_state=RANDOM_SEED)
+        model = DecisionTreeClassifier(random_state=RANDOM_SEED)
         model.fit(x, y)
     elif method == "catboost":
-        model = CatBoostRegressor(
+        model = CatBoostClassifier(
             iterations=10,  # performance is better when iterations = 100
             learning_rate=0.1,
             depth=3,
-            loss_function="RMSE",
             verbose=None,
             silent=True,
             allow_writing_files=False,
@@ -52,14 +56,14 @@ def train(x, y, method):
 
 def validate(x, y, model):
     y_pred = model.predict(x)
-    evaluation_scores = metrics.print_metrics_regression(y, y_pred, verbose=0)
+    evaluation_scores = metrics.print_metrics_binary(y, y_pred, verbose=0)
     return evaluation_scores
 
 
 def test(x, y, model):
     y_pred = model.predict(x)
     # print(y_pred[0:10], y[0:10])
-    evaluation_scores = metrics.print_metrics_regression(y, y_pred, verbose=0)
+    evaluation_scores = metrics.print_metrics_binary(y, y_pred, verbose=0)
     return evaluation_scores
 
 
@@ -76,7 +80,7 @@ def start_pipeline(cfg):
     x, y_outcome, y_los, x_lab_length = numpy_dataset(x, y, x_lab_length)
 
     all_history = {}
-    test_performance = {"test_mad": [], "test_mse": [], "test_mape": []}
+    test_performance = {"test_accuracy": [], "test_auroc": [], "test_auprc": []}
 
     kfold_test = StratifiedKFold(
         n_splits=num_folds, shuffle=True, random_state=RANDOM_SEED
@@ -101,48 +105,66 @@ def start_pipeline(cfg):
             sss.split(np.arange(len(train_and_val_idx)), sub_y_outcome)
         )
 
-        x_train, y_train = flatten_dataset(sub_x, sub_y, train_idx, sub_x_lab_length)
-        x_val, y_val = flatten_dataset(sub_x, sub_y, val_idx, sub_x_lab_length)
-        x_test, y_test = flatten_dataset(x, y, test_idx, x_lab_length)
+        x_train, y_train = flatten_dataset(
+            sub_x, sub_y, train_idx, sub_x_lab_length, case="outcome"
+        )
+        x_val, y_val = flatten_dataset(
+            sub_x, sub_y, val_idx, sub_x_lab_length, case="outcome"
+        )
+        x_test, y_test = flatten_dataset(x, y, test_idx, x_lab_length, case="outcome")
 
         all_history["test_fold_{}".format(fold_test + 1)] = {}
 
         model = train(x_train, y_train, method)
 
         if mode == "val":
-            history = {"val_mad": [], "val_mse": [], "val_mape": []}
+            history = {
+                "val_accuracy": [],
+                "val_auroc": [],
+                "val_auprc": [],
+            }
             val_evaluation_scores = validate(x_val, y_val, model)
-            history["val_mad"].append(val_evaluation_scores["mad"])
-            history["val_mse"].append(val_evaluation_scores["mse"])
-            history["val_mape"].append(val_evaluation_scores["mape"])
+            history["val_accuracy"].append(val_evaluation_scores["acc"])
+            history["val_auroc"].append(val_evaluation_scores["auroc"])
+            history["val_auprc"].append(val_evaluation_scores["auprc"])
             all_history["test_fold_{}".format(fold_test + 1)] = history
             print(
                 f"Performance on val set {fold_test+1}: \
-                MAE = {val_evaluation_scores['mad']}, \
-                MSE = {val_evaluation_scores['mse']}, \
-                MAPE = {val_evaluation_scores['mape']}"
+                ACC = {val_evaluation_scores['acc']}, \
+                AUROC = {val_evaluation_scores['auroc']}, \
+                AUPRC = {val_evaluation_scores['auprc']}"
             )
 
         elif mode == "test":
             test_evaluation_scores = test(x_test, y_test, model)
-            test_performance["test_mad"].append(test_evaluation_scores["mad"])
-            test_performance["test_mse"].append(test_evaluation_scores["mse"])
-            test_performance["test_mape"].append(test_evaluation_scores["mape"])
+            test_performance["test_accuracy"].append(test_evaluation_scores["acc"])
+            test_performance["test_auroc"].append(test_evaluation_scores["auroc"])
+            test_performance["test_auprc"].append(test_evaluation_scores["auprc"])
             print(
                 f"Performance on test set {fold_test+1}: \
-                MAE = {test_evaluation_scores['mad']}, \
-                MSE = {test_evaluation_scores['mse']}, \
-                MAPE = {test_evaluation_scores['mape']}"
+                ACC = {test_evaluation_scores['acc']}, \
+                AUROC = {test_evaluation_scores['auroc']}, \
+                AUPRC = {test_evaluation_scores['auprc']}"
             )
 
             # Calculate average performance on 10-fold test set
-            test_mad_list = np.array(test_performance["test_mad"])
-            test_mse_list = np.array(test_performance["test_mse"])
-            test_mape_list = np.array(test_performance["test_mape"])
+            test_accuracy_list = np.array(test_performance["test_accuracy"])
+            test_auroc_list = np.array(test_performance["test_auroc"])
+            test_auprc_list = np.array(test_performance["test_auprc"])
     if mode == "test":
         print("====================== TEST RESULT ======================")
-        print("MAE: {:.3f} ({:.3f})".format(test_mad_list.mean(), test_mad_list.std()))
-        print("MSE: {:.3f} ({:.3f})".format(test_mse_list.mean(), test_mse_list.std()))
         print(
-            "MAPE: {:.3f} ({:.3f})".format(test_mape_list.mean(), test_mape_list.std())
+            "ACC: {:.3f} ({:.3f})".format(
+                test_accuracy_list.mean(), test_accuracy_list.std()
+            )
+        )
+        print(
+            "AUROC: {:.3f} ({:.3f})".format(
+                test_auroc_list.mean(), test_auroc_list.std()
+            )
+        )
+        print(
+            "AUPRC: {:.3f} ({:.3f})".format(
+                test_auprc_list.mean(), test_auprc_list.std()
+            )
         )
