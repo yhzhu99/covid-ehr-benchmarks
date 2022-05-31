@@ -17,7 +17,7 @@ class Model:
         return x
 
 
-def build_encoder_from_cfg(cfg):
+def build_backbone_from_cfg(cfg):
     if cfg.model == "transformer":
         return Transformer(
             lab_dim=cfg.lab_dim,
@@ -28,15 +28,15 @@ def build_encoder_from_cfg(cfg):
         )
 
 
-def build_head_from_cfg(cfg):
-    if cfg.head == "los":
+def build_classifier_from_cfg(cfg):
+    if cfg.task == "los":
         return LosHead(
             hidden_dim=cfg.hidden_dim,
             output_dim=cfg.output_dim,
             act_layer=cfg.act_layer,
             drop=cfg.drop,
         )
-    elif cfg.head == "outcome":
+    elif cfg.task == "outcome":
         return OutcomeHead(
             hidden_dim=cfg.hidden_dim,
             output_dim=cfg.output_dim,
@@ -44,9 +44,10 @@ def build_head_from_cfg(cfg):
             drop=cfg.drop,
         )
     else:
-        raise ValueError("Unknown head: {}".format(cfg.head))
+        raise ValueError("Unknown task: {}".format(cfg.task))
 
 
 def build_model_from_cfg(cfg):
-
-    return model
+    backbone = build_backbone_from_cfg(cfg)
+    head = build_classifier_from_cfg(cfg)
+    return Model(backbone, head)
