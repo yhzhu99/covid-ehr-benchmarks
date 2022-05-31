@@ -46,10 +46,9 @@ def load_data(dataset_type):
 
 
 def create_app(my_pipeline):
-    # Load config
-    my_pipeline = OmegaConf.load("configs/gru_tongji_epoch50_fold10_bs64.yaml")
     # Load dataset
-    dataset = OmegaConf.load(f"configs/_base_/dataset/{my_pipeline.dataset}.yaml")
+    dataset_cfg = OmegaConf.load(f"configs/_base_/dataset/{my_pipeline.dataset}.yaml")
     # Merge config
-    cfg = OmegaConf.merge(dataset, my_pipeline)
+    cfg = OmegaConf.merge(dataset_cfg, my_pipeline)
+    print(cfg.model, cfg.task)
     return cfg

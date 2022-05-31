@@ -1,4 +1,4 @@
-model: GRU
+model: gru
 dataset: tongji
 task: los
 epochs: 100
