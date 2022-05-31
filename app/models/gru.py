@@ -29,8 +29,8 @@ from torch.utils.data import (
 class GRU(nn.Module):
     def __init__(
         self,
-        input_lab_dim,
-        input_demo_dim,
+        lab_dim,
+        demo_dim,
         hidden_dim,
         output_dim,
         act_layer=nn.GELU,
@@ -39,13 +39,13 @@ class GRU(nn.Module):
         super(GRU, self).__init__()
 
         # hyperparameters
-        self.input_lab_dim = input_lab_dim
-        self.input_demo_dim = input_demo_dim
+        self.lab_dim = lab_dim
+        self.demo_dim = demo_dim
         self.hidden_dim = hidden_dim
         self.output_dim = output_dim
 
-        self.demo_proj = nn.Linear(input_demo_dim, hidden_dim)
-        self.lab_proj = nn.Linear(input_lab_dim, hidden_dim)
+        self.demo_proj = nn.Linear(demo_dim, hidden_dim)
+        self.lab_proj = nn.Linear(lab_dim, hidden_dim)
         self.bn = nn.BatchNorm1d(13)
 
         self.gru = nn.GRU(

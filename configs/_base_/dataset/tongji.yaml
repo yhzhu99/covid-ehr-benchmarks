@@ -1,0 +1,4 @@
+# dataset settings
+demo_dim: 2
+lab_dim: 25
+max_visits: 13

@@ -1,0 +1,8 @@
+model: GRU
+dataset: tongji
+task: los
+epochs: 100
+split_folds: 10
+train_fold: 10
+batch_size: 64
+hidden_dim: 64

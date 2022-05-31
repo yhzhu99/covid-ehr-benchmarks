@@ -1,0 +1,4 @@
+model: catboost
+dataset: tongji
+task: outcome
+split_folds: 10

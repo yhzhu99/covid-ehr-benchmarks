@@ -1,4 +1,0 @@
-# dataset settings
-dataset: 'tongji_hospital'
-demographic_dim: 2
-labtest_dim: 25
