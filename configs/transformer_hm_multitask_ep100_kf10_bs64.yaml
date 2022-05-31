@@ -1,3 +1,4 @@
+name: transformer_hm_multitask_ep100_kf10_bs64
 model_type: dl
 model: transformer
 dataset: hm

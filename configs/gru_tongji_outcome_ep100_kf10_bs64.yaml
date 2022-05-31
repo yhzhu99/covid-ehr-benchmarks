@@ -1,3 +1,4 @@
+name: gru_tongji_outcome_ep100_kf10_bs64
 model_type: dl
 model: gru
 dataset: tongji
