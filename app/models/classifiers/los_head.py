@@ -16,12 +16,9 @@ class LosHead(nn.Module):
         self.fc = nn.Linear(hidden_dim, output_dim)
         self.drop = nn.Dropout(drop)
 
-        self.sigmoid = nn.Sigmoid()
-
     def forward(self, x):
         # x = self.act(x)
         x = self.drop(x)
         x = self.fc(x)
         x = self.drop(x)
-        # x = self.sigmoid(x)
         return x

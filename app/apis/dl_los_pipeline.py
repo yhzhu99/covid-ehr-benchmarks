@@ -97,7 +97,7 @@ def start_pipeline(cfg, device):
     x, y, x_lab_length = datasets.load_data(dataset_type)
     dataset = datasets.get_dataset(x, y, x_lab_length)
     model = build_model_from_cfg(cfg)
-    print(model.parameters())
+    print(model)
     # optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     # criterion = predict_all_visits_mse_loss
     # train_loader = DataLoader(dataset, batch_size=128)

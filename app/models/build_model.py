@@ -6,8 +6,9 @@ from .classifiers import *
 from .losses import *
 
 
-class Model:
+class Model(nn.Module):
     def __init__(self, backbone, head):
+        super().__init__()
         self.backbone = backbone
         self.head = head
 
