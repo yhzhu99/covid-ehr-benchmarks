@@ -6,7 +6,7 @@ from app.utils import init_random
 init_random()
 
 
-def create_app(my_pipeline):
+def create_app(my_pipeline, device):
     # Load dataset
     dataset_cfg = OmegaConf.load(f"configs/_base_/datasets/{my_pipeline.dataset}.yaml")
     # Merge config
@@ -17,5 +17,7 @@ def create_app(my_pipeline):
         apis.ml_los_pipeline.start_pipeline(cfg)
     elif cfg.model_type == "ml" and cfg.task == "outcome":
         apis.ml_outcome_pipeline.start_pipeline(cfg)
+    elif cfg.model_type == "dl" and cfg.task == "los":
+        apis.dl_los_pipeline.start_pipeline(cfg, device)
 
     return cfg

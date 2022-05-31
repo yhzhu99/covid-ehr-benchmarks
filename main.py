@@ -1,3 +1,4 @@
+import torch
 from omegaconf import OmegaConf
 
 import app.models as models
@@ -13,5 +14,6 @@ if __name__ == "__main__":
         "transformer_hm_multitask_ep100_kf10_bs64.yaml.yml",
     ]
     my_pipeline = OmegaConf.load("configs/" + configs_options[0])
-    cfg = create_app(my_pipeline)
+    device = torch.device("cuda:0" if torch.cuda.is_available() == True else "cpu")
+    cfg = create_app(my_pipeline, device)
     print("===[End]===")
