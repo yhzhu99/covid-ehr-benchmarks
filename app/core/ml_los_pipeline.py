@@ -101,9 +101,13 @@ def start_pipeline(cfg):
             sss.split(np.arange(len(train_and_val_idx)), sub_y_outcome)
         )
 
-        x_train, y_train = flatten_dataset(sub_x, sub_y, train_idx, sub_x_lab_length)
-        x_val, y_val = flatten_dataset(sub_x, sub_y, val_idx, sub_x_lab_length)
-        x_test, y_test = flatten_dataset(x, y, test_idx, x_lab_length)
+        x_train, y_train = flatten_dataset(
+            sub_x, sub_y, train_idx, sub_x_lab_length, case="los"
+        )
+        x_val, y_val = flatten_dataset(
+            sub_x, sub_y, val_idx, sub_x_lab_length, case="los"
+        )
+        x_test, y_test = flatten_dataset(x, y, test_idx, x_lab_length, case="los")
 
         all_history["test_fold_{}".format(fold_test + 1)] = {}
 
