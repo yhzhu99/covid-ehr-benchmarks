@@ -20,8 +20,16 @@ from sklearn.model_selection import (
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 from app import datasets
+from app.core.evaluation import eval_metrics
+from app.datasets.dl import Dataset
 from app.datasets.ml import flatten_dataset, numpy_dataset
-from app.utils import RANDOM_SEED, metrics
+from app.models import (
+    build_model_from_cfg,
+    get_multi_task_loss,
+    predict_all_visits_bce_loss,
+    predict_all_visits_mse_loss,
+)
+from app.utils import RANDOM_SEED
 
 
 def train(x, y, method):
@@ -56,14 +64,14 @@ def train(x, y, method):
 
 def validate(x, y, model):
     y_pred = model.predict(x)
-    evaluation_scores = metrics.print_metrics_binary(y, y_pred, verbose=0)
+    evaluation_scores = eval_metrics.print_metrics_binary(y, y_pred, verbose=0)
     return evaluation_scores
 
 
 def test(x, y, model):
     y_pred = model.predict(x)
     # print(y_pred[0:10], y[0:10])
-    evaluation_scores = metrics.print_metrics_binary(y, y_pred, verbose=0)
+    evaluation_scores = eval_metrics.print_metrics_binary(y, y_pred, verbose=0)
     return evaluation_scores
 
 

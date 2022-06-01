@@ -29,6 +29,7 @@ from torch.utils.data import (
 )
 
 from app import datasets
+from app.core.evaluation import eval_metrics
 from app.datasets.dl import Dataset
 from app.datasets.ml import flatten_dataset, numpy_dataset
 from app.models import (
@@ -37,7 +38,7 @@ from app.models import (
     predict_all_visits_bce_loss,
     predict_all_visits_mse_loss,
 )
-from app.utils import RANDOM_SEED, metrics
+from app.utils import RANDOM_SEED
 
 
 def train_epoch(model, device, dataloader, loss_fn, optimizer):
@@ -102,10 +103,12 @@ def val_epoch(model, device, dataloader, loss_fn):
     y_outcome_true = np.array(y_outcome_true)
     y_outcome_pred = np.array(y_outcome_pred)
     y_outcome_pred = np.stack([1 - y_outcome_pred, y_outcome_pred], axis=1)
-    outcome_evaluation_scores = metrics.print_metrics_binary(
+    outcome_evaluation_scores = eval_metrics.print_metrics_binary(
         y_outcome_true, y_outcome_pred
     )
-    los_evaluation_scores = metrics.print_metrics_regression(y_los_true, y_los_pred)
+    los_evaluation_scores = eval_metrics.print_metrics_regression(
+        y_los_true, y_los_pred
+    )
     return np.array(val_loss).mean(), outcome_evaluation_scores, los_evaluation_scores
 
 
