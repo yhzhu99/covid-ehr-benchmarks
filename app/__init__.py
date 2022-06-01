@@ -1,7 +1,7 @@
 from omegaconf import OmegaConf
 
-from app import apis, datasets, models, utils
-from app.utils import init_random
+from app import apis, core, datasets, models
+from app.core.utils import RANDOM_SEED, init_random
 
 init_random()
 

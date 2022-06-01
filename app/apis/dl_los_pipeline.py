@@ -28,8 +28,9 @@ from torch.utils.data import (
     random_split,
 )
 
-from app import datasets
 from app.core.evaluation import eval_metrics
+from app.core.utils import RANDOM_SEED
+from app.datasets import get_dataset, load_data
 from app.datasets.dl import Dataset
 from app.datasets.ml import flatten_dataset, numpy_dataset
 from app.models import (
@@ -38,7 +39,6 @@ from app.models import (
     predict_all_visits_bce_loss,
     predict_all_visits_mse_loss,
 )
-from app.utils import RANDOM_SEED
 
 
 def train_epoch(model, device, dataloader, loss_fn, optimizer):
@@ -100,8 +100,8 @@ def start_pipeline(cfg, device):
         cfg.train_fold,
     )
     # Load data
-    x, y, x_lab_length = datasets.load_data(dataset_type)
-    dataset = datasets.get_dataset(x, y, x_lab_length)
+    x, y, x_lab_length = load_data(dataset_type)
+    dataset = get_dataset(x, y, x_lab_length)
     model = build_model_from_cfg(cfg)
     print(model)
     all_history = {}
