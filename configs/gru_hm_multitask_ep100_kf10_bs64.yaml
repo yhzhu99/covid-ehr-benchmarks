@@ -1,4 +1,4 @@
-name: transformer_hm_multitask_ep100_kf10_bs64
+name: gru_hm_multitask_ep100_kf10_bs64
 model_type: dl
 model: gru
 dataset: hm
