@@ -23,4 +23,5 @@ def create_app(my_pipeline, device):
         apis.dl_outcome_pipeline.start_pipeline(cfg, device)
     elif cfg.model_type == "dl" and cfg.task == "multitask":
         apis.dl_multitask_pipeline.start_pipeline(cfg, device)
+        # apis.dl_multitask_pipeline.start_inference(cfg, device)
     return cfg

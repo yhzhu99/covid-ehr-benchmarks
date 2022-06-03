@@ -249,3 +249,29 @@ def start_pipeline(cfg, device):
     print(
         "AUPRC: {:.3f} ({:.3f})".format(test_auprc_list.mean(), test_auprc_list.std())
     )
+
+
+def start_inference(cfg, device):
+    dataset_type, method, num_folds, train_fold = (
+        cfg.dataset,
+        cfg.model,
+        cfg.num_folds,
+        cfg.train_fold,
+    )
+    # Load data
+    x, y, x_lab_length = load_data(dataset_type)
+    x, y, x_lab_length = x.float(), y.float(), x_lab_length.float()
+    print(x.shape)
+
+    model = build_model_from_cfg(cfg)
+    model.load_state_dict(torch.load(f"checkpoints/{cfg.name}.pth"))
+
+    idx = 1000
+    out = model(x[idx : idx + 1])
+    print("x_lab_length:", x_lab_length[idx : idx + 1])
+    print("---- start y_true --------")
+    print(y[idx : idx + 1])
+    print("---- end y_true --------")
+    print("---- start y_pred --------")
+    print(out)
+    print("---- end y_pred --------")
