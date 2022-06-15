@@ -76,13 +76,17 @@ def calculate_los_statistics(y):
 
 def zscore_los(y, los_statistics):
     """zscore scale y"""
-    y = (y - los_statistics["los_mean"]) / (los_statistics["los_std"] + 1e12)
+    # y = (y - los_statistics["los_mean"]) / (los_statistics["los_std"] + 1e12)
+    # y = (y - los_statistics["los_mean"]) / 1
     return y
 
 
 def reverse_zscore_los(y, los_statistics):
     """reverse zscore y"""
-    y = y * los_statistics["los_std"] + los_statistics["los_mean"]
+    # print("1--------", y)
+    # y = y * los_statistics["los_std"] + los_statistics["los_mean"]
+    # y = y * 1 + los_statistics["los_mean"]
+    # print("2--------", y)
     return y
 
 
@@ -127,8 +131,10 @@ def start_pipeline(cfg):
         x_train, y_train = flatten_dataset(
             sub_x, sub_y, train_idx, sub_x_lab_length, case="los"
         )
+        print(train_idx)
 
         los_statistics = calculate_los_statistics(y_train)
+        print(los_statistics)
         y_train = zscore_los(y_train, los_statistics)
 
         x_val, y_val = flatten_dataset(
@@ -158,7 +164,7 @@ def start_pipeline(cfg):
             )
 
         elif mode == "test":
-            test_evaluation_scores = validate(x_val, y_val, model, los_statistics)
+            test_evaluation_scores = validate(x_test, y_test, model, los_statistics)
             test_performance["test_mad"].append(test_evaluation_scores["mad"])
             test_performance["test_mse"].append(test_evaluation_scores["mse"])
             test_performance["test_mape"].append(test_evaluation_scores["mape"])
