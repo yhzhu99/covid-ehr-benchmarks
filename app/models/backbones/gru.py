@@ -20,6 +20,7 @@ class GRU(nn.Module):
         self.hidden_dim = hidden_dim
 
         self.proj = nn.Linear(demo_dim + lab_dim, hidden_dim)
+        self.act = act_layer()
         self.bn = nn.BatchNorm1d(max_visits)
         self.gru = nn.GRU(
             input_size=hidden_dim,
