@@ -58,15 +58,11 @@ def train(x, y, method):
     return model
 
 
-def validate(x, y, model):
+def validate(x, y, model, los_statistics):
+    """val/test"""
     y_pred = model.predict(x)
-    evaluation_scores = eval_metrics.print_metrics_regression(y, y_pred, verbose=0)
-    return evaluation_scores
-
-
-def test(x, y, model):
-    y_pred = model.predict(x)
-    # print(y_pred[0:10], y[0:10])
+    y = reverse_zscore_los(y, los_statistics)
+    y_pred = reverse_zscore_los(y_pred, los_statistics)
     evaluation_scores = eval_metrics.print_metrics_regression(y, y_pred, verbose=0)
     return evaluation_scores
 
@@ -149,7 +145,7 @@ def start_pipeline(cfg):
 
         if mode == "val":
             history = {"val_mad": [], "val_mse": [], "val_mape": []}
-            val_evaluation_scores = validate(x_val, y_val, model)
+            val_evaluation_scores = validate(x_val, y_val, model, los_statistics)
             history["val_mad"].append(val_evaluation_scores["mad"])
             history["val_mse"].append(val_evaluation_scores["mse"])
             history["val_mape"].append(val_evaluation_scores["mape"])
@@ -162,7 +158,7 @@ def start_pipeline(cfg):
             )
 
         elif mode == "test":
-            test_evaluation_scores = test(x_test, y_test, model)
+            test_evaluation_scores = validate(x_val, y_val, model, los_statistics)
             test_performance["test_mad"].append(test_evaluation_scores["mad"])
             test_performance["test_mse"].append(test_evaluation_scores["mse"])
             test_performance["test_mape"].append(test_evaluation_scores["mape"])
