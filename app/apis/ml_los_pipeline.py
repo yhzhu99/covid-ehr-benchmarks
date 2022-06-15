@@ -74,7 +74,8 @@ def test(x, y, model):
 def calculate_los_statistics(y):
     """calculate los's mean/std"""
     mean, std = y.mean(), y.std()
-    return {"los_mean": mean, "los_std": std}
+    los_statistics = {"los_mean": mean, "los_std": std}
+    return los_statistics
 
 
 def zscore_los(y, los_statistics):
@@ -131,10 +132,16 @@ def start_pipeline(cfg):
             sub_x, sub_y, train_idx, sub_x_lab_length, case="los"
         )
 
+        los_statistics = calculate_los_statistics(y_train)
+        y_train = zscore_los(y_train, los_statistics)
+
         x_val, y_val = flatten_dataset(
             sub_x, sub_y, val_idx, sub_x_lab_length, case="los"
         )
+        y_val = zscore_los(y_val, los_statistics)
+
         x_test, y_test = flatten_dataset(x, y, test_idx, x_lab_length, case="los")
+        y_test = zscore_los(y_test, los_statistics)
 
         all_history["test_fold_{}".format(fold_test + 1)] = {}
 
