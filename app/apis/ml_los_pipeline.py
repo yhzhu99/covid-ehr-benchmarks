@@ -71,6 +71,24 @@ def test(x, y, model):
     return evaluation_scores
 
 
+def calculate_los_statistics(y):
+    """calculate los's mean/std"""
+    mean, std = y.mean(), y.std()
+    return {"los_mean": mean, "los_std": std}
+
+
+def zscore_los(y, los_statistics):
+    """zscore scale y"""
+    y = (y - los_statistics["los_mean"]) / (los_statistics["los_std"] + 1e12)
+    return y
+
+
+def reverse_zscore_los(y, los_statistics):
+    """reverse zscore y"""
+    y = y * los_statistics["los_std"] + los_statistics["los_mean"]
+    return y
+
+
 def start_pipeline(cfg):
     dataset_type, mode, method, num_folds, train_fold = (
         cfg.dataset,
@@ -112,6 +130,7 @@ def start_pipeline(cfg):
         x_train, y_train = flatten_dataset(
             sub_x, sub_y, train_idx, sub_x_lab_length, case="los"
         )
+
         x_val, y_val = flatten_dataset(
             sub_x, sub_y, val_idx, sub_x_lab_length, case="los"
         )
