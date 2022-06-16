@@ -76,17 +76,13 @@ def calculate_los_statistics(y):
 
 def zscore_los(y, los_statistics):
     """zscore scale y"""
-    # y = (y - los_statistics["los_mean"]) / (los_statistics["los_std"] + 1e12)
-    # y = (y - los_statistics["los_mean"]) / 1
+    y = (y - los_statistics["los_mean"]) / los_statistics["los_std"]
     return y
 
 
 def reverse_zscore_los(y, los_statistics):
     """reverse zscore y"""
-    # print("1--------", y)
-    # y = y * los_statistics["los_std"] + los_statistics["los_mean"]
-    # y = y * 1 + los_statistics["los_mean"]
-    # print("2--------", y)
+    y = y * los_statistics["los_std"] + los_statistics["los_mean"]
     return y
 
 
