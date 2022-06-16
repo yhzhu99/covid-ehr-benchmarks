@@ -109,15 +109,13 @@ def start_pipeline(cfg):
         n_splits=num_folds, shuffle=True, random_state=RANDOM_SEED
     )
 
+    skf = kfold_test.split(np.arange(len(x)), y_outcome)
     for fold_test in range(train_fold):
-        train_and_val_idx, test_idx = next(
-            kfold_test.split(np.arange(len(x)), y_outcome)
-        )
+        train_and_val_idx, test_idx = next(skf)
         print("====== Test Fold {} ======".format(fold_test + 1))
         sss = StratifiedShuffleSplit(
             n_splits=1, test_size=1 / (num_folds - 1), random_state=RANDOM_SEED
         )
-
         sub_x = x[train_and_val_idx]
         sub_x_lab_length = x_lab_length[train_and_val_idx]
         sub_y = y[train_and_val_idx]
@@ -131,7 +129,6 @@ def start_pipeline(cfg):
         x_train, y_train = flatten_dataset(
             sub_x, sub_y, train_idx, sub_x_lab_length, case="los"
         )
-        print(train_idx)
 
         los_statistics = calculate_los_statistics(y_train)
         print(los_statistics)
