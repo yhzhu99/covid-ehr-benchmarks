@@ -304,8 +304,11 @@ def start_inference(cfg, device):
     model = build_model_from_cfg(cfg)
     model.load_state_dict(torch.load(f"checkpoints/{cfg.name}.pth"))
 
-    idx = 1000
-    out = model(x[idx : idx + 1])
+    idx = 4
+    _, out = model(x[idx : idx + 1])
+    los_statistics = {"los_mean": 7.3101974, "los_std": 6.9111395}
+    out = out * los_statistics["los_std"] + los_statistics["los_mean"]
+    # y = y * los_statistics["los_std"] + los_statistics["los_mean"]
     print("x_lab_length:", x_lab_length[idx : idx + 1])
     print("---- start y_true --------")
     print(y[idx : idx + 1])
