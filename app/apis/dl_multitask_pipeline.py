@@ -104,14 +104,14 @@ def val_epoch(model, device, dataloader, loss_fn, los_statistics):
     y_outcome_pred = np.array(y_outcome_pred)
     y_outcome_pred = np.stack([1 - y_outcome_pred, y_outcome_pred], axis=1)
     outcome_evaluation_scores = eval_metrics.print_metrics_binary(
-        y_outcome_true, y_outcome_pred
+        y_outcome_true, y_outcome_pred, verbose=0
     )
     y_los_true = np.array(y_los_true)
     y_los_pred = np.array(y_los_pred)
     y_los_true = reverse_zscore_los(y_los_true, los_statistics)
     y_los_pred = reverse_zscore_los(y_los_pred, los_statistics)
     los_evaluation_scores = eval_metrics.print_metrics_regression(
-        y_los_true, y_los_pred
+        y_los_true, y_los_pred, verbose=0
     )
     return np.array(val_loss).mean(), outcome_evaluation_scores, los_evaluation_scores
 
@@ -263,7 +263,7 @@ def start_pipeline(cfg, device):
         test_performance["test_auroc"].append(test_outcome_evaluation_scores["auroc"])
         test_performance["test_auprc"].append(test_outcome_evaluation_scores["auprc"])
         print(
-            f"Performance on test set {fold_test+1}: MAE = {test_los_evaluation_scores['mape']}, MSE = {test_los_evaluation_scores['mse']}, MAPE = {test_los_evaluation_scores['mape']}, ACC = {test_outcome_evaluation_scores['acc']}, AUROC = {test_outcome_evaluation_scores['auroc']}, AUPRC = {test_outcome_evaluation_scores['auprc']}"
+            f"Performance on test set {fold_test+1}: MAE = {test_los_evaluation_scores['mad']}, MSE = {test_los_evaluation_scores['mse']}, MAPE = {test_los_evaluation_scores['mape']}, ACC = {test_outcome_evaluation_scores['acc']}, AUROC = {test_outcome_evaluation_scores['auroc']}, AUPRC = {test_outcome_evaluation_scores['auprc']}"
         )
     # Calculate average performance on 10-fold test set
     test_mad_list = np.array(test_performance["test_mad"])
