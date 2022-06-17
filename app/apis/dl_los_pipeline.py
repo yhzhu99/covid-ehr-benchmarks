@@ -109,9 +109,9 @@ def calculate_los_statistics(dataset, train_idx):
 
 def zscore_los(dataset, los_statistics):
     """zscore scale y"""
-    dataset.y[:, :, 1] = (dataset.y[:, :, 1] - los_statistics["los_mean"]) / dataset.y[
-        :, :, 1
-    ]["los_std"]
+    dataset.y[:, :, 1] = (
+        dataset.y[:, :, 1] - los_statistics["los_mean"]
+    ) / los_statistics["los_std"]
     return dataset
 
 
@@ -152,11 +152,6 @@ def start_pipeline(cfg, device):
         sss = StratifiedShuffleSplit(
             n_splits=1, test_size=1 / (num_folds - 1), random_state=RANDOM_SEED
         )
-
-        test_sampler = SubsetRandomSampler(test_idx)
-        test_loader = DataLoader(
-            dataset, batch_size=cfg.batch_size, sampler=test_sampler
-        )
         sub_dataset = Dataset(
             dataset.x[train_and_val_idx],
             dataset.y[train_and_val_idx],
@@ -168,10 +163,16 @@ def start_pipeline(cfg, device):
             sss.split(np.arange(len(train_and_val_idx)), sub_dataset.y[:, 0, 0])
         )
 
-        print(train_idx)
-
+        # apply z-score transform los
         los_statistics = calculate_los_statistics(sub_dataset, train_idx)
         print(los_statistics)
+        sub_dataset = zscore_los(sub_dataset, los_statistics)
+        dataset = zscore_los(dataset, los_statistics)
+
+        test_sampler = SubsetRandomSampler(test_idx)
+        test_loader = DataLoader(
+            dataset, batch_size=cfg.batch_size, sampler=test_sampler
+        )
 
         train_sampler = SubsetRandomSampler(train_idx)
         val_sampler = SubsetRandomSampler(val_idx)
