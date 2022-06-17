@@ -17,7 +17,7 @@ if __name__ == "__main__":
         "gru_hm_multitask_ep100_kf10_bs64.yaml",
         "gru_hm_los_ep100_kf10_bs64.yaml",
     ]
-    my_pipeline = OmegaConf.load("configs/" + configs_options[5])
+    my_pipeline = OmegaConf.load("configs/" + configs_options[4])
     device = torch.device("cuda:0" if torch.cuda.is_available() == True else "cpu")
     cfg = create_app(my_pipeline, device)
     print("===[End]===")
