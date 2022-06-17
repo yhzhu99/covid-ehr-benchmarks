@@ -2,6 +2,7 @@ def early_prediction_outcome_metric(y_true, predictions, verbose=1):
     """
     > y_true: np.ndarray
     > predictions: np.ndarray
+    return metric (type: List)
     """
     metric = []
     num_patient, max_visits_len, _ = y_true.shape
@@ -32,3 +33,12 @@ def early_prediction_outcome_metric(y_true, predictions, verbose=1):
     if verbose:
         print(metric)
     return metric
+
+
+def early_prediction_los_metric(y_true, predictions, verbose=1):
+    """
+    > y_true: np.ndarray
+    > predictions: np.ndarray
+    return metric (type: List)
+    """
+    pass
