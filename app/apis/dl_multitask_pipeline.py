@@ -62,7 +62,7 @@ def train_epoch(model, device, dataloader, loss_fn, optimizer):
     return np.array(train_loss).mean()
 
 
-def val_epoch(model, device, dataloader, loss_fn):
+def val_epoch(model, device, dataloader, loss_fn, los_statistics):
     """
     val / test
     """
@@ -106,10 +106,40 @@ def val_epoch(model, device, dataloader, loss_fn):
     outcome_evaluation_scores = eval_metrics.print_metrics_binary(
         y_outcome_true, y_outcome_pred
     )
+    y_los_true = np.array(y_los_true)
+    y_los_pred = np.array(y_los_pred)
+    y_los_true = reverse_zscore_los(y_los_true, los_statistics)
+    y_los_pred = reverse_zscore_los(y_los_pred, los_statistics)
     los_evaluation_scores = eval_metrics.print_metrics_regression(
         y_los_true, y_los_pred
     )
     return np.array(val_loss).mean(), outcome_evaluation_scores, los_evaluation_scores
+
+
+def calculate_los_statistics(dataset, train_idx):
+    """calculate los's mean/std"""
+    y = []
+    for i in train_idx:
+        for j in range(dataset.x_lab_length[i]):
+            y.append(dataset.y[i][j][1])
+    y = np.array(y)
+    mean, std = y.mean(), y.std()
+    los_statistics = {"los_mean": mean, "los_std": std}
+    return los_statistics
+
+
+def zscore_los(dataset, los_statistics):
+    """zscore scale y"""
+    dataset.y[:, :, 1] = (
+        dataset.y[:, :, 1] - los_statistics["los_mean"]
+    ) / los_statistics["los_std"]
+    return dataset
+
+
+def reverse_zscore_los(y, los_statistics):
+    """reverse zscore y"""
+    y = y * los_statistics["los_std"] + los_statistics["los_mean"]
+    return y
 
 
 def start_pipeline(cfg, device):
@@ -139,16 +169,14 @@ def start_pipeline(cfg, device):
     )
     skf = kfold_test.split(np.arange(len(dataset)), dataset.y[:, 0, 0])
     for fold_test in range(train_fold):
+        x, y, x_lab_length = load_data(dataset_type)
+        dataset = get_dataset(x, y, x_lab_length)
         train_and_val_idx, test_idx = next(skf)
         print("====== Test Fold {} ======".format(fold_test + 1))
         sss = StratifiedShuffleSplit(
             n_splits=1, test_size=1 / (num_folds - 1), random_state=RANDOM_SEED
         )
 
-        test_sampler = SubsetRandomSampler(test_idx)
-        test_loader = DataLoader(
-            dataset, batch_size=cfg.batch_size, sampler=test_sampler
-        )
         sub_dataset = Dataset(
             dataset.x[train_and_val_idx],
             dataset.y[train_and_val_idx],
@@ -160,6 +188,16 @@ def start_pipeline(cfg, device):
             sss.split(np.arange(len(train_and_val_idx)), sub_dataset.y[:, 0, 0])
         )
 
+        # apply z-score transform los
+        los_statistics = calculate_los_statistics(sub_dataset, train_idx)
+        print(los_statistics)
+        sub_dataset = zscore_los(sub_dataset, los_statistics)
+        dataset = zscore_los(dataset, los_statistics)
+
+        test_sampler = SubsetRandomSampler(test_idx)
+        test_loader = DataLoader(
+            dataset, batch_size=cfg.batch_size, sampler=test_sampler
+        )
         train_sampler = SubsetRandomSampler(train_idx)
         val_sampler = SubsetRandomSampler(val_idx)
         train_loader = DataLoader(
@@ -186,7 +224,7 @@ def start_pipeline(cfg, device):
                 val_loss,
                 val_outcome_evaluation_scores,
                 val_los_evaluation_scores,
-            ) = val_epoch(model, device, val_loader, criterion)
+            ) = val_epoch(model, device, val_loader, criterion, los_statistics)
             # save performance history on validation set
             print(
                 "Epoch:{}/{} AVG Training Loss:{:.3f} AVG Val Loss:{:.3f}".format(
@@ -216,7 +254,7 @@ def start_pipeline(cfg, device):
             test_loss,
             test_outcome_evaluation_scores,
             test_los_evaluation_scores,
-        ) = val_epoch(model, device, test_loader, criterion)
+        ) = val_epoch(model, device, test_loader, criterion, los_statistics)
         test_performance["test_loss"].append(test_loss)
         test_performance["test_mad"].append(test_los_evaluation_scores["mad"])
         test_performance["test_mse"].append(test_los_evaluation_scores["mse"])
