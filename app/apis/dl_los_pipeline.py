@@ -92,6 +92,37 @@ def val_epoch(model, device, dataloader, loss_fn):
     return np.array(val_loss).mean(), evaluation_scores
 
 
+def calculate_los_statistics(dataset, train_idx):
+    """calculate los's mean/std"""
+    # y = dataset.y[train_idx][:, :, 1]
+    y = []
+    for i in train_idx:
+        # print(dataset.y[i][:dataset.x_lab_length[i].long()])
+        for j in range(dataset.x_lab_length[i]):
+            y.append(dataset.y[i][j][1])
+        # y.extend(dataset.y[i][:dataset.x_lab_length[i].long()].tolist())
+    y = np.array(y)
+    mean, std = y.mean(), y.std()
+    los_statistics = {"los_mean": mean, "los_std": std}
+    return los_statistics
+
+
+def zscore_los(dataset, los_statistics):
+    """zscore scale y"""
+    dataset.y[:, :, 1] = (dataset.y[:, :, 1] - los_statistics["los_mean"]) / dataset.y[
+        :, :, 1
+    ]["los_std"]
+    return dataset
+
+
+def reverse_zscore_los(dataset, los_statistics):
+    """reverse zscore y"""
+    dataset.y[:, :, 1] = (
+        dataset.y[:, :, 1] * los_statistics["los_std"] + los_statistics["los_mean"]
+    )
+    return dataset
+
+
 def start_pipeline(cfg, device):
     dataset_type, method, num_folds, train_fold = (
         cfg.dataset,
@@ -136,6 +167,11 @@ def start_pipeline(cfg, device):
         train_idx, val_idx = next(
             sss.split(np.arange(len(train_and_val_idx)), sub_dataset.y[:, 0, 0])
         )
+
+        print(train_idx)
+
+        los_statistics = calculate_los_statistics(sub_dataset, train_idx)
+        print(los_statistics)
 
         train_sampler = SubsetRandomSampler(train_idx)
         val_sampler = SubsetRandomSampler(val_idx)
