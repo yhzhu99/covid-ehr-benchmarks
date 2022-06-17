@@ -62,7 +62,7 @@ def train_epoch(model, device, dataloader, loss_fn, optimizer):
     return np.array(train_loss).mean()
 
 
-def val_epoch(model, device, dataloader, loss_fn):
+def val_epoch(model, device, dataloader, loss_fn, los_statistics):
     """
     val / test
     """
@@ -88,6 +88,10 @@ def val_epoch(model, device, dataloader, loss_fn):
             for i in range(len(batch_y)):
                 y_pred.extend(output[i][: batch_x_lab_length[i].long()].tolist())
                 y_true.extend(batch_y[i][: batch_x_lab_length[i].long()].tolist())
+    y_pred = np.array(y_pred)
+    y_true = np.array(y_true)
+    y_pred = reverse_zscore_los(y_pred, los_statistics)
+    y_true = reverse_zscore_los(y_true, los_statistics)
     evaluation_scores = eval_metrics.print_metrics_regression(y_true, y_pred, verbose=1)
     return np.array(val_loss).mean(), evaluation_scores
 
@@ -115,12 +119,10 @@ def zscore_los(dataset, los_statistics):
     return dataset
 
 
-def reverse_zscore_los(dataset, los_statistics):
+def reverse_zscore_los(y, los_statistics):
     """reverse zscore y"""
-    dataset.y[:, :, 1] = (
-        dataset.y[:, :, 1] * los_statistics["los_std"] + los_statistics["los_mean"]
-    )
-    return dataset
+    y = y * los_statistics["los_std"] + los_statistics["los_mean"]
+    return y
 
 
 def start_pipeline(cfg, device):
@@ -194,7 +196,7 @@ def start_pipeline(cfg, device):
         for epoch in range(cfg.epochs):
             train_loss = train_epoch(model, device, train_loader, criterion, optimizer)
             val_loss, val_evaluation_scores = val_epoch(
-                model, device, val_loader, criterion
+                model, device, val_loader, criterion, los_statistics
             )
             # save performance history on validation set
             print(
@@ -219,7 +221,7 @@ def start_pipeline(cfg, device):
         model = build_model_from_cfg(cfg)
         model.load_state_dict(torch.load(f"checkpoints/{cfg.name}.pth"))
         test_loss, test_evaluation_scores = val_epoch(
-            model, device, test_loader, criterion
+            model, device, test_loader, criterion, los_statistics
         )
         test_performance["test_loss"].append(test_loss)
         test_performance["test_mad"].append(test_evaluation_scores["mad"])
