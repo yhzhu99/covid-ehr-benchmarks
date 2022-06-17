@@ -90,8 +90,12 @@ def val_epoch(model, device, dataloader, loss_fn, los_statistics):
                 y_true.extend(batch_y[i][: batch_x_lab_length[i].long()].tolist())
     y_pred = np.array(y_pred)
     y_true = np.array(y_true)
+    # print("y_pred before: ", y_pred)
     y_pred = reverse_zscore_los(y_pred, los_statistics)
+    # print("y_pred after: ", y_pred)
+    # print("y_true before: ", y_true)
     y_true = reverse_zscore_los(y_true, los_statistics)
+    # print("y_true before: ", y_true)
     evaluation_scores = eval_metrics.print_metrics_regression(y_true, y_pred, verbose=1)
     return np.array(val_loss).mean(), evaluation_scores
 
@@ -149,6 +153,8 @@ def start_pipeline(cfg, device):
     )
     skf = kfold_test.split(np.arange(len(dataset)), dataset.y[:, 0, 0])
     for fold_test in range(train_fold):
+        x, y, x_lab_length = load_data(dataset_type)
+        dataset = get_dataset(x, y, x_lab_length)
         train_and_val_idx, test_idx = next(skf)
         print("====== Test Fold {} ======".format(fold_test + 1))
         sss = StratifiedShuffleSplit(
@@ -212,14 +218,18 @@ def start_pipeline(cfg, device):
             # if mad is lower, than set the best mad, save the model, and test it on the test set
             if val_evaluation_scores["mad"] < best_val_performance:
                 best_val_performance = val_evaluation_scores["mad"]
-                torch.save(model.state_dict(), f"checkpoints/{cfg.name}.pth")
+                torch.save(
+                    model.state_dict(), f"checkpoints/{cfg.name}_fold{fold_test+1}.pth"
+                )
         all_history["test_fold_{}".format(fold_test + 1)] = history
         print(
             f"Best performance on val set {fold_test+1}: \
             MAE = {best_val_performance}"
         )
         model = build_model_from_cfg(cfg)
-        model.load_state_dict(torch.load(f"checkpoints/{cfg.name}.pth"))
+        model.load_state_dict(
+            torch.load(f"checkpoints/{cfg.name}_fold{fold_test+1}.pth")
+        )
         test_loss, test_evaluation_scores = val_epoch(
             model, device, test_loader, criterion, los_statistics
         )
