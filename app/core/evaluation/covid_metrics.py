@@ -1,4 +1,5 @@
 import numpy as np
+from sklearn import metrics
 
 
 def early_prediction_outcome_metric(y_true, predictions, verbose=1):
@@ -47,18 +48,55 @@ def early_prediction_outcome_metric(y_true, predictions, verbose=1):
     return result
 
 
-def early_prediction_los_metric(y_true, predictions, verbose=1):
+def sigma(los):
     """
+    los = real los of patients (from this visit to the end)
+    """
+    if los >= 2:
+        return 0
+    elif 2 > los > 1:
+        return 2 - los
+    else:
+        return 1
+
+
+def multitask_los_metric(
+    y_true,
+    y_pred_outcome,
+    y_pred_los,
+    max_los=300,
+    sigma_func=sigma,
+    metrics_strategy="MAE",
+    verbose=1,
+):
+    """
+    > predictions: np.ndarray
+      shape (num_records, ) --> [los]
     > y_true: np.ndarray
-      shape (num_patients, 2), 2 --> [outcome, los]
+      shape (num_records, 2), 2 --> [outcome, los]
       eg: 2 records, they have outcome = 1, 0 separately
           then y_true = [[1, 5], [0, 3]]
           5 and 3 denotes their length of stay
-    > predictions: np.ndarray
     return metric (type: List)
 
     note:
       - y/predictions are already flattened here
       - so we don't need to consider visits_length
     """
-    pass
+    metric = 0
+    y_true_outcome = y_true[:, 0]
+    y_true_los = y_true[:, 1]
+    if metrics_strategy == "MAE":
+        metric += metrics.median_absolute_error(y_true_los, y_pred_los)
+    elif metrics_strategy == "MSE":
+        metric += metrics.mean_squared_error(y_true_los, y_pred_los)
+    elif metrics_strategy == "MAPE":
+        metric += metrics.mean_absolute_percentage_error(y_true_los, y_pred_los)
+    metric += np.mean(
+        np.abs(y_true_outcome - y_pred_outcome)
+        * max_los
+        * np.array(list(map(lambda x: sigma_func(x), y_true_los)))
+    )
+    if verbose:
+        print(metric)
+    return metric
