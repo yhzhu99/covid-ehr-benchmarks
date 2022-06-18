@@ -1,2 +1,2 @@
-from .early_prediction_metric import *
+from .covid_metrics import *
 from .eval_metrics import *
