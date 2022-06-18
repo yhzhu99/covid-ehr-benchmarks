@@ -1,5 +1,5 @@
 import numpy as np
-from sklearn import metrics
+from sklearn import metrics as sklearn_metrics
 
 
 def early_prediction_outcome_metric(y_true, predictions, verbose=1):
@@ -87,11 +87,11 @@ def multitask_los_metric(
     y_true_outcome = y_true[:, 0]
     y_true_los = y_true[:, 1]
     if metrics_strategy == "MAE":
-        metric += metrics.median_absolute_error(y_true_los, y_pred_los)
+        metric += sklearn_metrics.median_absolute_error(y_true_los, y_pred_los)
     elif metrics_strategy == "MSE":
-        metric += metrics.mean_squared_error(y_true_los, y_pred_los)
+        metric += sklearn_metrics.mean_squared_error(y_true_los, y_pred_los)
     elif metrics_strategy == "MAPE":
-        metric += metrics.mean_absolute_percentage_error(y_true_los, y_pred_los)
+        metric += sklearn_metrics.mean_absolute_percentage_error(y_true_los, y_pred_los)
     metric += np.mean(
         np.abs(y_true_outcome - y_pred_outcome)
         * max_los
