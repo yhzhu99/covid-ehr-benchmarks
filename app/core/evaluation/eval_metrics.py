@@ -106,15 +106,17 @@ def print_metrics_regression(y_true, predictions, verbose=1):
     )
     mad = sklearn_metrics.mean_absolute_error(y_true, predictions)
     mse = sklearn_metrics.mean_squared_error(y_true, predictions)
+    rmse = sklearn_metrics.mean_squared_error(y_true, predictions, squared=False)
     mape = mean_absolute_percentage_error(y_true, predictions)
 
     if verbose:
-        print("Mean absolute deviation (MAD) = {}".format(mad))
-        print("Mean squared error (MSE) = {}".format(mse))
-        print("Mean absolute percentage error (MAPE) = {}".format(mape))
-        print("Cohen kappa score = {}".format(kappa))
+        print("MAE = {}".format(mad))
+        print("MSE = {}".format(mse))
+        print("RMSE = {}".format(rmse))
+        print("MAPE = {}".format(mape))
+        print("Cohen kappa = {}".format(kappa))
 
-    return {"mad": mad, "mse": mse, "mape": mape, "kappa": kappa}
+    return {"mad": mad, "mse": mse, "rmse": rmse, "mape": mape, "kappa": kappa}
 
 
 class LogBins:
