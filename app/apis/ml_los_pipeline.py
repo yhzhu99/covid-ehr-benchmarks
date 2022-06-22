@@ -148,7 +148,7 @@ def start_pipeline(cfg):
         model = train(x_train, y_train, method)
 
         if mode == "val":
-            history = {"val_mad": [], "val_mse": [], "val_mape": []}
+            history = {"val_mad": [], "val_mse": [], "val_mape": [], "val_rmse": []}
             val_evaluation_scores = validate(x_val, y_val, model, los_statistics)
             history["val_mad"].append(val_evaluation_scores["mad"])
             history["val_mse"].append(val_evaluation_scores["mse"])
