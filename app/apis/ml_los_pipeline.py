@@ -99,7 +99,12 @@ def start_pipeline(cfg):
     x, y_outcome, y_los, x_lab_length = numpy_dataset(x, y, x_lab_length)
 
     all_history = {}
-    test_performance = {"test_mad": [], "test_mse": [], "test_mape": []}
+    test_performance = {
+        "test_mad": [],
+        "test_mse": [],
+        "test_mape": [],
+        "test_rmse": [],
+    }
 
     kfold_test = StratifiedKFold(
         n_splits=num_folds, shuffle=True, random_state=RANDOM_SEED
@@ -148,12 +153,14 @@ def start_pipeline(cfg):
             history["val_mad"].append(val_evaluation_scores["mad"])
             history["val_mse"].append(val_evaluation_scores["mse"])
             history["val_mape"].append(val_evaluation_scores["mape"])
+            history["val_rmse"].append(val_evaluation_scores["rmse"])
             all_history["test_fold_{}".format(fold_test + 1)] = history
             print(
                 f"Performance on val set {fold_test+1}: \
                 MAE = {val_evaluation_scores['mad']}, \
                 MSE = {val_evaluation_scores['mse']}, \
-                MAPE = {val_evaluation_scores['mape']}"
+                MAPE = {val_evaluation_scores['mape']},\
+                RMSE = {val_evaluation_scores['rmse']}"
             )
 
         elif mode == "test":
@@ -161,21 +168,27 @@ def start_pipeline(cfg):
             test_performance["test_mad"].append(test_evaluation_scores["mad"])
             test_performance["test_mse"].append(test_evaluation_scores["mse"])
             test_performance["test_mape"].append(test_evaluation_scores["mape"])
+            test_performance["test_rmse"].append(test_evaluation_scores["rmse"])
             print(
                 f"Performance on test set {fold_test+1}: \
                 MAE = {test_evaluation_scores['mad']}, \
                 MSE = {test_evaluation_scores['mse']}, \
-                MAPE = {test_evaluation_scores['mape']}"
+                MAPE = {test_evaluation_scores['mape']}, \
+                RMSE = {test_evaluation_scores['rmse']}"
             )
 
             # Calculate average performance on 10-fold test set
             test_mad_list = np.array(test_performance["test_mad"])
             test_mse_list = np.array(test_performance["test_mse"])
             test_mape_list = np.array(test_performance["test_mape"])
+            test_rmse_list = np.array(test_performance["test_rmse"])
     if mode == "test":
         print("====================== TEST RESULT ======================")
         print("MAE: {:.3f} ({:.3f})".format(test_mad_list.mean(), test_mad_list.std()))
         print("MSE: {:.3f} ({:.3f})".format(test_mse_list.mean(), test_mse_list.std()))
         print(
             "MAPE: {:.3f} ({:.3f})".format(test_mape_list.mean(), test_mape_list.std())
+        )
+        print(
+            "RMSE: {:.3f} ({:.3f})".format(test_rmse_list.mean(), test_rmse_list.std())
         )
