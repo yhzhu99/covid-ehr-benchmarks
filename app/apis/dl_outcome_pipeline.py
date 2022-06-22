@@ -28,7 +28,7 @@ from torch.utils.data import (
     random_split,
 )
 
-from app.core.evaluation import eval_metrics
+from app.core.evaluation import covid_metrics, eval_metrics
 from app.core.utils import RANDOM_SEED
 from app.datasets import get_dataset, load_data
 from app.datasets.dl import Dataset
@@ -69,6 +69,7 @@ def val_epoch(model, device, dataloader, loss_fn):
     val_loss = []
     y_pred = []
     y_true = []
+    y_true_all = []
     model.eval()
     with torch.no_grad():
         for step, data in enumerate(dataloader):
@@ -78,6 +79,7 @@ def val_epoch(model, device, dataloader, loss_fn):
                 batch_y.float(),
                 batch_x_lab_length.float(),
             )
+            all_y = batch_y
             batch_y = batch_y[:, :, 0]  # 0: outcome, 1: los
             batch_y = batch_y.unsqueeze(-1)
             output = model(batch_x)
@@ -86,10 +88,16 @@ def val_epoch(model, device, dataloader, loss_fn):
             for i in range(len(batch_y)):
                 y_pred.extend(output[i][: batch_x_lab_length[i].long()].tolist())
                 y_true.extend(batch_y[i][: batch_x_lab_length[i].long()].tolist())
+                y_true_all.extend(all_y[i][: batch_x_lab_length[i].long()].tolist())
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
+    y_true_all = np.array(y_true_all)
+    early_prediction_score = covid_metrics.early_prediction_outcome_metric(
+        y_true_all, y_pred, verbose=0
+    )
     y_pred = np.stack([1 - y_pred, y_pred], axis=1)
     evaluation_scores = eval_metrics.print_metrics_binary(y_true, y_pred, verbose=0)
+    evaluation_scores["early_prediction_score"] = early_prediction_score
     return np.array(val_loss).mean(), evaluation_scores
 
 
@@ -111,6 +119,7 @@ def start_pipeline(cfg, device):
         "test_accuracy": [],
         "test_auroc": [],
         "test_auprc": [],
+        "test_early_prediction_score": [],
     }
     kfold_test = StratifiedKFold(
         n_splits=num_folds, shuffle=True, random_state=RANDOM_SEED
@@ -153,6 +162,7 @@ def start_pipeline(cfg, device):
             "val_accuracy": [],
             "val_auroc": [],
             "val_auprc": [],
+            "val_early_prediction_score": [],
         }
         best_val_performance = 0.0
         for epoch in range(cfg.epochs):
@@ -171,6 +181,9 @@ def start_pipeline(cfg, device):
             history["val_accuracy"].append(val_evaluation_scores["acc"])
             history["val_auroc"].append(val_evaluation_scores["auroc"])
             history["val_auprc"].append(val_evaluation_scores["auprc"])
+            history["val_early_prediction_score"].append(
+                val_evaluation_scores["early_prediction_score"]
+            )
             # if auroc is better, than set the best auroc, save the model, and test it on the test set
             if val_evaluation_scores["auroc"] > best_val_performance:
                 best_val_performance = val_evaluation_scores["auroc"]
@@ -189,13 +202,23 @@ def start_pipeline(cfg, device):
         test_performance["test_accuracy"].append(test_evaluation_scores["acc"])
         test_performance["test_auroc"].append(test_evaluation_scores["auroc"])
         test_performance["test_auprc"].append(test_evaluation_scores["auprc"])
+        test_performance["test_early_prediction_score"].append(
+            test_evaluation_scores["early_prediction_score"]
+        )
         print(
-            f"Performance on test set {fold_test+1}: ACC = {test_evaluation_scores['acc']}, AUROC = {test_evaluation_scores['auroc']}, AUPRC = {test_evaluation_scores['auprc']}"
+            f"Performance on test set {fold_test+1}: \
+            ACC = {test_evaluation_scores['acc']}, \
+            AUROC = {test_evaluation_scores['auroc']}, \
+            AUPRC = {test_evaluation_scores['auprc']}, \
+            EarlyPredictionScore = {test_evaluation_scores['early_prediction_score']}"
         )
     # Calculate average performance on 10-fold test set
     test_accuracy_list = np.array(test_performance["test_accuracy"])
     test_auroc_list = np.array(test_performance["test_auroc"])
     test_auprc_list = np.array(test_performance["test_auprc"])
+    test_early_prediction_list = np.array(
+        test_performance["test_early_prediction_score"]
+    )
     print(
         "ACC: {:.3f} ({:.3f})".format(
             test_accuracy_list.mean(), test_accuracy_list.std()
@@ -206,4 +229,9 @@ def start_pipeline(cfg, device):
     )
     print(
         "AUPRC: {:.3f} ({:.3f})".format(test_auprc_list.mean(), test_auprc_list.std())
+    )
+    print(
+        "EarlyPredictionScore: {:.3f} ({:.3f})".format(
+            test_early_prediction_list.mean(), test_early_prediction_list.std()
+        )
     )
