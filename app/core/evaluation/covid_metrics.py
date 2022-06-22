@@ -44,7 +44,7 @@ def early_prediction_outcome_metric(y_true, predictions, verbose=1):
             metric.append(0)
     result = np.array(metric).mean()
     if verbose:
-        print(result)
+        print("Early Prediction Score:", result)
     return result
 
 
@@ -98,5 +98,5 @@ def multitask_los_metric(
         * np.array(list(map(lambda x: sigma_func(x), y_true_los)))
     )
     if verbose:
-        print(metric)
+        print("LOS Score:", metric)
     return metric
