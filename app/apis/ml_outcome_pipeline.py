@@ -137,6 +137,7 @@ def start_pipeline(cfg):
                 "val_accuracy": [],
                 "val_auroc": [],
                 "val_auprc": [],
+                "val_early_prediction_score": [],
             }
             val_evaluation_scores = validate(x_val, y_val, model)
 
