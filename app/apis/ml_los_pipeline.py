@@ -176,13 +176,32 @@ def start_pipeline(cfg):
                 MAPE = {test_evaluation_scores['mape']}, \
                 RMSE = {test_evaluation_scores['rmse']}"
             )
-
-            # Calculate average performance on 10-fold test set
-            test_mad_list = np.array(test_performance["test_mad"])
-            test_mse_list = np.array(test_performance["test_mse"])
-            test_mape_list = np.array(test_performance["test_mape"])
-            test_rmse_list = np.array(test_performance["test_rmse"])
-    if mode == "test":
+    if mode == "val":
+        # Calculate average performance on 10-fold val set
+        val_mad_list = []
+        val_mse_list = []
+        val_mape_list = []
+        val_rmse_list = []
+        for f in range(num_folds):
+            val_mad_list.extend(all_history[f"test_fold_{f + 1}"]["val_mad"])
+            val_mse_list.extend(all_history[f"test_fold_{f + 1}"]["val_mse"])
+            val_mape_list.extend(all_history[f"test_fold_{f + 1}"]["val_mape"])
+            val_rmse_list.extend(all_history[f"test_fold_{f + 1}"]["val_rmse"])
+        val_mad_list = np.array(val_mad_list)
+        val_mse_list = np.array(val_mse_list)
+        val_mape_list = np.array(val_mape_list)
+        val_rmse_list = np.array(val_rmse_list)
+        print("====================== VAL RESULT ======================")
+        print("MAE: {:.3f} ({:.3f})".format(val_mad_list.mean(), val_mad_list.std()))
+        print("MSE: {:.3f} ({:.3f})".format(val_mse_list.mean(), val_mse_list.std()))
+        print("MAPE: {:.3f} ({:.3f})".format(val_mape_list.mean(), val_mape_list.std()))
+        print("RMSE: {:.3f} ({:.3f})".format(val_rmse_list.mean(), val_rmse_list.std()))
+    elif mode == "test":
+        # Calculate average performance on 10-fold test set
+        test_mad_list = np.array(test_performance["test_mad"])
+        test_mse_list = np.array(test_performance["test_mse"])
+        test_mape_list = np.array(test_performance["test_mape"])
+        test_rmse_list = np.array(test_performance["test_rmse"])
         print("====================== TEST RESULT ======================")
         print("MAE: {:.3f} ({:.3f})".format(test_mad_list.mean(), test_mad_list.std()))
         print("MSE: {:.3f} ({:.3f})".format(test_mse_list.mean(), test_mse_list.std()))
