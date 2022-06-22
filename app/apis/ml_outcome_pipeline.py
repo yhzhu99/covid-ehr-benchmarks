@@ -170,15 +170,49 @@ def start_pipeline(cfg):
                 AUPRC = {test_evaluation_scores['auprc']}, \
                 EarlyPredictionScore = {test_evaluation_scores['early_prediction_score']}"
             )
-
-            # Calculate average performance on 10-fold test set
-            test_accuracy_list = np.array(test_performance["test_accuracy"])
-            test_auroc_list = np.array(test_performance["test_auroc"])
-            test_auprc_list = np.array(test_performance["test_auprc"])
-            test_early_prediction_list = np.array(
-                test_performance["test_early_prediction_score"]
+    if mode == "val":
+        # Calculate average performance on 10-fold val set
+        val_accuracy_list = []
+        val_auroc_list = []
+        val_auprc_list = []
+        val_early_prediction_score_list = []
+        for f in range(num_folds):
+            val_accuracy_list.extend(all_history[f"test_fold_{f + 1}"]["val_accuracy"])
+            val_auroc_list.extend(all_history[f"test_fold_{f + 1}"]["val_auroc"])
+            val_auprc_list.extend(all_history[f"test_fold_{f + 1}"]["val_auprc"])
+            val_early_prediction_score_list.extend(
+                all_history[f"test_fold_{f + 1}"]["val_early_prediction_score"]
             )
-    if mode == "test":
+        val_accuracy_list = np.array(val_accuracy_list)
+        val_auroc_list = np.array(val_auroc_list)
+        val_auprc_list = np.array(val_auprc_list)
+        val_early_prediction_score_list = np.array(val_early_prediction_score_list)
+        print("====================== VAL RESULT ======================")
+        print(
+            "MAE: {:.3f} ({:.3f})".format(
+                val_accuracy_list.mean(), val_accuracy_list.std()
+            )
+        )
+        print(
+            "MSE: {:.3f} ({:.3f})".format(val_auroc_list.mean(), val_auroc_list.std())
+        )
+        print(
+            "MAPE: {:.3f} ({:.3f})".format(val_auprc_list.mean(), val_auprc_list.std())
+        )
+        print(
+            "RMSE: {:.3f} ({:.3f})".format(
+                val_early_prediction_score_list.mean(),
+                val_early_prediction_score_list.std(),
+            )
+        )
+    elif mode == "test":
+        # Calculate average performance on 10-fold test set
+        test_accuracy_list = np.array(test_performance["test_accuracy"])
+        test_auroc_list = np.array(test_performance["test_auroc"])
+        test_auprc_list = np.array(test_performance["test_auprc"])
+        test_early_prediction_list = np.array(
+            test_performance["test_early_prediction_score"]
+        )
         print("====================== TEST RESULT ======================")
         print(
             "ACC: {:.3f} ({:.3f})".format(
