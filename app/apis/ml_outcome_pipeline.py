@@ -33,6 +33,9 @@ from app.models import (
 
 
 def train(x, y, method):
+    print(x.shape, y.shape)
+    y = y[:, 0]
+
     if method == "xgboost":
         model = xgb.XGBClassifier(
             verbosity=0, n_estimators=1000, learning_rate=0.1, use_label_encoder=False
@@ -64,10 +67,13 @@ def train(x, y, method):
 
 def validate(x, y, model):
     """val/test"""
-    y_pred = model.predict(x)
-    evaluation_scores = eval_metrics.print_metrics_binary(y, y_pred, verbose=0)
+    y_outcome_pred = model.predict(x)
+    y_outcome_true = y[:, 0]
+    evaluation_scores = eval_metrics.print_metrics_binary(
+        y_outcome_true, y_outcome_pred, verbose=0
+    )
     early_prediction_score = covid_metrics.early_prediction_outcome_metric(
-        y, y_pred, verbose=1
+        y, y_outcome_pred, verbose=1
     )
     evaluation_scores["early_prediction_score"] = early_prediction_score
     return evaluation_scores
@@ -86,7 +92,12 @@ def start_pipeline(cfg):
     x, y_outcome, y_los, x_lab_length = numpy_dataset(x, y, x_lab_length)
 
     all_history = {}
-    test_performance = {"test_accuracy": [], "test_auroc": [], "test_auprc": []}
+    test_performance = {
+        "test_accuracy": [],
+        "test_auroc": [],
+        "test_auprc": [],
+        "test_early_prediction_score": [],
+    }
 
     kfold_test = StratifiedKFold(
         n_splits=num_folds, shuffle=True, random_state=RANDOM_SEED
@@ -116,7 +127,7 @@ def start_pipeline(cfg):
             sub_x, sub_y, val_idx, sub_x_lab_length, case="outcome"
         )
         x_test, y_test = flatten_dataset(x, y, test_idx, x_lab_length, case="outcome")
-
+        print(y_train.shape)
         all_history["test_fold_{}".format(fold_test + 1)] = {}
 
         model = train(x_train, y_train, method)
@@ -149,6 +160,9 @@ def start_pipeline(cfg):
             test_performance["test_accuracy"].append(test_evaluation_scores["acc"])
             test_performance["test_auroc"].append(test_evaluation_scores["auroc"])
             test_performance["test_auprc"].append(test_evaluation_scores["auprc"])
+            test_performance["test_early_prediction_score"].append(
+                test_evaluation_scores["early_prediction_score"]
+            )
             print(
                 f"Performance on test set {fold_test+1}: \
                 ACC = {test_evaluation_scores['acc']}, \
@@ -162,7 +176,7 @@ def start_pipeline(cfg):
             test_auroc_list = np.array(test_performance["test_auroc"])
             test_auprc_list = np.array(test_performance["test_auprc"])
             test_early_prediction_list = np.array(
-                test_performance["early_prediction_score"]
+                test_performance["test_early_prediction_score"]
             )
     if mode == "test":
         print("====================== TEST RESULT ======================")
