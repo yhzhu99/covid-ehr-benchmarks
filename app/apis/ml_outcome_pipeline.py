@@ -176,34 +176,33 @@ def start_pipeline(cfg):
         val_accuracy_list = []
         val_auroc_list = []
         val_auprc_list = []
-        val_early_prediction_score_list = []
+        val_early_prediction_list = []
         for f in range(num_folds):
             val_accuracy_list.extend(all_history[f"test_fold_{f + 1}"]["val_accuracy"])
             val_auroc_list.extend(all_history[f"test_fold_{f + 1}"]["val_auroc"])
             val_auprc_list.extend(all_history[f"test_fold_{f + 1}"]["val_auprc"])
-            val_early_prediction_score_list.extend(
+            val_early_prediction_list.extend(
                 all_history[f"test_fold_{f + 1}"]["val_early_prediction_score"]
             )
         val_accuracy_list = np.array(val_accuracy_list)
         val_auroc_list = np.array(val_auroc_list)
         val_auprc_list = np.array(val_auprc_list)
-        val_early_prediction_score_list = np.array(val_early_prediction_score_list)
+        val_early_prediction_list = np.array(val_early_prediction_list)
         print("====================== VAL RESULT ======================")
         print(
-            "MAE: {:.3f} ({:.3f})".format(
+            "ACC: {:.3f} ({:.3f})".format(
                 val_accuracy_list.mean(), val_accuracy_list.std()
             )
         )
         print(
-            "MSE: {:.3f} ({:.3f})".format(val_auroc_list.mean(), val_auroc_list.std())
+            "AUROC: {:.3f} ({:.3f})".format(val_auroc_list.mean(), val_auroc_list.std())
         )
         print(
-            "MAPE: {:.3f} ({:.3f})".format(val_auprc_list.mean(), val_auprc_list.std())
+            "AUPRC: {:.3f} ({:.3f})".format(val_auprc_list.mean(), val_auprc_list.std())
         )
         print(
-            "RMSE: {:.3f} ({:.3f})".format(
-                val_early_prediction_score_list.mean(),
-                val_early_prediction_score_list.std(),
+            "EarlyPredictionScore: {:.3f} ({:.3f})".format(
+                val_early_prediction_list.mean(), val_early_prediction_list.std()
             )
         )
     elif mode == "test":
