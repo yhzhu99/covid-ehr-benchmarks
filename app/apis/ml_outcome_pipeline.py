@@ -19,7 +19,7 @@ from sklearn.model_selection import (
 )
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
-from app.core.evaluation import eval_metrics
+from app.core.evaluation import covid_metrics, eval_metrics
 from app.core.utils import RANDOM_SEED, init_random
 from app.datasets import get_dataset, load_data
 from app.datasets.dl import Dataset
@@ -63,15 +63,13 @@ def train(x, y, method):
 
 
 def validate(x, y, model):
+    """val/test"""
     y_pred = model.predict(x)
     evaluation_scores = eval_metrics.print_metrics_binary(y, y_pred, verbose=0)
-    return evaluation_scores
-
-
-def test(x, y, model):
-    y_pred = model.predict(x)
-    # print(y_pred[0:10], y[0:10])
-    evaluation_scores = eval_metrics.print_metrics_binary(y, y_pred, verbose=0)
+    early_prediction_score = covid_metrics.early_prediction_outcome_metric(
+        y, y_pred, verbose=1
+    )
+    evaluation_scores["early_prediction_score"] = early_prediction_score
     return evaluation_scores
 
 
@@ -130,19 +128,24 @@ def start_pipeline(cfg):
                 "val_auprc": [],
             }
             val_evaluation_scores = validate(x_val, y_val, model)
+
             history["val_accuracy"].append(val_evaluation_scores["acc"])
             history["val_auroc"].append(val_evaluation_scores["auroc"])
             history["val_auprc"].append(val_evaluation_scores["auprc"])
+            history["val_early_prediction_score"].append(
+                val_evaluation_scores["early_prediction_score"]
+            )
             all_history["test_fold_{}".format(fold_test + 1)] = history
             print(
                 f"Performance on val set {fold_test+1}: \
                 ACC = {val_evaluation_scores['acc']}, \
                 AUROC = {val_evaluation_scores['auroc']}, \
-                AUPRC = {val_evaluation_scores['auprc']}"
+                AUPRC = {val_evaluation_scores['auprc']}, \
+                EarlyPredictionScore = {val_evaluation_scores['early_prediction_score']}"
             )
 
         elif mode == "test":
-            test_evaluation_scores = test(x_test, y_test, model)
+            test_evaluation_scores = validate(x_test, y_test, model)
             test_performance["test_accuracy"].append(test_evaluation_scores["acc"])
             test_performance["test_auroc"].append(test_evaluation_scores["auroc"])
             test_performance["test_auprc"].append(test_evaluation_scores["auprc"])
@@ -150,13 +153,17 @@ def start_pipeline(cfg):
                 f"Performance on test set {fold_test+1}: \
                 ACC = {test_evaluation_scores['acc']}, \
                 AUROC = {test_evaluation_scores['auroc']}, \
-                AUPRC = {test_evaluation_scores['auprc']}"
+                AUPRC = {test_evaluation_scores['auprc']}, \
+                EarlyPredictionScore = {test_evaluation_scores['early_prediction_score']}"
             )
 
             # Calculate average performance on 10-fold test set
             test_accuracy_list = np.array(test_performance["test_accuracy"])
             test_auroc_list = np.array(test_performance["test_auroc"])
             test_auprc_list = np.array(test_performance["test_auprc"])
+            test_early_prediction_list = np.array(
+                test_performance["early_prediction_score"]
+            )
     if mode == "test":
         print("====================== TEST RESULT ======================")
         print(
@@ -172,5 +179,10 @@ def start_pipeline(cfg):
         print(
             "AUPRC: {:.3f} ({:.3f})".format(
                 test_auprc_list.mean(), test_auprc_list.std()
+            )
+        )
+        print(
+            "EarlyPredictionScore: {:.3f} ({:.3f})".format(
+                test_early_prediction_list.mean(), test_early_prediction_list.std()
             )
         )
