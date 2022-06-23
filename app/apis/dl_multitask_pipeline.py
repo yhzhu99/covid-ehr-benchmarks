@@ -28,7 +28,7 @@ from torch.utils.data import (
     random_split,
 )
 
-from app.core.evaluation import eval_metrics
+from app.core.evaluation import covid_metrics, eval_metrics
 from app.core.utils import RANDOM_SEED
 from app.datasets import get_dataset, load_data
 from app.datasets.dl import Dataset
@@ -71,6 +71,7 @@ def val_epoch(model, device, dataloader, loss_fn, los_statistics):
     y_outcome_true = []
     y_los_pred = []
     y_los_true = []
+    y_true_all = []
     model.eval()
     with torch.no_grad():
         for step, data in enumerate(dataloader):
@@ -80,6 +81,7 @@ def val_epoch(model, device, dataloader, loss_fn, los_statistics):
                 batch_y.float(),
                 batch_x_lab_length.float(),
             )
+            all_y = batch_y
             batch_y_outcome = batch_y[:, :, 0].unsqueeze(-1)
             batch_y_los = batch_y[:, :, 1].unsqueeze(-1)
             outcome, los = model(batch_x)
@@ -100,20 +102,38 @@ def val_epoch(model, device, dataloader, loss_fn, los_statistics):
                 y_los_true.extend(
                     batch_y_los[i][: batch_x_lab_length[i].long()].tolist()
                 )
+                y_true_all.extend(all_y[i][: batch_x_lab_length[i].long()].tolist())
     y_outcome_true = np.array(y_outcome_true)
     y_outcome_pred = np.array(y_outcome_pred)
+    y_true_all = np.array(y_true_all)
+    y_los_true = np.array(y_los_true)
+    y_los_pred = np.array(y_los_pred)
+    early_prediction_score = covid_metrics.early_prediction_outcome_metric(
+        y_true_all, y_outcome_pred, verbose=0
+    )
+    multitask_los_score = covid_metrics.multitask_los_metric(
+        y_true_all,
+        y_outcome_pred,
+        y_los_pred,
+        metrics_strategy="MAE",
+        verbose=1,
+    )
     y_outcome_pred = np.stack([1 - y_outcome_pred, y_outcome_pred], axis=1)
     outcome_evaluation_scores = eval_metrics.print_metrics_binary(
         y_outcome_true, y_outcome_pred, verbose=0
     )
-    y_los_true = np.array(y_los_true)
-    y_los_pred = np.array(y_los_pred)
     y_los_true = reverse_zscore_los(y_los_true, los_statistics)
     y_los_pred = reverse_zscore_los(y_los_pred, los_statistics)
     los_evaluation_scores = eval_metrics.print_metrics_regression(
         y_los_true, y_los_pred, verbose=0
     )
-    return np.array(val_loss).mean(), outcome_evaluation_scores, los_evaluation_scores
+    covid_evaluation_scores = early_prediction_score | multitask_los_score
+    return (
+        np.array(val_loss).mean(),
+        outcome_evaluation_scores,
+        los_evaluation_scores,
+        covid_evaluation_scores,
+    )
 
 
 def calculate_los_statistics(dataset, train_idx):
@@ -160,9 +180,12 @@ def start_pipeline(cfg, device):
         "test_mad": [],
         "test_mse": [],
         "test_mape": [],
+        "test_rmse": [],
         "test_accuracy": [],
         "test_auroc": [],
         "test_auprc": [],
+        "test_early_prediction_score": [],
+        "test_multitask_los_score": [],
     }
     kfold_test = StratifiedKFold(
         n_splits=num_folds, shuffle=True, random_state=RANDOM_SEED
@@ -210,12 +233,15 @@ def start_pipeline(cfg, device):
         history = {
             "train_loss": [],
             "val_loss": [],
-            "val_accuracy": [],
-            "val_auroc": [],
-            "val_auprc": [],
             "val_mad": [],
             "val_mse": [],
             "val_mape": [],
+            "val_rmse": [],
+            "val_accuracy": [],
+            "val_auroc": [],
+            "val_auprc": [],
+            "val_early_prediction_score": [],
+            "val_multitask_los_score": [],
         }
         best_val_performance = 1e8
         for epoch in range(cfg.epochs):
@@ -224,6 +250,7 @@ def start_pipeline(cfg, device):
                 val_loss,
                 val_outcome_evaluation_scores,
                 val_los_evaluation_scores,
+                val_covid_evaluation_scores,
             ) = val_epoch(model, device, val_loader, criterion, los_statistics)
             # save performance history on validation set
             print(
@@ -239,6 +266,14 @@ def start_pipeline(cfg, device):
             history["val_mad"].append(val_los_evaluation_scores["mad"])
             history["val_mse"].append(val_los_evaluation_scores["mse"])
             history["val_mape"].append(val_los_evaluation_scores["mape"])
+            history["val_rmse"].append(val_los_evaluation_scores["rmse"])
+            history["val_early_prediction_score"].append(
+                val_covid_evaluation_scores["early_prediction_score"]
+            )
+            history["val_multitask_los_score"].append(
+                val_covid_evaluation_scores["multitask_los_score"]
+            )
+
             # if mad is lower, than set the best mad, save the model, and test it on the test set
             if val_los_evaluation_scores["mad"] < best_val_performance:
                 best_val_performance = val_los_evaluation_scores["mad"]
@@ -254,28 +289,42 @@ def start_pipeline(cfg, device):
             test_loss,
             test_outcome_evaluation_scores,
             test_los_evaluation_scores,
+            test_covid_evaluation_scores,
         ) = val_epoch(model, device, test_loader, criterion, los_statistics)
         test_performance["test_loss"].append(test_loss)
         test_performance["test_mad"].append(test_los_evaluation_scores["mad"])
         test_performance["test_mse"].append(test_los_evaluation_scores["mse"])
         test_performance["test_mape"].append(test_los_evaluation_scores["mape"])
+        test_performance["test_rmse"].append(test_los_evaluation_scores["rmse"])
         test_performance["test_accuracy"].append(test_outcome_evaluation_scores["acc"])
         test_performance["test_auroc"].append(test_outcome_evaluation_scores["auroc"])
         test_performance["test_auprc"].append(test_outcome_evaluation_scores["auprc"])
+        test_performance["test_early_prediction_score"].append(
+            test_covid_evaluation_scores["early_prediction_score"]
+        )
+        test_performance["test_multitask_los_score"].append(
+            test_covid_evaluation_scores["multitask_los_score"]
+        )
         print(
-            f"Performance on test set {fold_test+1}: MAE = {test_los_evaluation_scores['mad']}, MSE = {test_los_evaluation_scores['mse']}, MAPE = {test_los_evaluation_scores['mape']}, ACC = {test_outcome_evaluation_scores['acc']}, AUROC = {test_outcome_evaluation_scores['auroc']}, AUPRC = {test_outcome_evaluation_scores['auprc']}"
+            f"Performance on test set {fold_test+1}: MAE = {test_los_evaluation_scores['mad']}, MSE = {test_los_evaluation_scores['mse']}, RMSE = {test_los_evaluation_scores['rmse']}, MAPE = {test_los_evaluation_scores['mape']}, ACC = {test_outcome_evaluation_scores['acc']}, AUROC = {test_outcome_evaluation_scores['auroc']}, AUPRC = {test_outcome_evaluation_scores['auprc']},  EarlyPredictionScore = {test_covid_evaluation_scores['early_prediction_score']}, MultitaskPredictionScore = {test_covid_evaluation_scores['multitask_los_score']}"
         )
     # Calculate average performance on 10-fold test set
     test_mad_list = np.array(test_performance["test_mad"])
     test_mse_list = np.array(test_performance["test_mse"])
     test_mape_list = np.array(test_performance["test_mape"])
+    test_rmse_list = np.array(test_performance["test_rmse"])
     test_accuracy_list = np.array(test_performance["test_accuracy"])
     test_auroc_list = np.array(test_performance["test_auroc"])
     test_auprc_list = np.array(test_performance["test_auprc"])
+    test_early_prediction_list = np.array(
+        test_performance["test_early_prediction_score"]
+    )
+    test_multitask_los_list = np.array(test_performance["test_multitask_los_score"])
 
     print("MAE: {:.3f} ({:.3f})".format(test_mad_list.mean(), test_mad_list.std()))
     print("MSE: {:.3f} ({:.3f})".format(test_mse_list.mean(), test_mse_list.std()))
     print("MAPE: {:.3f} ({:.3f})".format(test_mape_list.mean(), test_mape_list.std()))
+    print("RMSE: {:.3f} ({:.3f})".format(test_rmse_list.mean(), test_rmse_list.std()))
     print(
         "ACC: {:.3f} ({:.3f})".format(
             test_accuracy_list.mean(), test_accuracy_list.std()
@@ -286,6 +335,16 @@ def start_pipeline(cfg, device):
     )
     print(
         "AUPRC: {:.3f} ({:.3f})".format(test_auprc_list.mean(), test_auprc_list.std())
+    )
+    print(
+        "EarlyPredictionScore: {:.3f} ({:.3f})".format(
+            test_early_prediction_list.mean(), test_early_prediction_list.std()
+        )
+    )
+    print(
+        "MultitaskPredictionScore: {:.3f} ({:.3f})".format(
+            test_multitask_los_list.mean(), test_multitask_los_list.std()
+        )
     )
 
 

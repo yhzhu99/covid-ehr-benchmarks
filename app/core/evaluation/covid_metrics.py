@@ -64,7 +64,7 @@ def multitask_los_metric(
     y_true,
     y_pred_outcome,
     y_pred_los,
-    max_los=300,
+    max_los=13,
     sigma_func=sigma,
     metrics_strategy="MAE",
     verbose=1,
