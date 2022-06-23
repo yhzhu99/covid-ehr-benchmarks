@@ -4,7 +4,7 @@ from torch import nn
 
 class MTL(nn.Module):
     def __init__(self, task_num):
-        super(WeightUncertaintyMTL, self).__init__()
+        super(MTL, self).__init__()
         self.task_num = task_num
         self.alpha = nn.Parameter(torch.ones((task_num)))
 
