@@ -62,7 +62,7 @@ def train_epoch(model, device, dataloader, loss_fn, optimizer):
     return np.array(train_loss).mean()
 
 
-def val_epoch(model, device, dataloader, loss_fn, los_statistics):
+def val_epoch(model, device, dataloader, loss_fn, los_statistics, max_visits):
     """
     val / test
     """
@@ -115,6 +115,7 @@ def val_epoch(model, device, dataloader, loss_fn, los_statistics):
         y_true_all,
         y_outcome_pred,
         y_los_pred,
+        max_visits,
         metrics_strategy="MAE",
         verbose=1,
     )
@@ -166,11 +167,12 @@ def reverse_zscore_los(y, los_statistics):
 
 
 def start_pipeline(cfg, device):
-    dataset_type, method, num_folds, train_fold = (
+    dataset_type, method, num_folds, train_fold, max_visits = (
         cfg.dataset,
         cfg.model,
         cfg.num_folds,
         cfg.train_fold,
+        cfg.max_visits,
     )
     # Load data
     x, y, x_lab_length = load_data(dataset_type)
@@ -254,7 +256,9 @@ def start_pipeline(cfg, device):
                 val_outcome_evaluation_scores,
                 val_los_evaluation_scores,
                 val_covid_evaluation_scores,
-            ) = val_epoch(model, device, val_loader, criterion, los_statistics)
+            ) = val_epoch(
+                model, device, val_loader, criterion, los_statistics, max_visits
+            )
             # save performance history on validation set
             print(
                 "Epoch:{}/{} AVG Training Loss:{:.3f} AVG Val Loss:{:.3f}".format(
@@ -293,7 +297,7 @@ def start_pipeline(cfg, device):
             test_outcome_evaluation_scores,
             test_los_evaluation_scores,
             test_covid_evaluation_scores,
-        ) = val_epoch(model, device, test_loader, criterion, los_statistics)
+        ) = val_epoch(model, device, test_loader, criterion, los_statistics, max_visits)
         test_performance["test_loss"].append(test_loss)
         test_performance["test_mad"].append(test_los_evaluation_scores["mad"])
         test_performance["test_mse"].append(test_los_evaluation_scores["mse"])
