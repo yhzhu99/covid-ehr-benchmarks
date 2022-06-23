@@ -64,7 +64,7 @@ def multitask_los_metric(
     y_true,
     y_pred_outcome,
     y_pred_los,
-    max_los=13,
+    max_visits=13,
     sigma_func=sigma,
     metrics_strategy="MAE",
     verbose=1,
@@ -94,7 +94,7 @@ def multitask_los_metric(
         metric += sklearn_metrics.mean_absolute_percentage_error(y_true_los, y_pred_los)
     metric += np.mean(
         np.abs(y_true_outcome - y_pred_outcome)
-        * max_los
+        * max_visits
         * np.array(list(map(lambda x: sigma_func(x), y_true_los)))
     )
     if verbose:
