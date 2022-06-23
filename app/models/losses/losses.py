@@ -2,9 +2,14 @@ import torch
 from torch import nn
 
 
-class MultiTaskLoss(nn.Module):
+class WeightUncertaintyMTL(nn.Module):
+    """
+    Ref: Multi-Task Learning Using Uncertainty to Weigh Losses for Scene Geometry and Semantics
+    https://arxiv.org/abs/1705.07115
+    """
+
     def __init__(self, task_num):
-        super(MultiTaskLoss, self).__init__()
+        super(WeightUncertaintyMTL, self).__init__()
         self.task_num = task_num
         self.log_vars = nn.Parameter(torch.zeros((task_num)))
 
@@ -53,7 +58,7 @@ def get_multi_task_loss(
     y_outcome_pred, y_outcome_true, y_los_pred, y_los_true, x_lab_length
 ):
     batch_size = len(y_outcome_pred)
-    loss = MultiTaskLoss(2)
+    loss = WeightUncertaintyMTL(2)
     indices = torch.arange(batch_size, dtype=torch.int64)
     losses = 0
     for i in indices:
