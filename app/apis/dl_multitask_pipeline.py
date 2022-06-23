@@ -127,7 +127,10 @@ def val_epoch(model, device, dataloader, loss_fn, los_statistics):
     los_evaluation_scores = eval_metrics.print_metrics_regression(
         y_los_true, y_los_pred, verbose=0
     )
-    covid_evaluation_scores = early_prediction_score | multitask_los_score
+    covid_evaluation_scores = {
+        "early_prediction_score": early_prediction_score,
+        "multitask_los_score": multitask_los_score,
+    }
     return (
         np.array(val_loss).mean(),
         outcome_evaluation_scores,
