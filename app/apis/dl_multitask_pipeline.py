@@ -324,6 +324,7 @@ def start_pipeline(cfg, device):
     )
     test_multitask_los_list = np.array(test_performance["test_multitask_los_score"])
 
+    print("====================== TEST RESULT ======================")
     print("MAE: {:.3f} ({:.3f})".format(test_mad_list.mean(), test_mad_list.std()))
     print("MSE: {:.3f} ({:.3f})".format(test_mse_list.mean(), test_mse_list.std()))
     print("MAPE: {:.3f} ({:.3f})".format(test_mape_list.mean(), test_mape_list.std()))

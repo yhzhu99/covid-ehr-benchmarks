@@ -219,6 +219,8 @@ def start_pipeline(cfg, device):
     test_early_prediction_list = np.array(
         test_performance["test_early_prediction_score"]
     )
+
+    print("====================== TEST RESULT ======================")
     print(
         "ACC: {:.3f} ({:.3f})".format(
             test_accuracy_list.mean(), test_accuracy_list.std()
