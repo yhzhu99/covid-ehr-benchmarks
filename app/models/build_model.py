@@ -82,6 +82,7 @@ def build_backbone_from_cfg(cfg):
     if cfg.model == "agent":
         return Agent(
             cell=cfg.cell,
+            max_visits=cfg.max_visits,
             lab_dim=cfg.lab_dim,
             demo_dim=cfg.demo_dim,
             n_actions=cfg.n_actions,
