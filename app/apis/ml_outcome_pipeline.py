@@ -33,7 +33,6 @@ from app.models import (
 
 
 def train(x, y, method):
-    print(x.shape, y.shape)
     y = y[:, 0]
 
     if method == "xgboost":
@@ -127,7 +126,6 @@ def start_pipeline(cfg):
             sub_x, sub_y, val_idx, sub_x_lab_length, case="outcome"
         )
         x_test, y_test = flatten_dataset(x, y, test_idx, x_lab_length, case="outcome")
-        print(y_train.shape)
         all_history["test_fold_{}".format(fold_test + 1)] = {}
 
         model = train(x_train, y_train, method)
