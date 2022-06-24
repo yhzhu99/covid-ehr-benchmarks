@@ -19,13 +19,12 @@ class Agent(nn.Module):
         n_actions=10,
         n_units=64,
         fusion_dim=128,
-        n_input=76,
+        lab_dim=73,
         n_hidden=128,
-        demo_dim=17,
-        n_output=1,
+        demo_dim=2,
+        # n_output=1,
         dropout=0.0,
         lamda=0.5,
-        device="cpu",
     ):
         super(Agent, self).__init__()
 
@@ -33,14 +32,13 @@ class Agent(nn.Module):
         self.use_baseline = use_baseline
         self.n_actions = n_actions
         self.n_units = n_units
-        self.n_input = n_input
+        self.lab_dim = lab_dim
         self.n_hidden = n_hidden
-        self.n_output = n_output
+        # self.n_output = n_output
         self.dropout = dropout
         self.lamda = lamda
         self.fusion_dim = fusion_dim
         self.demo_dim = demo_dim
-        self.device = device
 
         self.agent1_action = []
         self.agent1_prob = []
@@ -52,7 +50,7 @@ class Agent(nn.Module):
         self.agent2_baseline = []
 
         self.agent1_fc1 = nn.Linear(self.n_hidden + self.demo_dim, self.n_units)
-        self.agent2_fc1 = nn.Linear(self.n_input + self.demo_dim, self.n_units)
+        self.agent2_fc1 = nn.Linear(self.lab_dim + self.demo_dim, self.n_units)
         self.agent1_fc2 = nn.Linear(self.n_units, self.n_actions)
         self.agent2_fc2 = nn.Linear(self.n_units, self.n_actions)
         if use_baseline == True:
@@ -60,9 +58,9 @@ class Agent(nn.Module):
             self.agent2_value = nn.Linear(self.n_units, 1)
 
         if self.cell == "lstm":
-            self.rnn = nn.LSTMCell(self.n_input, self.n_hidden)
+            self.rnn = nn.LSTMCell(self.lab_dim, self.n_hidden)
         else:
-            self.rnn = nn.GRUCell(self.n_input, self.n_hidden)
+            self.rnn = nn.GRUCell(self.lab_dim, self.n_hidden)
 
         for name, param in self.rnn.named_parameters():
             if "bias" in name:
@@ -75,7 +73,7 @@ class Agent(nn.Module):
         self.init_h = nn.Linear(self.demo_dim, self.n_hidden)
         self.init_c = nn.Linear(self.demo_dim, self.n_hidden)
         self.fusion = nn.Linear(self.n_hidden + self.demo_dim, self.fusion_dim)
-        self.output = nn.Linear(self.fusion_dim, self.n_output)
+        # self.output = nn.Linear(self.fusion_dim, self.n_output)
 
         self.sigmoid = nn.Sigmoid()
         self.softmax = nn.Softmax()
@@ -115,11 +113,14 @@ class Agent(nn.Module):
 
         return actions.unsqueeze(-1)
 
-    def forward(self, input, demo):
-        batch_size = input.size(0)
-        time_step = input.size(1)
-        feature_dim = input.size(2)
-        assert feature_dim == self.n_input
+    def forward(self, x):
+        demo = x[:, :, : self.demo_dim]
+        labtest = x[:, :, self.demo_dim :]
+
+        batch_size = labtest.size(0)
+        time_step = labtest.size(1)
+        feature_dim = labtest.size(2)
+        assert feature_dim == self.lab_dim
 
         self.agent1_action = []
         self.agent1_prob = []
@@ -135,7 +136,7 @@ class Agent(nn.Module):
             cur_c = self.init_c(demo)
 
         for cur_time in range(time_step):
-            cur_input = input[:, cur_time, :]
+            cur_input = labtest[:, cur_time, :]
 
             if cur_time == 0:
                 obs_1 = cur_h
@@ -170,11 +171,7 @@ class Agent(nn.Module):
                 obs_2 = torch.cat((obs_2, demo), dim=1)
                 act_idx1 = self.choose_action(obs_1, 1).long()
                 act_idx2 = self.choose_action(obs_2, 2).long()
-                batch_idx = (
-                    torch.arange(batch_size, dtype=torch.long)
-                    .unsqueeze(-1)
-                    .to(self.device)
-                )
+                batch_idx = torch.arange(batch_size, dtype=torch.long).unsqueeze(-1)
                 action_h1 = observed_h[act_idx1, batch_idx, :].squeeze(1)
                 action_h2 = observed_h[act_idx2, batch_idx, :].squeeze(1)
                 action_h = (action_h1 + action_h2) / 2
@@ -198,7 +195,7 @@ class Agent(nn.Module):
         cur_h = torch.cat((cur_h, demo), dim=1)
         cur_h = self.fusion(cur_h)
         cur_h = self.relu(cur_h)
-        output = self.output(cur_h)
-        output = self.sigmoid(output)
+        # output = self.output(cur_h)
+        # output = self.sigmoid(output)
 
-        return output
+        return cur_h
