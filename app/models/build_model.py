@@ -40,6 +40,13 @@ def build_backbone_from_cfg(cfg):
             max_visits=cfg.max_visits,
             hidden_dim=cfg.hidden_dim,
         )
+    if cfg.model == "lstm":
+        return LSTM(
+            demo_dim=cfg.demo_dim,
+            lab_dim=cfg.lab_dim,
+            max_visits=cfg.max_visits,
+            hidden_dim=cfg.hidden_dim,
+        )
 
 
 def build_classifier_from_cfg(cfg):
