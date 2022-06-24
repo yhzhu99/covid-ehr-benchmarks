@@ -106,7 +106,6 @@ class TemporalConvNet(nn.Module):
         self,
         num_inputs,
         num_channels,  # serve as hidden dim
-        num_classes,
         max_seq_length=0,
         kernel_size=2,
         dropout=0.0,
@@ -142,11 +141,9 @@ class TemporalConvNet(nn.Module):
             ]
 
         self.network = nn.Sequential(*layers)
-        self.logit = nn.Linear(num_channels[-1], num_classes)
 
     def forward(self, x):
         x = x.permute(0, 2, 1)  # Permute to channel first
         o = self.network(x)
         o = o.permute(0, 2, 1)  # Permute to channel last
-        pred = self.logit(o)
-        return pred
+        return o
