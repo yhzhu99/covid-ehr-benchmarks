@@ -1,6 +1,6 @@
 name: ml_tongji_outcome_kf10
 model_type: ml
-model: catboost
+model: gbdt
 mode: test # val
 dataset: tongji
 task: outcome

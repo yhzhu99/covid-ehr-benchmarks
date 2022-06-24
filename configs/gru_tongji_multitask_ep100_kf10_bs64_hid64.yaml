@@ -1,8 +1,8 @@
-name: gru_tongji_los_ep100_kf10_bs64
+name: gru_tongji_multitask_ep100_kf10_bs64_hid64
 model_type: dl
 model: gru
 dataset: tongji
-task: los
+task: multitask
 epochs: 100
 num_folds: 10
 train_fold: 10
