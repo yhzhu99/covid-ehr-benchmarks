@@ -1,146 +1,79 @@
-import argparse
-import copy
-import datetime
-import math
-import os
-import pickle
-import random
-import re
-
 import numpy as np
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
-import torch.nn.init as init
-import torch.nn.utils.rnn as rnn_utils
-from sklearn.model_selection import KFold, StratifiedKFold
-from torch import nn
-from torch.autograd import Variable
-from torch.utils import data
-from torch.utils.data import (
-    ConcatDataset,
-    DataLoader,
-    Dataset,
-    Subset,
-    SubsetRandomSampler,
-    TensorDataset,
-    random_split,
-)
 
 
 class RETAIN(nn.Module):
     def __init__(
         self,
         dim_input,
-        dim_emb=128,
+        dim_emb,
+        dim_alpha,
+        dim_beta,
         drop=0.0,
-        dim_alpha=128,
-        dim_beta=128,
-        # dropout_context=0.5,
-        # dim_output=2,
-        # l2=0.0001,
-        batch_first=True,
     ):
         super(RETAIN, self).__init__()
-        self.batch_first = batch_first
-        self.embedding = nn.Sequential(
-            nn.Linear(dim_input, dim_emb, bias=False),
-            nn.Dropout(p=drop),
-        )
-        init.xavier_normal(self.embedding[1].weight)
+        self.dim_input = dim_input
+        self.dim_emb = dim_emb
+        self.dim_alpha = dim_alpha
+        self.dim_beta = dim_beta
+        self.drop = drop
 
-        self.rnn_alpha = nn.GRU(
-            input_size=dim_emb,
-            hidden_size=dim_alpha,
-            num_layers=1,
-            batch_first=self.batch_first,
-        )
+        self.embedding = nn.Linear(self.dim_input, self.dim_emb)
+        self.dropout = nn.Dropout(self.drop)
+        self.gru_alpha = nn.GRU(self.dim_emb, self.dim_alpha)
+        self.gru_beta = nn.GRU(self.dim_emb, self.dim_beta)
+        self.alpha_att = nn.Linear(self.dim_alpha, 1)
+        self.beta_att = nn.Linear(self.dim_beta, self.dim_emb)
 
-        self.alpha_fc = nn.Linear(in_features=dim_alpha, out_features=1)
-        init.xavier_normal(self.alpha_fc.weight)
-        self.alpha_fc.bias.data.zero_()
+    def initHidden_alpha(self, batch_size):
+        return torch.zeros(1, batch_size, self.dim_alpha)
 
-        self.rnn_beta = nn.GRU(
-            input_size=dim_emb,
-            hidden_size=dim_beta,
-            num_layers=1,
-            batch_first=self.batch_first,
-        )
+    def initHidden_beta(self, batch_size):
+        return torch.zeros(1, batch_size, self.dim_beta)
 
-        self.beta_fc = nn.Linear(in_features=dim_beta, out_features=dim_emb)
-        init.xavier_normal(self.beta_fc.weight, gain=nn.init.calculate_gain("tanh"))
-        self.beta_fc.bias.data.zero_()
+    # 两个attention的处理，其中att_timesteps是目前为止的步数
+    # 返回的是一个3维向量，维度为(n_timesteps × n_samples × dim_emb)
+    def attentionStep(self, h_a, h_b, att_timesteps):
+        """
+        两个attention的处理，其中att_timesteps是目前为止的步数
+        返回的是一个3维向量，维度为(n_timesteps × n_samples × dim_emb)
+        :param h_a:
+        :param h_b:
+        :param att_timesteps:
+        :return:
+        """
+        reverse_emb_t = self.emb[:att_timesteps].flip(dims=[0])
+        reverse_h_a = self.gru_alpha(reverse_emb_t, h_a)[0].flip(dims=[0]) * 0.5
+        reverse_h_b = self.gru_beta(reverse_emb_t, h_b)[0].flip(dims=[0]) * 0.5
 
-        # self.output = nn.Sequential(
-        #     nn.Dropout(p=dropout_context),
-        #     nn.Linear(in_features=dim_emb, out_features=dim_output),
-        # )
-        # init.xavier_normal(self.output[1].weight)
-        # self.output[1].bias.data.zero_()
+        preAlpha = self.alpha_att(reverse_h_a)
+        preAlpha = torch.squeeze(preAlpha, dim=2)
+        alpha = torch.transpose(F.softmax(torch.transpose(preAlpha, 0, 1), dim=1), 0, 1)
+        beta = torch.tanh(self.beta_att(reverse_h_b))
 
-    def forward(self, x, lengths):
-        if self.batch_first:
-            batch_size, max_len = x.size()[:2]
-        else:
-            max_len, batch_size = x.size()[:2]
+        c_t = torch.mean((alpha.unsqueeze(2) * beta * self.emb[:att_timesteps]), dim=0)
+        return c_t
 
-        # emb -> batch_size X max_len X dim_emb
-        emb = self.embedding(x)
+    def forward(self, x):
+        first_h_a = self.initHidden_alpha(x.shape[1])
+        first_h_b = self.initHidden_beta(x.shape[1])
 
-        packed_input = torch.nn.utils.rnn.pack_padded_sequence(
-            emb, lengths, batch_first=self.batch_first
-        )
+        self.emb = self.embedding(x)
+        if self.drop < 1:
+            self.emb = self.dropout(self.emb)
 
-        g, _ = self.rnn_alpha(packed_input)
+        count = np.arange(x.shape[0]) + 1
+        self.c_t = torch.zeros_like(self.emb)  # shape=(seq_len, batch_size, day_dim)
+        for i, att_timesteps in enumerate(count):
+            # 按时间步迭代，计算每个时间步的经attention的gru输出
+            self.c_t[i] = self.attentionStep(first_h_a, first_h_b, att_timesteps)
 
-        # alpha_unpacked -> batch_size X max_len X dim_alpha
-        alpha_unpacked, _ = torch.nn.utils.rnn.pad_packed_sequence(
-            g, batch_first=self.batch_first
-        )
+        if self.drop < 1.0:
+            self.c_t = self.dropout(self.c_t)
 
-        # mask -> batch_size X max_len X 1
-        mask = Variable(
-            torch.FloatTensor(
-                [
-                    [1.0 if i < lengths[idx] else 0.0 for i in range(max_len)]
-                    for idx in range(batch_size)
-                ]
-            ).unsqueeze(2),
-            requires_grad=False,
-        )
-        if next(self.parameters()).is_cuda:  # returns a boolean
-            mask = mask.cuda()
-
-        # e => batch_size X max_len X 1
-        e = self.alpha_fc(alpha_unpacked)
-
-        def masked_softmax(batch_tensor, mask):
-            exp = torch.exp(batch_tensor)
-            masked_exp = exp * mask
-            sum_masked_exp = torch.sum(masked_exp, dim=1, keepdim=True)
-            return masked_exp / sum_masked_exp
-
-        # Alpha = batch_size X max_len X 1
-        # alpha value for padded visits (zero) will be zero
-        alpha = masked_softmax(e, mask)
-
-        h, _ = self.rnn_beta(packed_input)
-
-        # beta_unpacked -> batch_size X max_len X dim_beta
-        beta_unpacked, _ = torch.nn.utils.rnn.pad_packed_sequence(
-            h, batch_first=self.batch_first
-        )
-
-        # Beta -> batch_size X max_len X dim_emb
-        # beta for padded visits will be zero-vectors
-        beta = F.tanh(self.beta_fc(beta_unpacked) * mask)
-
-        # context -> batch_size X (1) X dim_emb (squeezed)
-        # Context up to i-th visit context_i = sum(alpha_j * beta_j * emb_j)
-        # Vectorized sum
-        context = torch.bmm(torch.transpose(alpha, 1, 2), beta * emb).squeeze(1)
-
-        # # without applying non-linearity
-        # logit = self.output(context)
-
-        # return logit, alpha, beta
-        return context
+        # # output层
+        # y_hat = self.out(self.c_t)
+        # y_hat = torch.sigmoid(y_hat)
+        return self.c_t
