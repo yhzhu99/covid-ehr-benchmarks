@@ -23,7 +23,10 @@ class Transformer(nn.Module):
         self.bn = nn.BatchNorm1d(max_visits)
 
         self.encoder_layer = nn.TransformerEncoderLayer(
-            d_model=hidden_dim, nhead=4, dim_feedforward=512, activation="gelu"
+            d_model=hidden_dim,
+            nhead=4,
+            dim_feedforward=4 * hidden_dim,
+            activation="gelu",
         )
         self.transformer_encoder = nn.TransformerEncoder(
             self.encoder_layer, num_layers=1
