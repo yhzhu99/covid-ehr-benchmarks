@@ -5,6 +5,10 @@ import torch.nn.functional as F
 
 
 class RETAIN(nn.Module):
+    """
+    Ref: https://github.com/Yuyoo/retain/blob/master/retain_torch/Retain_torch.py
+    """
+
     def __init__(
         self,
         dim_input,
