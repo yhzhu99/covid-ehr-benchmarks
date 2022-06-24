@@ -15,6 +15,7 @@ class Agent(nn.Module):
     def __init__(
         self,
         cell="gru",
+        max_visits=13,
         use_baseline=True,
         n_actions=10,
         n_units=64,
@@ -29,6 +30,7 @@ class Agent(nn.Module):
         super(Agent, self).__init__()
 
         self.cell = cell
+        self.max_visits = max_visits
         self.use_baseline = use_baseline
         self.n_actions = n_actions
         self.n_units = n_units
@@ -135,6 +137,8 @@ class Agent(nn.Module):
         if self.cell == "lstm":
             cur_c = self.init_c(demo)
 
+        out = torch.zeros(batch_size, self.max_visits, self.n_hidden)
+
         for cur_time in range(time_step):
             cur_input = labtest[:, cur_time, :]
 
@@ -189,13 +193,17 @@ class Agent(nn.Module):
             else:
                 weighted_h = self.lamda * action_h + (1 - self.lamda) * cur_h
                 cur_h = self.rnn(cur_input, weighted_h)
-
+            out[:, cur_time, :] = cur_h
         if self.dropout > 0.0:
-            cur_h = self.nn_dropout(cur_h)
-        cur_h = torch.cat((cur_h, demo), dim=1)
-        cur_h = self.fusion(cur_h)
-        cur_h = self.relu(cur_h)
+            out = self.nn_dropout(out)
+        demo = torch.reshape(
+            demo.repeat(1, self.max_visits),
+            (batch_size, self.max_visits, self.demo_dim),
+        )
+        out = torch.cat((demo, out), dim=2)
+        out = self.fusion(out)
+        out = self.relu(out)
         # output = self.output(cur_h)
         # output = self.sigmoid(output)
 
-        return cur_h
+        return out
