@@ -1,4 +1,4 @@
-name: tj_gru_outcome_ep100_kf10_bs64_hid64
+name: tj_outcome_gru_ep100_kf10_bs64_hid64
 model_type: dl
 model: gru
 dataset: tongji

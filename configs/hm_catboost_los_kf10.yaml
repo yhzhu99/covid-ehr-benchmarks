@@ -1,8 +1,0 @@
-name: hm_catboost_los_kf10
-model_type: ml
-model: catboost
-mode: test # val
-dataset: hm
-task: los
-num_folds: 10
-train_fold: 1

@@ -1,13 +1,13 @@
-name: hm_gru_multitask_ep100_kf10_bs64_hid128
+name: tj_multitask_gru_ep100_kf10_bs64_hid64
 model_type: dl
 model: gru
-dataset: hm
+dataset: tongji
 task: multitask
 epochs: 100
 num_folds: 10
-train_fold: 1
+train_fold: 10
 batch_size: 64
-hidden_dim: 128
+hidden_dim: 64
 output_dim: 1
 act_layer: nn.GELU
 drop: 0.0
