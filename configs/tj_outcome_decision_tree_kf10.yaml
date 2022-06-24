@@ -1,8 +1,8 @@
-name: tj_gbdt_los_kf10
+name: tj_outcome_decision_tree_kf10
 model_type: ml
-model: gbdt
+model: decision_tree
 mode: test # val / test
 dataset: tongji
-task: los
+task: outcome
 num_folds: 10
 train_fold: 10

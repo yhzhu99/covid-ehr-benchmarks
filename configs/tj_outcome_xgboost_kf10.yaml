@@ -1,4 +1,4 @@
-name: tj_xgboost_outcome_kf10
+name: tj_outcome_xgboost_kf10
 model_type: ml
 model: xgboost
 mode: test # val / test

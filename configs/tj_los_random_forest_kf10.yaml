@@ -1,8 +1,8 @@
-name: tj_decision_tree_outcome_kf10
+name: tj_los_random_forest_kf10
 model_type: ml
-model: decision_tree
+model: random_forest
 mode: test # val / test
 dataset: tongji
-task: outcome
+task: los
 num_folds: 10
 train_fold: 10

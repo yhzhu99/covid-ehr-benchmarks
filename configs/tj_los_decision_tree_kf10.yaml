@@ -1,4 +1,4 @@
-name: tj_decision_tree_los_kf10
+name: tj_los_decision_tree_kf10
 model_type: ml
 model: decision_tree
 mode: test # val / test

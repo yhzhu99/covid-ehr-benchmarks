@@ -1,4 +1,4 @@
-name: tj_random_forest_outcome_kf10
+name: tj_outcome_random_forest_kf10
 model_type: ml
 model: random_forest
 mode: test
