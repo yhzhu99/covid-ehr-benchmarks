@@ -4,6 +4,7 @@ from .concare import *
 from .grasp import *
 from .gru import *
 from .lstm import *
+from .mlp import *
 from .retain import *
 from .rnn import *
 from .stagenet import *

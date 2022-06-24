@@ -19,6 +19,13 @@ class Model(nn.Module):
 
 
 def build_backbone_from_cfg(cfg):
+    if cfg.model == "mlp":
+        return MLP(
+            demo_dim=cfg.demo_dim,
+            lab_dim=cfg.lab_dim,
+            max_visits=cfg.max_visits,
+            hidden_dim=cfg.hidden_dim,
+        )
     if cfg.model == "gru":
         return GRU(
             demo_dim=cfg.demo_dim,
