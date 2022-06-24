@@ -78,7 +78,7 @@ class Agent(nn.Module):
         # self.output = nn.Linear(self.fusion_dim, self.n_output)
 
         self.sigmoid = nn.Sigmoid()
-        self.softmax = nn.Softmax()
+        self.softmax = nn.Softmax(dim=1)
         self.tanh = nn.Tanh()
         self.relu = nn.ReLU()
 
