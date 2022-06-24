@@ -32,6 +32,7 @@ def build_backbone_from_cfg(cfg):
             lab_dim=cfg.lab_dim,
             max_visits=cfg.max_visits,
             hidden_dim=cfg.hidden_dim,
+            num_layers=cfg.num_layers,
         )
     if cfg.model == "rnn":
         return RNN(

@@ -8,6 +8,7 @@ class Transformer(nn.Module):
         lab_dim,
         max_visits,
         hidden_dim,
+        num_layers,
         act_layer=nn.GELU,
         drop=0.0,
     ):
@@ -29,7 +30,7 @@ class Transformer(nn.Module):
             activation="gelu",
         )
         self.transformer_encoder = nn.TransformerEncoder(
-            self.encoder_layer, num_layers=1
+            self.encoder_layer, num_layers=2
         )
 
     def forward(self, x):
