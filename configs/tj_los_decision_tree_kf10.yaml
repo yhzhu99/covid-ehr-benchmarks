@@ -1,0 +1,8 @@
+name: tj_los_decision_tree_kf10
+model_type: ml
+model: decision_tree
+mode: test # val / test
+dataset: tongji
+task: los
+num_folds: 10
+train_fold: 10

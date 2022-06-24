@@ -1,0 +1,8 @@
+name: tj_los_gbdt_kf10
+model_type: ml
+model: gbdt
+mode: test # val / test
+dataset: tongji
+task: los
+num_folds: 10
+train_fold: 10
