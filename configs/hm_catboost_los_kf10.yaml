@@ -1,4 +1,4 @@
-name: ml_hm_los_kf10
+name: hm_catboost_los_kf10
 model_type: ml
 model: catboost
 mode: test # val

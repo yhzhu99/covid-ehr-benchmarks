@@ -1,6 +1,6 @@
-name: transformer_hm_multitask_ep100_kf10_bs64
+name: hm_gru_multitask_ep100_kf10_bs64_hid128
 model_type: dl
-model: transformer
+model: gru
 dataset: hm
 task: multitask
 epochs: 100

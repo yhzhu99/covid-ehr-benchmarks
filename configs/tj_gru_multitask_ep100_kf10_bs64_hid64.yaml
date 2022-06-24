@@ -1,4 +1,4 @@
-name: gru_tongji_multitask_ep100_kf10_bs64_hid64
+name: tj_gru_multitask_ep100_kf10_bs64_hid64
 model_type: dl
 model: gru
 dataset: tongji

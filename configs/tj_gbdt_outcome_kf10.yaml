@@ -1,7 +1,7 @@
-name: ml_tongji_outcome_kf10
+name: tj_gbdt_outcome_kf10
 model_type: ml
 model: gbdt
-mode: test # val
+mode: val
 dataset: tongji
 task: outcome
 num_folds: 10
