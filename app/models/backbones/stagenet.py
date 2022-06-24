@@ -14,8 +14,8 @@ class StageNet(nn.Module):
         conv_size,
         # output_dim,
         levels,
-        dropconnect=0.0,
-        dropout=0.0,
+        dropconnect=0.5,
+        dropout=0.5,
         dropres=0.3,
     ):
         super(StageNet, self).__init__()
@@ -155,9 +155,10 @@ class StageNet(nn.Module):
         if self.dropout > 0.0:
             rnn_outputs = self.nn_dropout(rnn_outputs)
 
+        output = rnn_outputs.contiguous().view(batch_size, time_step, self.hidden_dim)
         # output = self.nn_output(rnn_outputs)
         # output = output.contiguous().view(batch_size, time_step, self.output_dim)
         # output = torch.sigmoid(output)
 
         # return output, torch.stack(distance)
-        return rnn_outputs
+        return output
