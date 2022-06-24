@@ -32,21 +32,19 @@ class RETAIN(nn.Module):
         self,
         dim_input,
         dim_emb=128,
-        dropout_input=0.8,
-        dropout_emb=0.5,
+        drop=0.0,
         dim_alpha=128,
         dim_beta=128,
-        dropout_context=0.5,
-        dim_output=2,
-        l2=0.0001,
+        # dropout_context=0.5,
+        # dim_output=2,
+        # l2=0.0001,
         batch_first=True,
     ):
         super(RETAIN, self).__init__()
         self.batch_first = batch_first
         self.embedding = nn.Sequential(
-            nn.Dropout(p=dropout_input),
             nn.Linear(dim_input, dim_emb, bias=False),
-            nn.Dropout(p=dropout_emb),
+            nn.Dropout(p=drop),
         )
         init.xavier_normal(self.embedding[1].weight)
 
@@ -72,12 +70,12 @@ class RETAIN(nn.Module):
         init.xavier_normal(self.beta_fc.weight, gain=nn.init.calculate_gain("tanh"))
         self.beta_fc.bias.data.zero_()
 
-        self.output = nn.Sequential(
-            nn.Dropout(p=dropout_context),
-            nn.Linear(in_features=dim_emb, out_features=dim_output),
-        )
-        init.xavier_normal(self.output[1].weight)
-        self.output[1].bias.data.zero_()
+        # self.output = nn.Sequential(
+        #     nn.Dropout(p=dropout_context),
+        #     nn.Linear(in_features=dim_emb, out_features=dim_output),
+        # )
+        # init.xavier_normal(self.output[1].weight)
+        # self.output[1].bias.data.zero_()
 
     def forward(self, x, lengths):
         if self.batch_first:
@@ -141,7 +139,8 @@ class RETAIN(nn.Module):
         # Vectorized sum
         context = torch.bmm(torch.transpose(alpha, 1, 2), beta * emb).squeeze(1)
 
-        # without applying non-linearity
-        logit = self.output(context)
+        # # without applying non-linearity
+        # logit = self.output(context)
 
-        return logit, alpha, beta
+        # return logit, alpha, beta
+        return context

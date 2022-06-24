@@ -63,6 +63,14 @@ def build_backbone_from_cfg(cfg):
             kernel_size=cfg.kernel_size,
             dropout=cfg.dropout,
         )
+    if cfg.model == "retain":
+        return RETAIN(
+            dim_input=cfg.demo_dim + cfg.lab_dim,
+            dim_emb=cfg.hidden_dim,
+            drop=cfg.drop,
+            dim_alpha=cfg.hidden_dim,
+            dim_beta=cfg.hidden_dim,
+        )
 
 
 def build_classifier_from_cfg(cfg):
