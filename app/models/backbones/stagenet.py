@@ -44,7 +44,7 @@ class StageNet(nn.Module):
         self.nn_scale = nn.Linear(int(hidden_dim), int(hidden_dim // 6))
         self.nn_rescale = nn.Linear(int(hidden_dim // 6), int(hidden_dim))
         self.nn_conv = nn.Conv1d(int(hidden_dim), int(self.conv_dim), int(conv_size), 1)
-        self.nn_output = nn.Linear(int(self.conv_dim), int(output_dim))
+        # self.nn_output = nn.Linear(int(self.conv_dim), int(output_dim))
 
         if self.dropconnect:
             self.nn_dropconnect = nn.Dropout(p=dropconnect)
@@ -154,9 +154,10 @@ class StageNet(nn.Module):
         rnn_outputs = rnn_outputs.contiguous().view(-1, rnn_outputs.size(-1))
         if self.dropout > 0.0:
             rnn_outputs = self.nn_dropout(rnn_outputs)
-        output = self.nn_output(rnn_outputs)
-        output = output.contiguous().view(batch_size, time_step, self.output_dim)
-        output = torch.sigmoid(output)
+
+        # output = self.nn_output(rnn_outputs)
+        # output = output.contiguous().view(batch_size, time_step, self.output_dim)
+        # output = torch.sigmoid(output)
 
         # return output, torch.stack(distance)
-        return output
+        return rnn_outputs
