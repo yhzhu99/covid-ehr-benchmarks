@@ -105,7 +105,7 @@ class TemporalConvNet(nn.Module):
     def __init__(
         self,
         num_inputs,
-        num_channels,
+        num_channels,  # serve as hidden dim
         num_classes,
         max_seq_length=0,
         kernel_size=2,

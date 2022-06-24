@@ -55,6 +55,14 @@ def build_backbone_from_cfg(cfg):
             max_visits=cfg.max_visits,
             hidden_dim=cfg.hidden_dim,
         )
+    if cfg.model == "tcn":
+        return TemporalConvNet(
+            num_inputs=cfg.demo_dim + cfg.lab_dim,
+            num_channels=cfg.hidden_dim,
+            max_seq_length=cfg.max_visits,
+            kernel_size=cfg.kernel_size,
+            dropout=cfg.dropout,
+        )
 
 
 def build_classifier_from_cfg(cfg):
