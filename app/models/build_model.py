@@ -79,6 +79,18 @@ def build_backbone_from_cfg(cfg):
             levels=cfg.levels,
             dropout=cfg.drop,
         )
+    if cfg.model == "agent":
+        return Agent(
+            cell=cfg.cell,
+            lab_dim=cfg.lab_dim,
+            demo_dim=cfg.demo_dim,
+            n_actions=cfg.n_actions,
+            n_units=cfg.n_units,
+            n_hidden=cfg.hidden_dim,
+            fusion_dim=cfg.hidden_dim,
+            dropout=cfg.drop,
+            lamda=cfg.lamda,
+        )
 
 
 def build_classifier_from_cfg(cfg):
