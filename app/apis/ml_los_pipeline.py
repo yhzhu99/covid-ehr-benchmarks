@@ -33,23 +33,23 @@ from app.models import (
 
 def train(x, y, method):
     if method == "xgboost":
-        model = xgb.XGBRegressor(verbosity=0, n_estimators=1000, learning_rate=0.1)
+        model = xgb.XGBRegressor(verbosity=0, n_estimators=1000, learning_rate=0.01)
         model.fit(x, y, eval_metric="auc")
     elif method == "gbdt":
         method = GradientBoostingRegressor(random_state=RANDOM_SEED)
         model = method.fit(x, y)
     elif method == "random_forest":
-        method = RandomForestRegressor(random_state=RANDOM_SEED, max_depth=2)
+        method = RandomForestRegressor(random_state=RANDOM_SEED, max_depth=100)
         model = method.fit(x, y)
     elif method == "decision_tree":
         model = DecisionTreeRegressor(random_state=RANDOM_SEED)
         model.fit(x, y)
     elif method == "catboost":
         model = CatBoostRegressor(
-            iterations=10,  # performance is better when iterations = 100
-            learning_rate=0.1,
-            depth=3,
-            loss_function="RMSE",
+            iterations=1000,  # performance is better when iterations = 100
+            learning_rate=0.02,
+            depth=5,
+            loss_function="MAE",
             verbose=None,
             silent=True,
             allow_writing_files=False,

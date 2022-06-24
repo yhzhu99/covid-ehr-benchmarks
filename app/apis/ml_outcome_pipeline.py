@@ -37,7 +37,7 @@ def train(x, y, method):
 
     if method == "xgboost":
         model = xgb.XGBClassifier(
-            verbosity=0, n_estimators=1000, learning_rate=0.1, use_label_encoder=False
+            verbosity=0, n_estimators=1000, learning_rate=0.3, use_label_encoder=False
         )
         model.fit(x, y, eval_metric="auc")
     elif method == "gbdt":
@@ -46,15 +46,15 @@ def train(x, y, method):
         )
         model = method.fit(x, y)
     elif method == "random_forest":
-        method = RandomForestClassifier(random_state=RANDOM_SEED, max_depth=2)
+        method = RandomForestClassifier(random_state=RANDOM_SEED, max_depth=100)
         model = method.fit(x, y)
     elif method == "decision_tree":
         model = DecisionTreeClassifier(random_state=RANDOM_SEED)
         model.fit(x, y)
     elif method == "catboost":
         model = CatBoostClassifier(
-            iterations=10,  # performance is better when iterations = 100
-            learning_rate=0.1,
+            iterations=1000,  # performance is better when iterations = 100
+            learning_rate=0.5,
             depth=3,
             verbose=None,
             silent=True,

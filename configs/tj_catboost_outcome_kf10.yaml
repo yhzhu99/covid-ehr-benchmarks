@@ -1,8 +1,8 @@
-name: tj_los_catboost_kf10
+name: tj_catboost_outcome_kf10
 model_type: ml
 model: catboost
 mode: test # val / test
 dataset: tongji
-task: los
+task: outcome
 num_folds: 10
 train_fold: 10

@@ -1,6 +1,6 @@
-name: tj_outcome_gbdt_kf10
+name: tj_random_forest_outcome_kf10
 model_type: ml
-model: gbdt
+model: random_forest
 mode: test
 dataset: tongji
 task: outcome
