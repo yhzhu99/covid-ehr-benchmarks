@@ -12,7 +12,7 @@ class StageNet(nn.Module):
         input_dim,
         hidden_dim,
         conv_size,
-        output_dim,
+        # output_dim,
         levels,
         dropconnect=0.0,
         dropout=0.0,
@@ -28,7 +28,7 @@ class StageNet(nn.Module):
         self.hidden_dim = hidden_dim
         self.conv_dim = hidden_dim
         self.conv_size = conv_size
-        self.output_dim = output_dim
+        # self.output_dim = output_dim
         self.levels = levels
         self.chunk_size = hidden_dim // levels
 
