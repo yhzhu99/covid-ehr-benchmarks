@@ -71,6 +71,14 @@ def build_backbone_from_cfg(cfg):
             dim_alpha=cfg.hidden_dim,
             dim_beta=cfg.hidden_dim,
         )
+    if cfg.model == "stagenet":
+        return StageNet(
+            input_dim=cfg.demo_dim + cfg.lab_dim,
+            hidden_dim=cfg.hidden_dim,
+            conv_size=cfg.conv_size,
+            levels=cfg.levels,
+            dropout=cfg.drop,
+        )
 
 
 def build_classifier_from_cfg(cfg):
