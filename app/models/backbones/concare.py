@@ -431,9 +431,9 @@ class ConCare(nn.Module):
         d_model,
         MHD_num_head,
         d_ff,
-        output_dim,
+        # output_dim,
         device,
-        keep_prob=0.5,
+        drop=0.5,
     ):
         super(ConCare, self).__init__()
 
@@ -443,8 +443,8 @@ class ConCare(nn.Module):
         self.d_model = d_model
         self.MHD_num_head = MHD_num_head
         self.d_ff = d_ff
-        self.output_dim = output_dim
-        self.keep_prob = keep_prob
+        # self.output_dim = output_dim
+        self.drop = drop
         self.demo_dim = demo_dim
         self.device = device
 
@@ -479,15 +479,13 @@ class ConCare(nn.Module):
             self.hidden_dim,
             self.hidden_dim,
             attention_type="mul",
-            dropout=1 - self.keep_prob,
+            dropout=self.drop,
         )
 
         self.MultiHeadedAttention = MultiHeadedAttention(
-            self.MHD_num_head, self.d_model, dropout=1 - self.keep_prob
+            self.MHD_num_head, self.d_model, dropout=self.drop
         )
-        self.SublayerConnection = SublayerConnection(
-            self.d_model, dropout=1 - self.keep_prob
-        )
+        self.SublayerConnection = SublayerConnection(self.d_model, dropout=self.drop)
 
         self.PositionwiseFeedForward = PositionwiseFeedForward(
             self.d_model, self.d_ff, dropout=0.1
@@ -496,9 +494,9 @@ class ConCare(nn.Module):
         self.demo_proj_main = nn.Linear(self.demo_dim, self.hidden_dim)
         self.demo_proj = nn.Linear(self.demo_dim, self.hidden_dim)
         self.output0 = nn.Linear(self.hidden_dim, self.hidden_dim)
-        self.output1 = nn.Linear(self.hidden_dim, self.output_dim)
+        # self.output1 = nn.Linear(self.hidden_dim, self.output_dim)
 
-        self.dropout = nn.Dropout(p=1 - self.keep_prob)
+        self.dropout = nn.Dropout(p=self.drop)
         self.tanh = nn.Tanh()
         self.softmax = nn.Softmax()
         self.sigmoid = nn.Sigmoid()
@@ -572,7 +570,8 @@ class ConCare(nn.Module):
         )[0]
 
         weighted_contexts = self.FinalAttentionQKV(contexts)[0]
-        output = self.output1(self.relu(self.output0(weighted_contexts)))  # b 1
-        output = self.sigmoid(output)
+        # output = self.output1(self.relu(self.output0(weighted_contexts)))  # b 1
+        # output = self.sigmoid(output)
 
-        return output, DeCov_loss
+        # return output, DeCov_loss
+        return weighted_contexts
