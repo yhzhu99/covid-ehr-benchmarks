@@ -92,6 +92,14 @@ def build_backbone_from_cfg(cfg):
             dropout=cfg.drop,
             lamda=cfg.lamda,
         )
+    if cfg.model == "adacare":
+        return AdaCare(
+            hidden_dim=cfg.hidden_dim,
+            kernel_size=cfg.kernel_size,
+            kernel_num=cfg.kernel_num,
+            input_dim=cfg.demo_dim + cfg.lab_dim,
+            dropout=cfg.drop,
+        )
 
 
 def build_classifier_from_cfg(cfg):
