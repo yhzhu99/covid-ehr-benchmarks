@@ -12,8 +12,8 @@ class Model(nn.Module):
         self.backbone = backbone
         self.head = head
 
-    def forward(self, x):
-        x = self.backbone(x)
+    def forward(self, x, info):
+        x = self.backbone(x, info)
         x = self.head(x)
         return x
 
@@ -109,6 +109,14 @@ def build_backbone_from_cfg(cfg):
             MHD_num_head=cfg.MHD_num_head,
             d_ff=4 * cfg.hidden_dim,
             drop=cfg.drop,
+        )
+    if cfg.model == "grasp":
+        return MAPLE(
+            input_dim=cfg.demo_dim + cfg.lab_dim,
+            hidden_dim=cfg.hidden_dim,
+            output_dim=cfg.hidden_dim,
+            cluster_num=cfg.cluster_num,
+            dropout=cfg.drop,
         )
 
 
