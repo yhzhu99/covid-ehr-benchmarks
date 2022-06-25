@@ -556,7 +556,7 @@ class vanilla_transformer_encoder(nn.Module):
 
         self.bn = nn.BatchNorm1d(self.hidden_dim)
 
-    def forward(self, input, lens):
+    def forward(self, input):
 
         batch_size = input.size(0)
         time_step = input.size(1)
@@ -565,28 +565,12 @@ class vanilla_transformer_encoder(nn.Module):
         assert self.d_model % self.MHD_num_head == 0
 
         GRU_embeded_input = (
-            self.GRUs[0](
-                pack_padded_sequence(
-                    input[:, :, 0].unsqueeze(-1),
-                    lens,
-                    batch_first=True,
-                    enforce_sorted=False,
-                )
-            )[1]
-            .squeeze(0)
-            .unsqueeze(1)
+            self.GRUs[0](input[:, :, 0].unsqueeze(-1))[1].squeeze(0).unsqueeze(1)
         )  # b 1 h
 
         for i in range(feature_dim - 1):
             embeded_input = (
-                self.GRUs[i + 1](
-                    pack_padded_sequence(
-                        input[:, :, i + 1].unsqueeze(-1),
-                        lens,
-                        batch_first=True,
-                        enforce_sorted=False,
-                    )
-                )[1]
+                self.GRUs[i + 1](input[:, :, i + 1].unsqueeze(-1))[1]
                 .squeeze(0)
                 .unsqueeze(1)
             )  # b 1 h
@@ -735,12 +719,12 @@ class MAPLE(nn.Module):
         y_hard = (y_hard - y).detach() + y
         return y_hard
 
-    def forward(self, input, epoch, lens):
+    def forward(self, input, epoch):
         batch_size = input.size(0)
         time_step = input.size(1)
         feature_dim = input.size(2)
 
-        _, _, hidden_t = self.backbone(input, lens)
+        _, _, hidden_t = self.backbone(input)
 
         centers, codes = cluster(hidden_t, self.cluster_num)
 
