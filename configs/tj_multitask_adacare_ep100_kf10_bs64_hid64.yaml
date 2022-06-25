@@ -1,6 +1,6 @@
 name: tj_multitask_adacare_ep100_kf10_bs64_hid64
 model_type: dl
-model: gru
+model: adacare
 dataset: tongji
 task: multitask
 epochs: 100
