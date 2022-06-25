@@ -23,8 +23,6 @@ from torch.nn import Parameter
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from torch.utils import data
 
-device = torch.device("cuda:0" if torch.cuda.is_available() == True else "cpu")
-
 
 def random_init(dataset, num_centers):
     num_points = dataset.size(0)
@@ -34,7 +32,6 @@ def random_init(dataset, num_centers):
         np.array(random.sample(range(num_points), k=num_centers)), dtype=torch.long
     )
 
-    indices = indices.to(device)
     centers = torch.gather(dataset, 0, indices.view(-1, 1).expand(-1, dimension))
     return centers
 
@@ -47,14 +44,14 @@ def compute_codes(dataset, centers):
     # 5e8 should vary depending on the free memory on the GPU
     # Ideally, automatically ;)
     chunk_size = int(5e8 / num_centers)
-    codes = torch.zeros(num_points, dtype=torch.long, device=device)
+    codes = torch.zeros(num_points, dtype=torch.long)
     centers_t = torch.transpose(centers, 0, 1)
-    centers_norms = torch.sum(centers**2, dim=1).view(1, -1)
+    centers_norms = torch.sum(centers ** 2, dim=1).view(1, -1)
     for i in range(0, num_points, chunk_size):
         begin = i
         end = min(begin + chunk_size, num_points)
         dataset_piece = dataset[begin:end, :]
-        dataset_norms = torch.sum(dataset_piece**2, dim=1).view(-1, 1)
+        dataset_norms = torch.sum(dataset_piece ** 2, dim=1).view(-1, 1)
         distances = torch.mm(dataset_piece, centers_t)
         distances *= -2.0
         distances += dataset_norms
@@ -68,15 +65,13 @@ def compute_codes(dataset, centers):
 def update_centers(dataset, codes, num_centers):
     num_points = dataset.size(0)
     dimension = dataset.size(1)
-    centers = torch.zeros(num_centers, dimension, dtype=torch.float, device=device)
-    cnt = torch.zeros(num_centers, dtype=torch.float, device=device)
+    centers = torch.zeros(num_centers, dimension, dtype=torch.float)
+    cnt = torch.zeros(num_centers, dtype=torch.float)
     centers.scatter_add_(0, codes.view(-1, 1).expand(-1, dimension), dataset)
-    cnt.scatter_add_(0, codes, torch.ones(num_points, dtype=torch.float, device=device))
+    cnt.scatter_add_(0, codes, torch.ones(num_points, dtype=torch.float))
     # Avoiding division by zero
     # Not necessary if there are no duplicates among the data points
-    cnt = torch.where(
-        cnt > 0.5, cnt, torch.ones(num_centers, dtype=torch.float, device=device)
-    )
+    cnt = torch.where(cnt > 0.5, cnt, torch.ones(num_centers, dtype=torch.float))
     centers /= cnt.view(-1, 1)
     return centers
 
@@ -203,7 +198,6 @@ class SingleAttention(nn.Module):
             torch.tensor(range(time_step - 1, -1, -1), dtype=torch.float32)
             .unsqueeze(-1)
             .unsqueeze(0)
-            .to(device)
         )  # 1*t*1
         b_time_decays = time_decays.repeat(batch_size, 1, 1)  # b t 1
 
@@ -361,8 +355,8 @@ def tile(a, dim, n_tile):
     a = a.repeat(*(repeat_idx))
     order_index = torch.LongTensor(
         np.concatenate([init_dim * np.arange(n_tile) + i for i in range(init_dim)])
-    ).to(device)
-    return torch.index_select(a, dim, order_index).to(device)
+    )
+    return torch.index_select(a, dim, order_index)
 
 
 class PositionwiseFeedForward(nn.Module):  # new added
@@ -458,7 +452,7 @@ class MultiHeadedAttention(nn.Module):
             x.transpose(1, 2).contiguous().view(nbatches, -1, self.h * self.d_k)
         )  # batch_size * d_input * hidden_dim
 
-        return self.final_linear(x), torch.zeros(1).to(device)
+        return self.final_linear(x), torch.zeros(1)
 
 
 class LayerNorm(nn.Module):
@@ -664,7 +658,6 @@ def clones(module, N):
 class MAPLE(nn.Module):
     def __init__(
         self,
-        device,
         input_dim=76,
         hidden_dim=32,
         output_dim=1,
@@ -697,7 +690,7 @@ class MAPLE(nn.Module):
             MHD_num_head=4,
             d_ff=2 * self.hidden_dim,
             output_dim=self.output_dim,
-        ).to(device)
+        )
 
         self.relu = nn.ReLU()
         self.tanh = nn.Tanh()
@@ -714,7 +707,7 @@ class MAPLE(nn.Module):
         self.bn = nn.BatchNorm1d(self.hidden_dim)
 
     def sample_gumbel(self, shape, eps=1e-20):
-        U = torch.rand(shape).to(device)
+        U = torch.rand(shape)
 
         return -torch.log(-torch.log(U + eps) + eps)
 
@@ -761,7 +754,7 @@ class MAPLE(nn.Module):
                 include_self=False,
             ).toarray()
 
-        adj_mat = torch.tensor(A_mat).to(device)
+        adj_mat = torch.tensor(A_mat)
 
         e = self.relu(torch.matmul(hidden_t, centers.transpose(0, 1)))  # b clu_num
 
