@@ -111,7 +111,7 @@ class SingleAttention(nn.Module):
             raise RuntimeError("Wrong attention type.")
 
         self.tanh = nn.Tanh()
-        self.softmax = nn.Softmax()
+        self.softmax = nn.Softmax(dim=1)
         self.sigmoid = nn.Sigmoid()
         self.relu = nn.ReLU()
 
@@ -490,6 +490,7 @@ class ConCare(nn.Module):
             self.d_model, self.d_ff, dropout=0.1
         )
 
+        self.demo_lab_proj = nn.Linear(self.demo_dim + self.lab_dim, self.hidden_dim)
         self.demo_proj_main = nn.Linear(self.demo_dim, self.hidden_dim)
         self.demo_proj = nn.Linear(self.demo_dim, self.hidden_dim)
         self.output0 = nn.Linear(self.hidden_dim, self.hidden_dim)
@@ -501,9 +502,7 @@ class ConCare(nn.Module):
         self.sigmoid = nn.Sigmoid()
         self.relu = nn.ReLU()
 
-    def forward(self, x):
-        demo_input = x[:, 0, : self.demo_dim]
-        input = x[:, :, self.demo_dim :]
+    def concare_encoder(self, input, demo_input):
 
         # input shape [batch_size, timestep, feature_dim]
         demo_main = self.tanh(self.demo_proj_main(demo_input)).unsqueeze(
@@ -533,12 +532,6 @@ class ConCare(nn.Module):
             1
         )  # b 1 h
 
-        """
-        for every time stamp, calculate its hidden state
-        """
-
-        out = torch.randn(batch_size, time_step, self.hidden_dim)
-        # for cur_time in range(time_step):
         for i in range(feature_dim - 1):
             embeded_input = self.GRUs[i + 1](
                 input[:, :, i + 1].unsqueeze(-1),
@@ -556,7 +549,6 @@ class ConCare(nn.Module):
             Attention_embeded_input = torch.cat(
                 (Attention_embeded_input, embeded_input), 1
             )  # b i h
-
         Attention_embeded_input = torch.cat(
             (Attention_embeded_input, demo_main), 1
         )  # b i+1 h
@@ -579,6 +571,20 @@ class ConCare(nn.Module):
         )[0]
 
         weighted_contexts = self.FinalAttentionQKV(contexts)[0]
-        # out[:, cur_time, :] = weighted_contexts
+        return weighted_contexts
 
+    def forward(self, x):
+        batch_size, time_steps, _ = x.size()
+        demo_input = x[:, 0, : self.demo_dim]
+        lab_input = x[:, :, self.demo_dim :]
+        out = torch.zeros((batch_size, time_steps, self.hidden_dim))
+        for cur_time in range(time_steps):
+            # print(cur_time, end=" ")
+            cur_lab = lab_input[:, : cur_time + 1, :]
+            # print("cur_lab", cur_lab.shape)
+            if cur_time == 0:
+                out[:, cur_time, :] = self.demo_lab_proj(x[:, 0, :])
+            else:
+                out[:, cur_time, :] = self.concare_encoder(cur_lab, demo_input)
+        # print()
         return out
