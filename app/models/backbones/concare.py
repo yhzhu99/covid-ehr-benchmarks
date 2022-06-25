@@ -425,7 +425,7 @@ class SublayerConnection(nn.Module):
 class ConCare(nn.Module):
     def __init__(
         self,
-        input_dim,
+        input_dim,  # lab_dim
         hidden_dim,
         demo_dim,
         d_model,
@@ -502,7 +502,10 @@ class ConCare(nn.Module):
         self.sigmoid = nn.Sigmoid()
         self.relu = nn.ReLU()
 
-    def forward(self, input, demo_input):
+    def forward(self, x):
+        demo_input = x[:, 0, : self.demo_dim]
+        input = x[:, :, self.demo_dim :]
+
         # input shape [batch_size, timestep, feature_dim]
         demo_main = self.tanh(self.demo_proj_main(demo_input)).unsqueeze(
             1
