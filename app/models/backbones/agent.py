@@ -117,7 +117,7 @@ class Agent(nn.Module):
 
     def forward(self, x):
         demo = x[:, 0, : self.demo_dim]
-        labtest = x[:, :, 2:]
+        labtest = x[:, :, self.demo_dim :]
 
         batch_size = labtest.size(0)
         time_step = labtest.size(1)
