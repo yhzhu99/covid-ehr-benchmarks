@@ -1,3 +1,4 @@
+import torch
 from torch import nn
 
 
@@ -34,9 +35,11 @@ class Transformer(nn.Module):
         )
 
     def forward(self, x):
+        batch_size, time_steps, _ = x.size()
         x = self.proj(x)
-        # x = self.act(x)
-        # x = self.bn(x)
-
-        x = self.transformer_encoder(x)
-        return x
+        out = torch.zeros((batch_size, time_steps, self.hidden_dim))
+        for cur_time in range(time_steps):
+            cur_x = x[:, : cur_time + 1, :]
+            cur_x = self.transformer_encoder(cur_x)
+            out[:, cur_time, :] = torch.mean(cur_x, dim=1)
+        return out
