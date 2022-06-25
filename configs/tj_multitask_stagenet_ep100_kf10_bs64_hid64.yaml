@@ -1,4 +1,4 @@
-name: tj_stagenet_transformer_ep100_kf10_bs64_hid64
+name: tj_multitask_stagenet_ep100_kf10_bs64_hid64
 model_type: dl
 model: stagenet
 dataset: tongji
