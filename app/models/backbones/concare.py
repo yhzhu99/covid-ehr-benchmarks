@@ -125,9 +125,8 @@ class SingleAttention(nn.Module):
 
         time_decays = (
             torch.tensor(range(time_step - 1, -1, -1), dtype=torch.float32)
-            .to(device="cuda")
-            .unsqueeze(-1)
-            .unsqueeze(0)
+            # .to(device="cuda")
+            .unsqueeze(-1).unsqueeze(0)
         )  # 1*t*1
         b_time_decays = time_decays.repeat(batch_size, 1, 1) + 1  # b t 1
 
@@ -425,20 +424,20 @@ class SublayerConnection(nn.Module):
 class ConCare(nn.Module):
     def __init__(
         self,
-        input_dim,  # lab_dim
+        lab_dim,  # lab_dim
         hidden_dim,
         demo_dim,
         d_model,
         MHD_num_head,
         d_ff,
         # output_dim,
-        device,
+        # device,
         drop=0.5,
     ):
         super(ConCare, self).__init__()
 
         # hyperparameters
-        self.input_dim = input_dim
+        self.lab_dim = lab_dim
         self.hidden_dim = hidden_dim  # d_model
         self.d_model = d_model
         self.MHD_num_head = MHD_num_head
@@ -446,7 +445,7 @@ class ConCare(nn.Module):
         # self.output_dim = output_dim
         self.drop = drop
         self.demo_dim = demo_dim
-        self.device = device
+        # self.device = device
 
         # layers
         self.PositionalEncoding = PositionalEncoding(
@@ -456,7 +455,7 @@ class ConCare(nn.Module):
         self.GRUs = nn.ModuleList(
             [
                 copy.deepcopy(nn.GRU(1, self.hidden_dim, batch_first=True))
-                for _ in range(self.input_dim)
+                for _ in range(self.lab_dim)
             ]
         )
         self.LastStepAttentions = nn.ModuleList(
@@ -471,7 +470,7 @@ class ConCare(nn.Module):
                         use_demographic=False,
                     )
                 )
-                for _ in range(self.input_dim)
+                for _ in range(self.lab_dim)
             ]
         )
 
@@ -514,7 +513,7 @@ class ConCare(nn.Module):
         batch_size = input.size(0)
         time_step = input.size(1)
         feature_dim = input.size(2)
-        assert feature_dim == self.input_dim  # input Tensor : 256 * 48 * 76
+        assert feature_dim == self.lab_dim  # input Tensor : 256 * 48 * 76
         assert self.d_model % self.MHD_num_head == 0
 
         # forward
@@ -522,7 +521,7 @@ class ConCare(nn.Module):
             input[:, :, 0].unsqueeze(-1),
             Variable(
                 torch.zeros(batch_size, self.hidden_dim)
-                .to(device=self.device)
+                # .to(device=self.device)
                 .unsqueeze(0)
             ),
         )[
@@ -538,7 +537,7 @@ class ConCare(nn.Module):
                 input[:, :, i + 1].unsqueeze(-1),
                 Variable(
                     torch.zeros(batch_size, self.hidden_dim)
-                    .to(device=self.device)
+                    # .to(device=self.device)
                     .unsqueeze(0)
                 ),
             )[
