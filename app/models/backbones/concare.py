@@ -234,7 +234,7 @@ class FinalAttentionQKV(nn.Module):
 
         self.dropout = nn.Dropout(p=dropout)
         self.tanh = nn.Tanh()
-        self.softmax = nn.Softmax()
+        self.softmax = nn.Softmax(dim=1)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, input):
