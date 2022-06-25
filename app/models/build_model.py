@@ -70,11 +70,9 @@ def build_backbone_from_cfg(cfg):
         )
     if cfg.model == "retain":
         return RETAIN(
-            dim_input=cfg.demo_dim + cfg.lab_dim,
-            dim_emb=cfg.hidden_dim,
-            drop=cfg.drop,
-            dim_alpha=cfg.hidden_dim,
-            dim_beta=cfg.hidden_dim,
+            input_dim=cfg.demo_dim + cfg.lab_dim,
+            hidden_dim=cfg.hidden_dim,
+            dropout=cfg.drop,
         )
     if cfg.model == "stagenet":
         return StageNet(
