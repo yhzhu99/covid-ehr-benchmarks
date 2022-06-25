@@ -644,7 +644,7 @@ class MAPLE(nn.Module):
         self,
         input_dim=76,
         hidden_dim=32,
-        output_dim=1,
+        # output_dim=1,
         cluster_num=12,
         dropout=0.0,
         block="LSTM",
@@ -662,10 +662,10 @@ class MAPLE(nn.Module):
         self.GRUs = clones(nn.GRU(1, self.hidden_dim, batch_first=True), self.input_dim)
         self.opt_layer2 = nn.Linear(self.input_dim * self.hidden_dim, self.hidden_dim)
 
-        self.opt_layer = nn.Linear(self.hidden_dim, self.output_dim)
+        # self.opt_layer = nn.Linear(self.hidden_dim, self.output_dim)
 
         nn.init.xavier_uniform_(self.embed_layer.weight)
-        nn.init.xavier_uniform_(self.opt_layer.weight)
+        # nn.init.xavier_uniform_(self.opt_layer.weight)
 
         self.backbone = vanilla_transformer_encoder(
             input_dim=self.input_dim,
@@ -756,6 +756,8 @@ class MAPLE(nn.Module):
         weight2 = 1 - weight1
 
         final_h = weight1 * clu_appendix + weight2 * hidden_t
-        opt = self.sigmoid(self.opt_layer(self.bn(final_h)))
+        # opt = self.sigmoid(self.opt_layer(self.bn(final_h)))
+        out = final_h
 
-        return opt, hidden_t
+        # return opt, hidden_t
+        return out
