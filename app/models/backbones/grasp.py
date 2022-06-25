@@ -644,7 +644,7 @@ class MAPLE(nn.Module):
         self,
         input_dim=76,
         hidden_dim=32,
-        # output_dim=1,
+        output_dim=76,
         cluster_num=12,
         dropout=0.0,
         block="LSTM",
@@ -719,7 +719,7 @@ class MAPLE(nn.Module):
         y_hard = (y_hard - y).detach() + y
         return y_hard
 
-    def forward(self, input, epoch):
+    def grasp_encoder(self, input, epoch):
         batch_size = input.size(0)
         time_step = input.size(1)
         feature_dim = input.size(2)
@@ -760,4 +760,12 @@ class MAPLE(nn.Module):
         out = final_h
 
         # return opt, hidden_t
+        return out
+
+    def forward(self, x, info):
+        batch_size, time_steps, _ = x.size()
+        out = torch.zeros((batch_size, time_steps, self.hidden_dim))
+        for cur_time in range(time_steps):
+            cur_x = x[:, : cur_time + 1, :]
+            out[:, cur_time, :] = self.grasp_encoder(cur_x, info["epoch"])
         return out
