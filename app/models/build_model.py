@@ -100,6 +100,16 @@ def build_backbone_from_cfg(cfg):
             input_dim=cfg.demo_dim + cfg.lab_dim,
             dropout=cfg.drop,
         )
+    if cfg.model == "concare":
+        return ConCare(
+            lab_dim=cfg.lab_dim,
+            demo_dim=cfg.demo_dim,
+            hidden_dim=cfg.hidden_dim,
+            d_model=cfg.hidden_dim,
+            MHD_num_head=cfg.MHD_num_head,
+            d_ff=4 * cfg.hidden_dim,
+            drop=cfg.drop,
+        )
 
 
 def build_classifier_from_cfg(cfg):

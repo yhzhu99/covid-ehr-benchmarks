@@ -532,6 +532,13 @@ class ConCare(nn.Module):
         ].unsqueeze(
             1
         )  # b 1 h
+
+        """
+        for every time stamp, calculate its hidden state
+        """
+
+        out = torch.randn(batch_size, time_step, self.hidden_dim)
+        # for cur_time in range(time_step):
         for i in range(feature_dim - 1):
             embeded_input = self.GRUs[i + 1](
                 input[:, :, i + 1].unsqueeze(-1),
@@ -572,8 +579,6 @@ class ConCare(nn.Module):
         )[0]
 
         weighted_contexts = self.FinalAttentionQKV(contexts)[0]
-        # output = self.output1(self.relu(self.output0(weighted_contexts)))  # b 1
-        # output = self.sigmoid(output)
+        # out[:, cur_time, :] = weighted_contexts
 
-        # return output, DeCov_loss
-        return weighted_contexts
+        return out
