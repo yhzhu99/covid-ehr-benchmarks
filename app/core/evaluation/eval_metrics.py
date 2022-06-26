@@ -6,7 +6,7 @@ from sklearn import metrics as sklearn_metrics
 # for decompensation, in-hospital mortality
 
 
-def print_metrics_binary(y_true, predictions, verbose=1):
+def print_metrics_binary(y_true, predictions, verbose=0):
     predictions = np.array(predictions)
     if len(predictions.shape) == 1:
         predictions = np.stack([1 - predictions, predictions]).transpose((1, 0))
@@ -57,7 +57,7 @@ def print_metrics_binary(y_true, predictions, verbose=1):
 # for phenotyping
 
 
-def print_metrics_multilabel(y_true, predictions, verbose=1):
+def print_metrics_multilabel(y_true, predictions, verbose=0):
     y_true = np.array(y_true)
     predictions = np.array(predictions)
 
@@ -89,7 +89,7 @@ def mean_absolute_percentage_error(y_true, y_pred):
     return np.mean(np.abs((y_true - y_pred) / (y_true + 0.1))) * 100
 
 
-def print_metrics_regression(y_true, predictions, verbose=1):
+def print_metrics_regression(y_true, predictions, verbose=0):
     predictions = np.array(predictions)
     predictions = np.maximum(predictions, 0).flatten()
     y_true = np.array(y_true)
@@ -154,7 +154,7 @@ def get_estimate_log(prediction, nbins):
     return LogBins.means[bin_id]
 
 
-def print_metrics_log_bins(y_true, predictions, verbose=1):
+def print_metrics_log_bins(y_true, predictions, verbose=0):
     y_true_bins = [get_bin_log(x, LogBins.nbins) for x in y_true]
     prediction_bins = [get_bin_log(x, LogBins.nbins) for x in predictions]
     cf = sklearn_metrics.confusion_matrix(y_true_bins, prediction_bins)
@@ -212,5 +212,5 @@ def get_estimate_custom(prediction, nbins):
     return CustomBins.means[bin_id]
 
 
-def print_metrics_custom_bins(y_true, predictions, verbose=1):
+def print_metrics_custom_bins(y_true, predictions, verbose=0):
     return print_metrics_regression(y_true, predictions, verbose)

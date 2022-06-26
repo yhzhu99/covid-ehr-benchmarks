@@ -2,7 +2,7 @@ import numpy as np
 from sklearn import metrics as sklearn_metrics
 
 
-def early_prediction_outcome_metric(y_true, predictions, verbose=1):
+def early_prediction_outcome_metric(y_true, predictions, verbose=0):
     """
     > predictions: np.ndarray
       shape (num_records, ) --> [outcome]
@@ -67,7 +67,7 @@ def multitask_los_metric(
     max_visits=13,
     sigma_func=sigma,
     metrics_strategy="MAE",
-    verbose=1,
+    verbose=0,
 ):
     """
     > predictions: np.ndarray

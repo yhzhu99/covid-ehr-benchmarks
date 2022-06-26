@@ -120,7 +120,7 @@ def val_epoch(model, device, dataloader, loss_fn, los_statistics, max_visits, in
         y_los_pred,
         max_visits,
         metrics_strategy="MAE",
-        verbose=1,
+        verbose=0,
     )
     y_outcome_pred = np.stack([1 - y_outcome_pred, y_outcome_pred], axis=1)
     outcome_evaluation_scores = eval_metrics.print_metrics_binary(

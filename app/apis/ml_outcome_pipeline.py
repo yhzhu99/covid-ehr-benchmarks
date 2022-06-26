@@ -72,7 +72,7 @@ def validate(x, y, model):
         y_outcome_true, y_outcome_pred, verbose=0
     )
     early_prediction_score = covid_metrics.early_prediction_outcome_metric(
-        y, y_outcome_pred, verbose=1
+        y, y_outcome_pred, verbose=0
     )
     evaluation_scores["early_prediction_score"] = early_prediction_score
     return evaluation_scores
