@@ -12,15 +12,16 @@ class Model(nn.Module):
         self.backbone = backbone
         self.head = head
 
-    # def forward(self, x, info):
-    #     """grasp model requires `info` (include current epoch message)"""
-    #     x = self.backbone(x, info)
-    #     x = self.head(x)
-    #     return x
-    def forward(self, x):
-        x = self.backbone(x)
+    def forward(self, x, info):
+        """grasp model requires `info` (include current epoch message)"""
+        x = self.backbone(x, info)
         x = self.head(x)
         return x
+
+    # def forward(self, x):
+    #     x = self.backbone(x)
+    #     x = self.head(x)
+    #     return x
 
 
 def build_backbone_from_cfg(cfg):
