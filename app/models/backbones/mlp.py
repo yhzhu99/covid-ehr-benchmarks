@@ -28,7 +28,8 @@ class MLP(nn.Module):
             nn.Linear(4 * hidden_dim, hidden_dim),
         )
 
-    def forward(self, x):
+    def forward(self, x, info=None):
+        """extra info is not used here"""
         x = self.proj(x)
         # x = self.act(x)
         # x = self.bn(x)

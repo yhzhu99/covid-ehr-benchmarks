@@ -115,7 +115,8 @@ class Agent(nn.Module):
 
         return actions.unsqueeze(-1)
 
-    def forward(self, x):
+    def forward(self, x, info=None):
+        """extra info is not used here"""
         demo = x[:, 0, : self.demo_dim]
         labtest = x[:, :, self.demo_dim :]
 

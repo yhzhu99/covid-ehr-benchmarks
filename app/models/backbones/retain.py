@@ -40,7 +40,8 @@ class RETAIN(nn.Module):
         out = ((x * beta).transpose(1, 2) @ alpha).squeeze(-1)
         return out
 
-    def forward(self, x):
+    def forward(self, x, info=None):
+        """extra info is not used here"""
         batch_size, time_steps, _ = x.size()
         x = self.proj(x)
         x = self.dropout(x)

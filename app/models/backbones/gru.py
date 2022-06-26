@@ -29,7 +29,8 @@ class GRU(nn.Module):
             batch_first=True,
         )
 
-    def forward(self, x):
+    def forward(self, x, info=None):
+        """extra info is not used here"""
         x = self.proj(x)
         # x = self.act(x)
         # x = self.bn(x)

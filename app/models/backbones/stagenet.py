@@ -101,7 +101,8 @@ class StageNet(nn.Module):
         out = torch.cat([h_out, f_master_gate[..., 0], i_master_gate[..., 0]], 1)
         return out, c_out, h_out
 
-    def forward(self, input):
+    def forward(self, input, info=None):
+        """extra info is not used here"""
         batch_size, time_step, feature_dim = input.size()
         time = torch.ones(batch_size, time_step)
         c_out = torch.zeros(batch_size, self.hidden_dim)

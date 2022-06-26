@@ -125,7 +125,7 @@ class TemporalConvNet(nn.Module):
 
         num_levels = len(num_channels)
         for i in range(num_levels):
-            dilation_size = 2**i
+            dilation_size = 2 ** i
             in_channels = num_inputs if i == 0 else num_channels[i - 1]
             out_channels = num_channels[i]
             layers += [
@@ -142,7 +142,8 @@ class TemporalConvNet(nn.Module):
 
         self.network = nn.Sequential(*layers)
 
-    def forward(self, x):
+    def forward(self, x, info=None):
+        """extra info is not used here"""
         x = x.permute(0, 2, 1)  # Permute to channel first
         o = self.network(x)
         o = o.permute(0, 2, 1)  # Permute to channel last

@@ -180,7 +180,8 @@ class AdaCare(nn.Module):
         self.sigmoid = nn.Sigmoid()
         self.tanh = nn.Tanh()
 
-    def forward(self, input):
+    def forward(self, input, info=None):
+        """extra info is not used here"""
         # input shape [batch_size, timestep, feature_dim]
         batch_size = input.size(0)
         time_step = input.size(1)

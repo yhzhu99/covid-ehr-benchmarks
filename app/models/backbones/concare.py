@@ -573,7 +573,8 @@ class ConCare(nn.Module):
         weighted_contexts = self.FinalAttentionQKV(contexts)[0]
         return weighted_contexts
 
-    def forward(self, x):
+    def forward(self, x, info=None):
+        """extra info is not used here"""
         batch_size, time_steps, _ = x.size()
         demo_input = x[:, 0, : self.demo_dim]
         lab_input = x[:, :, self.demo_dim :]
