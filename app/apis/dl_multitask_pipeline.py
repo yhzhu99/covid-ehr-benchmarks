@@ -41,7 +41,7 @@ from app.models import (
 )
 
 
-def train_epoch(model, device, dataloader, loss_fn, optimizer):
+def train_epoch(model, device, dataloader, loss_fn, optimizer, info):
     train_loss = []
     model.train()
     for step, data in enumerate(dataloader):
@@ -54,7 +54,7 @@ def train_epoch(model, device, dataloader, loss_fn, optimizer):
         batch_y_outcome = batch_y[:, :, 0].unsqueeze(-1)
         batch_y_los = batch_y[:, :, 1].unsqueeze(-1)
         optimizer.zero_grad()
-        outcome, los = model(batch_x)
+        outcome, los = model(batch_x, info)
         loss = loss_fn(outcome, batch_y_outcome, los, batch_y_los, batch_x_lab_length)
         train_loss.append(loss.item())
         loss.backward()
@@ -62,7 +62,7 @@ def train_epoch(model, device, dataloader, loss_fn, optimizer):
     return np.array(train_loss).mean()
 
 
-def val_epoch(model, device, dataloader, loss_fn, los_statistics, max_visits):
+def val_epoch(model, device, dataloader, loss_fn, los_statistics, max_visits, info):
     """
     val / test
     """
@@ -84,7 +84,7 @@ def val_epoch(model, device, dataloader, loss_fn, los_statistics, max_visits):
             all_y = batch_y
             batch_y_outcome = batch_y[:, :, 0].unsqueeze(-1)
             batch_y_los = batch_y[:, :, 1].unsqueeze(-1)
-            outcome, los = model(batch_x)
+            outcome, los = model(batch_x, info)
             loss = loss_fn(
                 outcome, batch_y_outcome, los, batch_y_los, batch_x_lab_length
             )
@@ -167,6 +167,8 @@ def reverse_zscore_los(y, los_statistics):
 
 
 def start_pipeline(cfg, device):
+    info = {"config": cfg, "epoch": 0}
+    val_info = {"config": cfg, "epoch": cfg.epochs}
     dataset_type, method, num_folds, train_fold, max_visits = (
         cfg.dataset,
         cfg.model,
@@ -250,14 +252,28 @@ def start_pipeline(cfg, device):
         }
         best_val_performance = 1e8
         for epoch in range(cfg.epochs):
-            train_loss = train_epoch(model, device, train_loader, criterion, optimizer)
+            info["epoch"] = epoch + 1
+            train_loss = train_epoch(
+                model,
+                device,
+                train_loader,
+                criterion,
+                optimizer,
+                info=info,
+            )
             (
                 val_loss,
                 val_outcome_evaluation_scores,
                 val_los_evaluation_scores,
                 val_covid_evaluation_scores,
             ) = val_epoch(
-                model, device, val_loader, criterion, los_statistics, max_visits
+                model,
+                device,
+                val_loader,
+                criterion,
+                los_statistics,
+                max_visits,
+                info=val_info,
             )
             # save performance history on validation set
             print(
@@ -297,7 +313,15 @@ def start_pipeline(cfg, device):
             test_outcome_evaluation_scores,
             test_los_evaluation_scores,
             test_covid_evaluation_scores,
-        ) = val_epoch(model, device, test_loader, criterion, los_statistics, max_visits)
+        ) = val_epoch(
+            model,
+            device,
+            test_loader,
+            criterion,
+            los_statistics,
+            max_visits,
+            info=val_info,
+        )
         test_performance["test_loss"].append(test_loss)
         test_performance["test_mad"].append(test_los_evaluation_scores["mad"])
         test_performance["test_mse"].append(test_los_evaluation_scores["mse"])
