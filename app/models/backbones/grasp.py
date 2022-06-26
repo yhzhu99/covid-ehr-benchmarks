@@ -27,6 +27,8 @@ from torch.utils import data
 def random_init(dataset, num_centers):
     num_points = dataset.size(0)
     dimension = dataset.size(1)
+    # print("random size", dataset.size())
+    # print("numcenter", num_centers)
 
     indices = torch.tensor(
         np.array(random.sample(range(num_points), k=num_centers)), dtype=torch.long
@@ -41,6 +43,8 @@ def compute_codes(dataset, centers):
     num_points = dataset.size(0)
     dimension = dataset.size(1)
     num_centers = centers.size(0)
+
+    # print("size:", dataset.size(), centers.size())
     # 5e8 should vary depending on the free memory on the GPU
     # Ideally, automatically ;)
     chunk_size = int(5e8 / num_centers)
@@ -90,7 +94,7 @@ def cluster(dataset, num_centers):
         # This is too strict in practice
         if torch.equal(codes, new_codes):
             #             sys.stdout.write('\n')
-            #             print('Converged in %d iterations' % num_iterations)
+            #             # print('Converged in %d iterations' % num_iterations)
             break
         if num_iterations > 1000:
             break
@@ -667,13 +671,12 @@ class MAPLE(nn.Module):
         nn.init.xavier_uniform_(self.embed_layer.weight)
         # nn.init.xavier_uniform_(self.opt_layer.weight)
 
-        self.backbone = vanilla_transformer_encoder(
-            input_dim=self.input_dim,
-            hidden_dim=self.hidden_dim,
-            d_model=self.hidden_dim,
-            MHD_num_head=4,
-            d_ff=2 * self.hidden_dim,
-            output_dim=self.output_dim,
+        self.proj = nn.Linear(input_dim, hidden_dim)
+        self.backbone = nn.GRU(
+            input_size=hidden_dim,
+            hidden_size=hidden_dim,
+            num_layers=1,
+            batch_first=True,
         )
 
         self.relu = nn.ReLU()
@@ -724,7 +727,10 @@ class MAPLE(nn.Module):
         time_step = input.size(1)
         feature_dim = input.size(2)
 
-        _, _, hidden_t = self.backbone(input)
+        # _, _, hidden_t = self.backbone(input)
+        _, hidden_t = self.backbone(input)
+        hidden_t = torch.squeeze(hidden_t, 0)
+        # print("hiddent", hidden_t.shape)
 
         centers, codes = cluster(hidden_t, self.cluster_num)
 
@@ -764,8 +770,10 @@ class MAPLE(nn.Module):
 
     def forward(self, x, info):
         batch_size, time_steps, _ = x.size()
+        x = self.proj(x)
         out = torch.zeros((batch_size, time_steps, self.hidden_dim))
         for cur_time in range(time_steps):
             cur_x = x[:, : cur_time + 1, :]
+            # print("curx", cur_x.shape)
             out[:, cur_time, :] = self.grasp_encoder(cur_x, info["epoch"])
         return out
