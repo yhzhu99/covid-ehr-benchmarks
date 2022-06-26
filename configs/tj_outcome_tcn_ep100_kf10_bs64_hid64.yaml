@@ -1,0 +1,13 @@
+name: tj_outcome_tcn_ep100_kf10_bs64_hid64
+model_type: dl
+model: tcn
+dataset: tongji
+task: outcome
+epochs: 100
+num_folds: 10
+train_fold: 10
+batch_size: 64
+hidden_dim: 64
+kernel_size: 2
+dropout: 0.0
+output_dim: 1

@@ -1,0 +1,8 @@
+name: hm_los_xgboost_kf10
+model_type: ml
+model: xgboost
+mode: test # val / test
+dataset: hm
+task: los
+num_folds: 10
+train_fold: 10
