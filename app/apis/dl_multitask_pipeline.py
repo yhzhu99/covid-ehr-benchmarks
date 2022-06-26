@@ -108,6 +108,7 @@ def val_epoch(model, device, dataloader, loss_fn, los_statistics, max_visits, in
     y_true_all = np.array(y_true_all)
     y_los_true = np.array(y_los_true)
     y_los_pred = np.array(y_los_pred)
+    y_true_all = reverse_zscore_los(y_true_all, los_statistics)
     y_los_true = reverse_zscore_los(y_los_true, los_statistics)
     y_los_pred = reverse_zscore_los(y_los_pred, los_statistics)
     early_prediction_score = covid_metrics.early_prediction_outcome_metric(
@@ -162,7 +163,10 @@ def zscore_los(dataset, los_statistics):
 
 def reverse_zscore_los(y, los_statistics):
     """reverse zscore y"""
-    y = y * los_statistics["los_std"] + los_statistics["los_mean"]
+    if len(y.shape) == 1:
+        y = y * los_statistics["los_std"] + los_statistics["los_mean"]
+    elif len(y.shape) == 2:  # [outcome, los]
+        y[:, 1] = y[:, 1] * los_statistics["los_std"] + los_statistics["los_mean"]
     return y
 
 
