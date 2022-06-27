@@ -53,7 +53,7 @@ def train(x, y, method):
         model.fit(x, y)
     elif method == "catboost":
         model = CatBoostClassifier(
-            iterations=1000,  # performance is better when iterations = 100
+            iterations=50,  # performance is better when iterations = 100
             learning_rate=0.5,
             depth=3,
             verbose=None,
@@ -175,7 +175,7 @@ def start_pipeline(cfg):
         val_auroc_list = []
         val_auprc_list = []
         val_early_prediction_list = []
-        for f in range(num_folds):
+        for f in range(train_fold):
             val_accuracy_list.extend(all_history[f"test_fold_{f + 1}"]["val_accuracy"])
             val_auroc_list.extend(all_history[f"test_fold_{f + 1}"]["val_auroc"])
             val_auprc_list.extend(all_history[f"test_fold_{f + 1}"]["val_auprc"])

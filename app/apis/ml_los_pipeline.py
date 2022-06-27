@@ -182,7 +182,7 @@ def start_pipeline(cfg):
         val_mse_list = []
         val_mape_list = []
         val_rmse_list = []
-        for f in range(num_folds):
+        for f in range(train_fold):
             val_mad_list.extend(all_history[f"test_fold_{f + 1}"]["val_mad"])
             val_mse_list.extend(all_history[f"test_fold_{f + 1}"]["val_mse"])
             val_mape_list.extend(all_history[f"test_fold_{f + 1}"]["val_mape"])
