@@ -64,7 +64,7 @@ def train(x, y, method):
     return model
 
 
-def validate(x, y, model):
+def validate(x, y, model, cfg):
     """val/test"""
     y_outcome_pred = model.predict(x)
     y_outcome_true = y[:, 0]
@@ -72,7 +72,7 @@ def validate(x, y, model):
         y_outcome_true, y_outcome_pred, verbose=0
     )
     early_prediction_score = covid_metrics.early_prediction_outcome_metric(
-        y, y_outcome_pred, verbose=0
+        y, y_outcome_pred, cfg.thresholds, verbose=0
     )
     evaluation_scores["early_prediction_score"] = early_prediction_score
     return evaluation_scores
@@ -137,7 +137,7 @@ def start_pipeline(cfg):
                 "val_auprc": [],
                 "val_early_prediction_score": [],
             }
-            val_evaluation_scores = validate(x_val, y_val, model)
+            val_evaluation_scores = validate(x_val, y_val, model, cfg)
 
             history["val_accuracy"].append(val_evaluation_scores["acc"])
             history["val_auroc"].append(val_evaluation_scores["auroc"])
@@ -155,7 +155,7 @@ def start_pipeline(cfg):
             )
 
         elif mode == "test":
-            test_evaluation_scores = validate(x_test, y_test, model)
+            test_evaluation_scores = validate(x_test, y_test, model, cfg)
             test_performance["test_accuracy"].append(test_evaluation_scores["acc"])
             test_performance["test_auroc"].append(test_evaluation_scores["auroc"])
             test_performance["test_auprc"].append(test_evaluation_scores["auprc"])
@@ -199,9 +199,11 @@ def start_pipeline(cfg):
             "AUPRC: {:.3f} ({:.3f})".format(val_auprc_list.mean(), val_auprc_list.std())
         )
         print(
-            "EarlyPredictionScore: {:.3f} ({:.3f})".format(
-                val_early_prediction_list.mean(), val_early_prediction_list.std()
-            )
+            "EarlyPredictionScore:",
+            (
+                val_early_prediction_list.mean(axis=0),
+                val_early_prediction_list.std(axis=0),
+            ),
         )
     elif mode == "test":
         # Calculate average performance on 10-fold test set
@@ -228,7 +230,9 @@ def start_pipeline(cfg):
             )
         )
         print(
-            "EarlyPredictionScore: {:.3f} ({:.3f})".format(
-                test_early_prediction_list.mean(), test_early_prediction_list.std()
-            )
+            "EarlyPredictionScore:",
+            (
+                test_early_prediction_list.mean(axis=0),
+                test_early_prediction_list.std(axis=0),
+            ),
         )
