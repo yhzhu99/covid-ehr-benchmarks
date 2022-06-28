@@ -2,7 +2,34 @@ import numpy as np
 from sklearn import metrics as sklearn_metrics
 
 
-def early_prediction_outcome_metric(y_true, predictions, verbose=0):
+def theta(los_true, thresholds, case="tp"):
+    """
+    > case: str, "tp" or "fp"
+    > outcome_pred: float, prediction of outcome
+    > los_pred: float, prediction of los
+    > los_true: float, true los
+    return theta (type: float)
+    """
+    metric = []
+    if case == "tp":
+        for t in thresholds:
+            if los_true >= t:  # predict right in early stage
+                metric.append(1)
+            else:
+                metric.append(los_true / t)
+        return np.array(metric)
+    elif case == "fn":
+        for t in thresholds:
+            if los_true >= t:  # predict right in early stage
+                metric.append(0)
+            else:
+                metric.append(los_true / t - 1)
+        return np.array(metric)
+    else:
+        raise ValueError("case must be 'tp' or 'fn'")
+
+
+def early_prediction_outcome_metric(y_true, predictions, thresholds, verbose=0):
     """
     > predictions: np.ndarray
       shape (num_records, ) --> [outcome]
@@ -11,6 +38,7 @@ def early_prediction_outcome_metric(y_true, predictions, verbose=0):
       eg: 2 records, they have outcome = 1, 0 separately
           then y_true = [[1, 5], [0, 3]]
           5 and 3 denotes their length of stay
+    > thresholds: List[float] e.g. [5,4,3.6044,3,2,1]]
     return metric (type: float)
 
     note:
@@ -23,29 +51,15 @@ def early_prediction_outcome_metric(y_true, predictions, verbose=0):
         cur_out = predictions[i]
         cur_gt = y_true[i, :]
         if cur_out > 0.5 and cur_gt[0] == 1:  # predict: 1, gt: 1
-            # check current los of ground truth (axis)
-            if cur_gt[1] >= 2:  # predict right in early stage
-                metric.append(1)
-            elif 2 > cur_gt[1] > 1:  # predict right in medium stage
-                score = cur_gt[1] - 1
-                metric.append(score)
-            elif cur_gt[1] <= 1:  # predict right in late stage
-                metric.append(0)
+            metric.append(theta(los_true=cur_gt[1], thresholds=thresholds, case="tp"))
         elif cur_out <= 0.5 and cur_gt[0] == 1:  # predict: 0, gt: 1
-            if cur_gt[1] >= 2:  # predict wrong in early stage
-                metric.append(0)
-            elif 2 > cur_gt[1] > 1:  # predict wrong in medium stage
-                score = cur_gt[1] - 2
-                metric.append(score)
-            elif cur_gt[1] <= 1:  # predict wrong in late stage
-                metric.append(-1)
+            metric.append(theta(los_true=cur_gt[1], thresholds=thresholds, case="fn"))
         else:
-            # 其他case不关心，score为0即可
-            metric.append(0)
-    result = np.array(metric).mean()
+            metric.append(np.zeros((len(thresholds),)))
+    result = np.array(metric)
     if verbose:
         print("Early Prediction Score:", result)
-    return result
+    return result.mean(axis=0)
 
 
 def sigma(los):
