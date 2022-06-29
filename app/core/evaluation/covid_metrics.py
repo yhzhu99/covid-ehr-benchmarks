@@ -26,7 +26,7 @@ def theta(los_true, thresholds, case="tp"):
                 metric.append(los_true / t - 1)
         return np.array(metric)
     else:
-        raise ValueError("case must be 'tp' or 'fn'")
+        return np.zeros((len(thresholds),))
 
 
 def early_prediction_outcome_metric(y_true, predictions, thresholds, verbose=0):
@@ -55,32 +55,51 @@ def early_prediction_outcome_metric(y_true, predictions, thresholds, verbose=0):
         elif cur_out <= 0.5 and cur_gt[0] == 1:  # predict: 0, gt: 1
             metric.append(theta(los_true=cur_gt[1], thresholds=thresholds, case="fn"))
         else:
-            metric.append(np.zeros((len(thresholds),)))
+            metric.append(
+                theta(los_true=cur_gt[1], thresholds=thresholds, case="tn|fp")
+            )
     result = np.array(metric)
     if verbose:
         print("Early Prediction Score:", result)
     return result.mean(axis=0)
 
 
-def sigma(los):
-    """
-    los = real los of patients (from this visit to the end)
-    """
-    if los >= 2:
-        return 0
-    elif 2 > los > 1:
-        return 2 - los
-    else:
+def calculate_epsilon(los_true, threshold, large_los):
+    if los_true <= threshold:
         return 1
+    else:
+        return max(0, (los_true - large_los) / (threshold - large_los))
+
+
+def sigma(los_pred, los_true, large_los, thresholds, case="true"):
+    metric = []
+    if case == "true":
+        for t in thresholds:
+            epsilon = calculate_epsilon(los_true, t, large_los)
+            metric.append(epsilon * np.abs(los_pred - los_true))
+        return np.array(metric)
+    elif case == "false":
+        for t in thresholds:
+            epsilon = calculate_epsilon(los_true, t, large_los)
+            metric.append(
+                epsilon * (max(0, large_los - los_pred) + max(0, large_los - los_true))
+            )
+        return np.array(metric)
+    else:
+        raise ValueError("case must be 'true' or 'false'")
+
+
+def calculate_outcome_prediction_result(outcome_pred, outcome_true):
+    outcome_pred = 1 if outcome_pred > 0.5 else 0
+    return "true" if outcome_pred == outcome_true else "false"
 
 
 def multitask_los_metric(
     y_true,
     y_pred_outcome,
     y_pred_los,
-    max_visits=13,
-    sigma_func=sigma,
-    metrics_strategy="MAE",
+    large_los,
+    thresholds,
     verbose=0,
 ):
     """
@@ -97,20 +116,27 @@ def multitask_los_metric(
       - y/predictions are already flattened here
       - so we don't need to consider visits_length
     """
-    metric = 0
-    y_true_outcome = y_true[:, 0]
-    y_true_los = y_true[:, 1]
-    if metrics_strategy == "MAE":
-        metric += sklearn_metrics.median_absolute_error(y_true_los, y_pred_los)
-    elif metrics_strategy == "MSE":
-        metric += sklearn_metrics.mean_squared_error(y_true_los, y_pred_los)
-    elif metrics_strategy == "MAPE":
-        metric += sklearn_metrics.mean_absolute_percentage_error(y_true_los, y_pred_los)
-    metric += np.mean(
-        np.abs(y_true_outcome - y_pred_outcome)
-        * max_visits
-        * np.array(list(map(lambda x: sigma_func(x), y_true_los)))
-    )
+    metric = []
+    num_records = len(y_pred_outcome)
+    for i in range(num_records):
+        cur_outcome_pred = y_pred_outcome[i]
+        cur_los_pred = y_pred_los[i]
+        cur_gt = y_true[i, :]
+        cur_outcome_true = cur_gt[0]
+        cur_los_true = cur_gt[1]
+        prediction_result = calculate_outcome_prediction_result(
+            cur_outcome_pred, cur_outcome_true
+        )
+        metric.append(
+            sigma(
+                cur_los_pred,
+                cur_los_true,
+                large_los,
+                thresholds,
+                case=prediction_result,
+            )
+        )
+    result = np.array(metric)
     if verbose:
-        print("LOS Score:", metric)
-    return metric
+        print("Early Prediction Score:", result)
+    return result.mean(axis=0)
