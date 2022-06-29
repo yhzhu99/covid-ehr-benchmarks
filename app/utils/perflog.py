@@ -1,3 +1,4 @@
+import json
 import time
 
 from omegaconf import OmegaConf
@@ -42,6 +43,7 @@ def process_performance_raw_info(
     auprc=None,
     early_prediction_score=None,
     multitask_prediction_score=None,
+    verbose=0,
 ):
     result = []
     if mae is not None:
@@ -82,6 +84,9 @@ def process_performance_raw_info(
                     "threshold": thresholds[i],
                 }
             )
+    if verbose == 1:
+        print(result)
+    return result
 
 
 def create_perflog(db: Session, cfg, perf=None):
@@ -89,7 +94,7 @@ def create_perflog(db: Session, cfg, perf=None):
         task=cfg.task,
         model_type=cfg.model_type,
         model_name=cfg.model_name,
-        performance=perf,
+        performance=json.dumps(perf),
         config=OmegaConf.to_yaml(cfg),
         record_time=int(time.time()),
     )
@@ -99,20 +104,32 @@ def create_perflog(db: Session, cfg, perf=None):
     return db_perflog
 
 
-def process_and_upload_performance():
+def process_and_upload_performance(
+    cfg,
+    mae=None,
+    mse=None,
+    rmse=None,
+    mape=None,
+    acc=None,
+    auroc=None,
+    auprc=None,
+    early_prediction_score=None,
+    multitask_prediction_score=None,
+    verbose=0,
+):
     db = SessionLocal()
-    perflogs = db.query(Perflog).all()
-    for perflog in perflogs:
-        print(perflog.task)
-        print(perflog.model_type)
-        print(perflog.model_name)
-        print(perflog.performance)
-        print(perflog.config)
-        print(perflog.record_time)
-        print("==========================")
+    perf = process_performance_raw_info(
+        cfg,
+        mae=mae,
+        mse=mse,
+        rmse=rmse,
+        mape=mape,
+        acc=acc,
+        auroc=auroc,
+        auprc=auprc,
+        early_prediction_score=early_prediction_score,
+        multitask_prediction_score=multitask_prediction_score,
+        verbose=verbose,
+    )
+    create_perflog(db=db, cfg=cfg, perf=perf)
     db.close()
-    return perflogs
-
-
-if __name__ == "__main__":
-    process_and_upload_performance()
