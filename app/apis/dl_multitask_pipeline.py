@@ -62,7 +62,7 @@ def train_epoch(model, device, dataloader, loss_fn, optimizer, info):
     return np.array(train_loss).mean()
 
 
-def val_epoch(model, device, dataloader, loss_fn, los_statistics, max_visits, info):
+def val_epoch(model, device, dataloader, loss_fn, los_statistics, info):
     """
     val / test
     """
@@ -112,14 +112,14 @@ def val_epoch(model, device, dataloader, loss_fn, los_statistics, max_visits, in
     y_los_true = reverse_zscore_los(y_los_true, los_statistics)
     y_los_pred = reverse_zscore_los(y_los_pred, los_statistics)
     early_prediction_score = covid_metrics.early_prediction_outcome_metric(
-        y_true_all, y_outcome_pred, verbose=0
+        y_true_all, y_outcome_pred, info["config"].thresholds, verbose=0
     )
     multitask_los_score = covid_metrics.multitask_los_metric(
         y_true_all,
         y_outcome_pred,
         y_los_pred,
-        max_visits,
-        metrics_strategy="MAE",
+        info["config"].large_los,
+        info["config"].thresholds,
         verbose=0,
     )
     y_outcome_pred = np.stack([1 - y_outcome_pred, y_outcome_pred], axis=1)
@@ -173,12 +173,11 @@ def reverse_zscore_los(y, los_statistics):
 def start_pipeline(cfg, device):
     info = {"config": cfg, "epoch": 0}
     val_info = {"config": cfg, "epoch": cfg.epochs}
-    dataset_type, method, num_folds, train_fold, max_visits = (
+    dataset_type, method, num_folds, train_fold = (
         cfg.dataset,
         cfg.model,
         cfg.num_folds,
         cfg.train_fold,
-        cfg.max_visits,
     )
     # Load data
     x, y, x_lab_length = load_data(dataset_type)
@@ -276,7 +275,6 @@ def start_pipeline(cfg, device):
                 val_loader,
                 criterion,
                 los_statistics,
-                max_visits,
                 info=val_info,
             )
             # save performance history on validation set
@@ -323,7 +321,6 @@ def start_pipeline(cfg, device):
             test_loader,
             criterion,
             los_statistics,
-            max_visits,
             info=val_info,
         )
         test_performance["test_loss"].append(test_loss)
@@ -373,14 +370,15 @@ def start_pipeline(cfg, device):
         "AUPRC: {:.3f} ({:.3f})".format(test_auprc_list.mean(), test_auprc_list.std())
     )
     print(
-        "EarlyPredictionScore: {:.3f} ({:.3f})".format(
-            test_early_prediction_list.mean(), test_early_prediction_list.std()
-        )
+        "EarlyPredictionScore:",
+        (
+            test_early_prediction_list.mean(axis=0),
+            test_early_prediction_list.std(axis=0),
+        ),
     )
     print(
-        "MultitaskPredictionScore: {:.3f} ({:.3f})".format(
-            test_multitask_los_list.mean(), test_multitask_los_list.std()
-        )
+        "MultitaskPredictionScore:",
+        (test_multitask_los_list.mean(axis=0), test_multitask_los_list.std(axis=0)),
     )
 
 
