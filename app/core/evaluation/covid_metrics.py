@@ -50,13 +50,19 @@ def early_prediction_outcome_metric(y_true, predictions, thresholds, verbose=0):
     for i in range(num_records):
         cur_out = predictions[i]
         cur_gt = y_true[i, :]
-        if cur_out > 0.5 and cur_gt[0] == 1:  # predict: 1, gt: 1
-            metric.append(theta(los_true=cur_gt[1], thresholds=thresholds, case="tp"))
-        elif cur_out <= 0.5 and cur_gt[0] == 1:  # predict: 0, gt: 1
-            metric.append(theta(los_true=cur_gt[1], thresholds=thresholds, case="fn"))
+        cur_outcome_true = cur_gt[0]
+        cur_los_true = cur_gt[1]
+        if cur_out > 0.5 and cur_outcome_true == 1:  # predict: 1, gt: 1
+            metric.append(
+                theta(los_true=cur_los_true, thresholds=thresholds, case="tp")
+            )
+        elif cur_out <= 0.5 and cur_outcome_true == 1:  # predict: 0, gt: 1
+            metric.append(
+                theta(los_true=cur_los_true, thresholds=thresholds, case="fn")
+            )
         else:
             metric.append(
-                theta(los_true=cur_gt[1], thresholds=thresholds, case="tn|fp")
+                theta(los_true=cur_los_true, thresholds=thresholds, case="tn|fp")
             )
     result = np.array(metric)
     if verbose:
