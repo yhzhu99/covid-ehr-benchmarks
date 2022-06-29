@@ -79,13 +79,14 @@ def calculate_epsilon(los_true, threshold, large_los):
 
 def sigma(los_pred, los_true, large_los, thresholds, case="true"):
     metric = []
-    epsilon = calculate_epsilon(los_true, t, large_los)
     if case == "true":
         for t in thresholds:
+            epsilon = calculate_epsilon(los_true, t, large_los)
             metric.append(epsilon * np.abs(los_pred - los_true))
         return np.array(metric)
     elif case == "false":
         for t in thresholds:
+            epsilon = calculate_epsilon(los_true, t, large_los)
             metric.append(
                 epsilon * (max(0, large_los - los_pred) + max(0, large_los - los_true))
             )
