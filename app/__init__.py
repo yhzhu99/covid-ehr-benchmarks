@@ -17,7 +17,7 @@ def create_app(my_pipeline, device):
         apis.ml_los_pipeline.start_pipeline(cfg)
     elif cfg.model_type == "ml" and cfg.task == "outcome":
         apis.ml_outcome_pipeline.start_pipeline(cfg)
-    elif cfg.model_type == "dl" and cfg.task == "los":
+    elif cfg.model_type in ["dl", "ehr"] and cfg.task == "los":
         apis.dl_los_pipeline.start_pipeline(cfg, device)
     elif cfg.model_type == "dl" and cfg.task == "outcome":
         apis.dl_outcome_pipeline.start_pipeline(cfg, device)
