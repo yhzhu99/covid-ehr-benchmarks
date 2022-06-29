@@ -1,6 +1,7 @@
 import json
 import time
 
+from numpyencoder import NumpyEncoder
 from omegaconf import OmegaConf
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -94,7 +95,7 @@ def create_perflog(db: Session, cfg, perf=None):
         task=cfg.task,
         model_type=cfg.model_type,
         model_name=cfg.model,
-        performance=json.dumps(perf),
+        performance=json.dumps(perf, cls=NumpyEncoder),
         config=OmegaConf.to_yaml(cfg),
         record_time=int(time.time()),
     )
