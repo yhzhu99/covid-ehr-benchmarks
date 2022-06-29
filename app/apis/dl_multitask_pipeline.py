@@ -376,10 +376,25 @@ def start_pipeline(cfg, device):
             test_early_prediction_list.std(axis=0),
         ),
     )
+
+    for i in range(len(cfg.thresholds)):
+        print(
+            cfg.thresholds[i],
+            test_early_prediction_list.mean(axis=0)[i],
+            test_early_prediction_list.std(axis=0)[i],
+        )
+
     print(
         "MultitaskPredictionScore:",
         (test_multitask_los_list.mean(axis=0), test_multitask_los_list.std(axis=0)),
     )
+
+    for i in range(len(cfg.thresholds)):
+        print(
+            cfg.thresholds[i],
+            test_multitask_los_list.mean(axis=0)[i],
+            test_multitask_los_list.std(axis=0)[i],
+        )
 
 
 def start_inference(cfg, device):
