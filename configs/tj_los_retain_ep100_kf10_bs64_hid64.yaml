@@ -1,5 +1,5 @@
 name: tj_los_retain_ep100_kf10_bs64_hid64
-model_type: dl
+model_type: ehr
 model: retain
 dataset: tongji
 task: los

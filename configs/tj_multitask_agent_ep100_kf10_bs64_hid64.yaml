@@ -1,5 +1,5 @@
 name: tj_multitask_agent_ep100_kf10_bs64_hid64
-model_type: dl
+model_type: ehr
 model: agent
 dataset: tongji
 task: multitask
