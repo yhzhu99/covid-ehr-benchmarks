@@ -93,7 +93,7 @@ def val_epoch(model, device, dataloader, loss_fn, info):
     y_pred = np.array(y_pred)
     y_true_all = np.array(y_true_all)
     early_prediction_score = covid_metrics.early_prediction_outcome_metric(
-        y_true_all, y_pred, verbose=0
+        y_true_all, y_pred, info["config"].thresholds, verbose=0
     )
     y_pred = np.stack([1 - y_pred, y_pred], axis=1)
     evaluation_scores = eval_metrics.print_metrics_binary(y_true, y_pred, verbose=0)
@@ -251,7 +251,9 @@ def start_pipeline(cfg, device):
         "AUPRC: {:.3f} ({:.3f})".format(test_auprc_list.mean(), test_auprc_list.std())
     )
     print(
-        "EarlyPredictionScore: {:.3f} ({:.3f})".format(
-            test_early_prediction_list.mean(), test_early_prediction_list.std()
-        )
+        "EarlyPredictionScore:",
+        (
+            test_early_prediction_list.mean(axis=0),
+            test_early_prediction_list.std(axis=0),
+        ),
     )
