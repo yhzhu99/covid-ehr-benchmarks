@@ -1,7 +1,9 @@
+import time
+
 from omegaconf import OmegaConf
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.orm import Session, relationship, sessionmaker
 
 db_cfg = OmegaConf.load("configs/_base_/db.yaml")
 
@@ -27,6 +29,74 @@ class Perflog(Base):
     performance = Column(String)
     config = Column(String)
     record_time = Column(Integer)
+
+
+def process_performance_raw_info(
+    cfg,
+    mae=None,
+    mse=None,
+    rmse=None,
+    mape=None,
+    acc=None,
+    auroc=None,
+    auprc=None,
+    early_prediction_score=None,
+    multitask_prediction_score=None,
+):
+    result = []
+    if mae is not None:
+        result.extend(
+            [
+                {"name": "mae", "mean": mae.mean(), "std": mae.std()},
+                {"name": "mse", "mean": mse.mean(), "std": mse.std()},
+                {"name": "rmse", "mean": rmse.mean(), "std": rmse.std()},
+                {"name": "mape", "mean": mape.mean(), "std": mape.std()},
+            ]
+        )
+    if acc is not None:
+        result.extend(
+            [
+                {"name": "acc", "mean": acc.mean(), "std": acc.std()},
+                {"name": "auroc", "mean": auroc.mean(), "std": auroc.std()},
+                {"name": "auprc", "mean": auprc.mean(), "std": auprc.std()},
+            ]
+        )
+    thresholds = cfg.thresholds
+    if early_prediction_score is not None:
+        for i in range(len(thresholds)):
+            result.append(
+                {
+                    "name": "early_prediction_score",
+                    "mean": early_prediction_score.mean(axis=0)[i],
+                    "std": early_prediction_score.std(axis=0)[i],
+                    "threshold": thresholds[i],
+                }
+            )
+    if multitask_prediction_score is not None:
+        for i in range(len(thresholds)):
+            result.append(
+                {
+                    "name": "multitask_prediction_score",
+                    "mean": multitask_prediction_score.mean(axis=0)[i],
+                    "std": multitask_prediction_score.std(axis=0)[i],
+                    "threshold": thresholds[i],
+                }
+            )
+
+
+def create_perflog(db: Session, cfg, perf=None):
+    db_perflog = Perflog(
+        task=cfg.task,
+        model_type=cfg.model_type,
+        model_name=cfg.model_name,
+        performance=perf,
+        config=OmegaConf.to_yaml(cfg),
+        record_time=int(time.time()),
+    )
+    db.add(db_perflog)
+    db.commit()
+    db.refresh(db_perflog)
+    return db_perflog
 
 
 def process_and_upload_performance():
