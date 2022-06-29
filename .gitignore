@@ -140,3 +140,4 @@ processed_data/
 test.py
 test.ipynb
 checkpoints/
+db.yaml
