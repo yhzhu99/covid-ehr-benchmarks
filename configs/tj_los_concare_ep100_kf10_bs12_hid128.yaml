@@ -1,4 +1,4 @@
-name: tongji_los_concare_ep100_kf10_bs64_hid64
+name: tj_los_concare_ep100_kf10_bs64_hid128
 model_type: dl
 model: concare
 dataset: tongji

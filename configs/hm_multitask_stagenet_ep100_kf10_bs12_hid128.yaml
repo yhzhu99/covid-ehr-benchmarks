@@ -1,4 +1,4 @@
-name: hm_multitask_stagenet_ep100_kf10_bs64_hid64
+name: hm_multitask_stagenet_ep100_kf10_bs64_hid128
 model_type: dl
 model: stagenet
 dataset: hm

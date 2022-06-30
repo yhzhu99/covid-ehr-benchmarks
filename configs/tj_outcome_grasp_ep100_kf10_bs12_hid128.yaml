@@ -1,4 +1,4 @@
-name: tongji_outcome_grasp_ep100_kf10_bs64_hid64
+name: tj_outcome_grasp_ep100_kf10_bs64_hid128
 model_type: dl
 model: grasp
 dataset: tongji
