@@ -1,0 +1,19 @@
+name: hm_multitask_agent_ep100_kf10_bs64_hid64
+model_type: dl
+model: agent
+dataset: hm
+task: multitask
+epochs: 100
+num_folds: 10
+train_fold: 1
+batch_size: 64
+hidden_dim: 128
+
+cell: gru
+n_actions: 10
+n_units: 64
+lamda: 0.5
+
+output_dim: 1
+act_layer: nn.GELU
+drop: 0.0

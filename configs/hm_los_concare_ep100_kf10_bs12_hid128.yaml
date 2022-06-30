@@ -1,0 +1,15 @@
+name: hm_los_concare_ep100_kf10_bs64_hid64
+model_type: dl
+model: concare
+dataset: hm
+task: los
+epochs: 100
+num_folds: 10
+train_fold: 1
+batch_size: 64
+hidden_dim: 128
+
+MHD_num_head: 4
+
+output_dim: 1
+drop: 0.0
