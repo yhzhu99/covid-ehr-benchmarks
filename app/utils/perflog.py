@@ -117,8 +117,8 @@ def process_and_upload_performance(
     early_prediction_score=None,
     multitask_prediction_score=None,
     verbose=0,
+    upload=False,
 ):
-    db = SessionLocal()
     perf = process_performance_raw_info(
         cfg,
         mae=mae,
@@ -132,5 +132,7 @@ def process_and_upload_performance(
         multitask_prediction_score=multitask_prediction_score,
         verbose=verbose,
     )
-    create_perflog(db=db, cfg=cfg, perf=perf)
-    db.close()
+    if upload:
+        db = SessionLocal()
+        create_perflog(db=db, cfg=cfg, perf=perf)
+        db.close()

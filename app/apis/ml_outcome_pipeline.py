@@ -252,4 +252,5 @@ def start_pipeline(cfg):
             auprc=test_auprc_list,
             early_prediction_score=test_early_prediction_list,
             verbose=1,
+            upload=True,
         )

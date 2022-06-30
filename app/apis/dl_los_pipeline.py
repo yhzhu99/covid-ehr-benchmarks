@@ -281,4 +281,5 @@ def start_pipeline(cfg, device):
         rmse=test_rmse_list,
         mape=test_mape_list,
         verbose=1,
+        upload=True,
     )
