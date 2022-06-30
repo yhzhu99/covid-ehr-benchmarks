@@ -243,19 +243,13 @@ def start_pipeline(cfg):
                 test_early_prediction_list.mean(axis=0)[i],
                 test_early_prediction_list.std(axis=0)[i],
             )
-        perflog.process_performance_raw_info(
-            cfg,
-            acc=test_accuracy_list,
-            auroc=test_auroc_list,
-            auprc=test_auprc_list,
-            early_prediction_score=test_early_prediction_list,
-            verbose=1,
-        )
+
+        print("=========================================================")
         perflog.process_and_upload_performance(
             cfg,
             acc=test_accuracy_list,
             auroc=test_auroc_list,
             auprc=test_auprc_list,
             early_prediction_score=test_early_prediction_list,
-            verbose=0,
+            verbose=1,
         )

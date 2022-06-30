@@ -39,6 +39,7 @@ from app.models import (
     predict_all_visits_bce_loss,
     predict_all_visits_mse_loss,
 )
+from app.utils import perflog
 
 
 def train_epoch(model, device, dataloader, loss_fn, optimizer, info):
@@ -263,3 +264,12 @@ def start_pipeline(cfg, device):
             test_early_prediction_list.mean(axis=0)[i],
             test_early_prediction_list.std(axis=0)[i],
         )
+    print("=========================================================")
+    perflog.process_and_upload_performance(
+        cfg,
+        acc=test_accuracy_list,
+        auroc=test_auroc_list,
+        auprc=test_auprc_list,
+        early_prediction_score=test_early_prediction_list,
+        verbose=1,
+    )

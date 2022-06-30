@@ -29,6 +29,7 @@ from app.models import (
     predict_all_visits_bce_loss,
     predict_all_visits_mse_loss,
 )
+from app.utils import perflog
 
 
 def train(x, y, method):
@@ -210,4 +211,14 @@ def start_pipeline(cfg):
         )
         print(
             "RMSE: {:.3f} ({:.3f})".format(test_rmse_list.mean(), test_rmse_list.std())
+        )
+
+        print("=========================================================")
+        perflog.process_and_upload_performance(
+            cfg,
+            mae=test_mad_list,
+            mse=test_mse_list,
+            rmse=test_rmse_list,
+            mape=test_mape_list,
+            verbose=1,
         )
