@@ -29,6 +29,7 @@ class Perflog(Base):
     task = Column(String)
     model_type = Column(String)
     model_name = Column(String)
+    hidden_dim = Column(Integer)
     performance = Column(String)
     config = Column(String)
     record_time = Column(Integer)
@@ -97,6 +98,7 @@ def create_perflog(db: Session, cfg, perf=None):
         dataset=cfg.dataset,
         model_type=cfg.model_type,
         model_name=cfg.model,
+        hidden_dim=cfg.hidden_dim or 0,
         performance=json.dumps(perf, cls=NumpyEncoder),
         config=OmegaConf.to_yaml(cfg),
         record_time=int(time.time()),
