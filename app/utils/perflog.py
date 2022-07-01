@@ -93,12 +93,15 @@ def process_performance_raw_info(
 
 
 def create_perflog(db: Session, cfg, perf=None):
+    hid_dim = 0
+    if "hidden_dim" in cfg:
+        hid_dim = cfg.hidden_dim
     db_perflog = Perflog(
         task=cfg.task,
         dataset=cfg.dataset,
         model_type=cfg.model_type,
         model_name=cfg.model,
-        hidden_dim=cfg.hidden_dim or 0,
+        hidden_dim=hid_dim,
         performance=json.dumps(perf, cls=NumpyEncoder),
         config=OmegaConf.to_yaml(cfg),
         record_time=int(time.time()),
