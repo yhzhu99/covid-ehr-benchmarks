@@ -25,6 +25,7 @@ Base = declarative_base()
 class Perflog(Base):
     __tablename__ = "perflog"
     id = Column(Integer, primary_key=True, index=True)
+    dataset = Column(String)
     task = Column(String)
     model_type = Column(String)
     model_name = Column(String)
@@ -93,6 +94,7 @@ def process_performance_raw_info(
 def create_perflog(db: Session, cfg, perf=None):
     db_perflog = Perflog(
         task=cfg.task,
+        dataset=cfg.dataset,
         model_type=cfg.model_type,
         model_name=cfg.model,
         performance=json.dumps(perf, cls=NumpyEncoder),
