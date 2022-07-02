@@ -24,21 +24,21 @@ class Model(nn.Module):
     #     return x
 
 
-def build_backbone_from_cfg(cfg):
+def build_backbone_from_cfg(cfg, device):
     if cfg.model == "mlp":
         return MLP(
             demo_dim=cfg.demo_dim,
             lab_dim=cfg.lab_dim,
             max_visits=cfg.max_visits,
             hidden_dim=cfg.hidden_dim,
-        )
+        ).to(device=device)
     if cfg.model == "gru":
         return GRU(
             demo_dim=cfg.demo_dim,
             lab_dim=cfg.lab_dim,
             max_visits=cfg.max_visits,
             hidden_dim=cfg.hidden_dim,
-        )
+        ).to(device=device)
     if cfg.model == "transformer":
         return Transformer(
             demo_dim=cfg.demo_dim,
@@ -46,21 +46,21 @@ def build_backbone_from_cfg(cfg):
             max_visits=cfg.max_visits,
             hidden_dim=cfg.hidden_dim,
             num_layers=cfg.num_layers,
-        )
+        ).to(device=device)
     if cfg.model == "rnn":
         return RNN(
             demo_dim=cfg.demo_dim,
             lab_dim=cfg.lab_dim,
             max_visits=cfg.max_visits,
             hidden_dim=cfg.hidden_dim,
-        )
+        ).to(device=device)
     if cfg.model == "lstm":
         return LSTM(
             demo_dim=cfg.demo_dim,
             lab_dim=cfg.lab_dim,
             max_visits=cfg.max_visits,
             hidden_dim=cfg.hidden_dim,
-        )
+        ).to(device=device)
     if cfg.model == "tcn":
         return TemporalConvNet(
             num_inputs=cfg.demo_dim + cfg.lab_dim,
@@ -68,13 +68,13 @@ def build_backbone_from_cfg(cfg):
             max_seq_length=cfg.max_visits,
             kernel_size=cfg.kernel_size,
             dropout=cfg.dropout,
-        )
+        ).to(device=device)
     if cfg.model == "retain":
         return RETAIN(
             input_dim=cfg.demo_dim + cfg.lab_dim,
             hidden_dim=cfg.hidden_dim,
             dropout=cfg.drop,
-        )
+        ).to(device=device)
     if cfg.model == "stagenet":
         return StageNet(
             input_dim=cfg.demo_dim + cfg.lab_dim,
@@ -82,7 +82,7 @@ def build_backbone_from_cfg(cfg):
             conv_size=cfg.conv_size,
             levels=cfg.levels,
             dropout=cfg.drop,
-        )
+        ).to(device=device)
     if cfg.model == "agent":
         return Agent(
             cell=cfg.cell,
@@ -95,7 +95,7 @@ def build_backbone_from_cfg(cfg):
             fusion_dim=cfg.hidden_dim,
             dropout=cfg.drop,
             lamda=cfg.lamda,
-        )
+        ).to(device=device)
     if cfg.model == "adacare":
         return AdaCare(
             hidden_dim=cfg.hidden_dim,
@@ -103,7 +103,7 @@ def build_backbone_from_cfg(cfg):
             kernel_num=cfg.kernel_num,
             input_dim=cfg.demo_dim + cfg.lab_dim,
             dropout=cfg.drop,
-        )
+        ).to(device=device)
     if cfg.model == "concare":
         return ConCare(
             lab_dim=cfg.lab_dim,
@@ -113,7 +113,7 @@ def build_backbone_from_cfg(cfg):
             MHD_num_head=cfg.MHD_num_head,
             d_ff=4 * cfg.hidden_dim,
             drop=cfg.drop,
-        )
+        ).to(device=device)
     if cfg.model == "grasp":
         return MAPLE(
             input_dim=cfg.demo_dim + cfg.lab_dim,
@@ -121,34 +121,34 @@ def build_backbone_from_cfg(cfg):
             output_dim=cfg.hidden_dim,
             cluster_num=cfg.cluster_num,
             dropout=cfg.drop,
-        )
+        ).to(device=device)
 
 
-def build_classifier_from_cfg(cfg):
+def build_classifier_from_cfg(cfg, device):
     if cfg.task == "los":
         return LosHead(
             hidden_dim=cfg.hidden_dim,
             output_dim=cfg.output_dim,
             # act_layer=eval(cfg.act_layer),
             # drop=cfg.drop,
-        )
+        ).to(device=device)
     elif cfg.task == "outcome":
         return OutcomeHead(
             hidden_dim=cfg.hidden_dim,
             output_dim=cfg.output_dim,
             # act_layer=eval(cfg.act_layer),
             # drop=cfg.drop,
-        )
+        ).to(device=device)
     elif cfg.task == "multitask":
         return MultitaskHead(
             hidden_dim=cfg.hidden_dim,
             output_dim=cfg.output_dim,
-        )
+        ).to(device=device)
     else:
         raise ValueError("Unknown task: {}".format(cfg.task))
 
 
-def build_model_from_cfg(cfg):
-    backbone = build_backbone_from_cfg(cfg)
-    head = build_classifier_from_cfg(cfg)
+def build_model_from_cfg(cfg, device):
+    backbone = build_backbone_from_cfg(cfg, device)
+    head = build_classifier_from_cfg(cfg, device)
     return Model(backbone, head)

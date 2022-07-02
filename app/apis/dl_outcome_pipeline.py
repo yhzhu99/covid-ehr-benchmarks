@@ -48,9 +48,9 @@ def train_epoch(model, device, dataloader, loss_fn, optimizer, info):
     for step, data in enumerate(dataloader):
         batch_x, batch_y, batch_x_lab_length = data
         batch_x, batch_y, batch_x_lab_length = (
-            batch_x.float(),
-            batch_y.float(),
-            batch_x_lab_length.float(),
+            batch_x.float().to(device),
+            batch_y.float().to(device),
+            batch_x_lab_length.float().to(device),
         )
         batch_y = batch_y[:, :, 0]  # 0: outcome, 1: los
         batch_y = batch_y.unsqueeze(-1)
@@ -76,9 +76,9 @@ def val_epoch(model, device, dataloader, loss_fn, info):
         for step, data in enumerate(dataloader):
             batch_x, batch_y, batch_x_lab_length = data
             batch_x, batch_y, batch_x_lab_length = (
-                batch_x.float(),
-                batch_y.float(),
-                batch_x_lab_length.float(),
+                batch_x.float().to(device),
+                batch_y.float().to(device),
+                batch_x_lab_length.float().to(device),
             )
             all_y = batch_y
             batch_y = batch_y[:, :, 0]  # 0: outcome, 1: los
@@ -114,7 +114,7 @@ def start_pipeline(cfg, device):
     # Load data
     x, y, x_lab_length = load_data(dataset_type)
     dataset = get_dataset(x, y, x_lab_length)
-    model = build_model_from_cfg(cfg)
+    model = build_model_from_cfg(cfg, device)
     print(model)
     all_history = {}
     test_performance = {
@@ -156,7 +156,7 @@ def start_pipeline(cfg, device):
             dataset, batch_size=cfg.batch_size, sampler=train_sampler
         )
         val_loader = DataLoader(dataset, batch_size=cfg.batch_size, sampler=val_sampler)
-        model = build_model_from_cfg(cfg)
+        model = build_model_from_cfg(cfg, device)
         optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
         criterion = predict_all_visits_bce_loss
         history = {
