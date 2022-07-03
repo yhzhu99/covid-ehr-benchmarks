@@ -239,7 +239,7 @@ def start_pipeline(cfg, device):
             f"Best performance on val set {fold_test+1}: \
             MAE = {best_val_performance}"
         )
-        model = build_model_from_cfg(cfg)
+        model = build_model_from_cfg(cfg, device)
         model.load_state_dict(torch.load(f"checkpoints/{cfg.name}.pth"))
         test_loss, test_evaluation_scores = val_epoch(
             model,

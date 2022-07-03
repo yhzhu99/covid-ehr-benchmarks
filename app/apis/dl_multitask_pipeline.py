@@ -309,7 +309,7 @@ def start_pipeline(cfg, device):
             f"Best performance on val set {fold_test+1}: \
             MAE = {best_val_performance}"
         )
-        model = build_model_from_cfg(cfg)
+        model = build_model_from_cfg(cfg, device)
         model.load_state_dict(torch.load(f"checkpoints/{cfg.name}.pth"))
         (
             test_loss,
@@ -425,7 +425,7 @@ def start_inference(cfg, device):
     x, y, x_lab_length = x.float(), y.float(), x_lab_length.float()
     print(x.shape)
 
-    model = build_model_from_cfg(cfg)
+    model = build_model_from_cfg(cfg, device)
     model.load_state_dict(torch.load(f"checkpoints/{cfg.name}.pth"))
 
     idx = 4
