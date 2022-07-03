@@ -1,0 +1,15 @@
+name: hm_outcome_grasp_ep100_kf10_bs512_hid64
+model_type: dl
+model: grasp
+dataset: hm
+task: outcome
+epochs: 100
+num_folds: 10
+train_fold: 1
+batch_size: 512
+hidden_dim: 64
+
+cluster_num: 24
+
+output_dim: 1
+drop: 0.0

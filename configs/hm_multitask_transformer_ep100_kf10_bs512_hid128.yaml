@@ -1,0 +1,14 @@
+name: hm_multitask_transformer_ep100_kf10_bs512_hid128
+model_type: dl
+model: transformer
+dataset: hm
+task: multitask
+epochs: 100
+num_folds: 10
+train_fold: 1
+batch_size: 512
+hidden_dim: 128
+num_layers: 2
+output_dim: 1
+act_layer: nn.GELU
+drop: 0.0

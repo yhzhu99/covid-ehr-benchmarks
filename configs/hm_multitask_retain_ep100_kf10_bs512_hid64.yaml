@@ -1,0 +1,12 @@
+name: hm_multitask_retain_ep100_kf10_bs512_hid64
+model_type: dl
+model: retain
+dataset: hm
+task: multitask
+epochs: 100
+num_folds: 10
+train_fold: 1
+batch_size: 512
+hidden_dim: 64
+output_dim: 1
+drop: 0.0

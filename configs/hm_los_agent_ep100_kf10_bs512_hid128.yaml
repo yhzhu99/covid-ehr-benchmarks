@@ -1,0 +1,19 @@
+name: hm_los_agent_ep100_kf10_bs512_hid128
+model_type: dl
+model: agent
+dataset: hm
+task: los
+epochs: 100
+num_folds: 10
+train_fold: 1
+batch_size: 512
+hidden_dim: 128
+
+cell: gru
+n_actions: 10
+n_units: 64
+lamda: 0.5
+
+output_dim: 1
+act_layer: nn.GELU
+drop: 0.0
