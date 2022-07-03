@@ -3,7 +3,6 @@ import argparse
 import torch
 from omegaconf import OmegaConf
 
-import app.models as models
 from app import create_app
 
 if __name__ == "__main__":
