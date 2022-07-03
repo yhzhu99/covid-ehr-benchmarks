@@ -5,6 +5,7 @@ omegaconf
 torch
 scikit-learn
 xgboost
+catboost
 matplotlib
 seaborn
 numpyencoder
