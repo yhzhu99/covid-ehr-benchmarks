@@ -7,7 +7,6 @@ import numpy as np
 import pandas as pd
 import torch
 import xgboost as xgb
-from autogluon.tabular import TabularPredictor
 from catboost import CatBoostClassifier, CatBoostRegressor
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
