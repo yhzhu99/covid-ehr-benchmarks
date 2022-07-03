@@ -55,7 +55,7 @@ def train_epoch(model, device, dataloader, loss_fn, optimizer, info):
         batch_y = batch_y[:, :, 1]  # 0: outcome, 1: los
         batch_y = batch_y.unsqueeze(-1)
         optimizer.zero_grad()
-        output = model(batch_x, info)
+        output = model(batch_x, device, info)
         loss = loss_fn(output, batch_y, batch_x_lab_length)
         train_loss.append(loss.item())
         loss.backward()
@@ -81,7 +81,7 @@ def val_epoch(model, device, dataloader, loss_fn, los_statistics, info):
             )
             batch_y = batch_y[:, :, 1]  # 0: outcome, 1: los
             batch_y = batch_y.unsqueeze(-1)
-            output = model(batch_x, info)
+            output = model(batch_x, device, info)
             loss = loss_fn(output, batch_y, batch_x_lab_length)
             val_loss.append(loss.item())
             output = torch.squeeze(output)

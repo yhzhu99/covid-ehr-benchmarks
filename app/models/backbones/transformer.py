@@ -34,7 +34,7 @@ class Transformer(nn.Module):
             self.encoder_layer, num_layers=2
         )
 
-    def forward(self, x, info=None):
+    def forward(self, x, device, info=None):
         """extra info is not used here"""
         batch_size, time_steps, _ = x.size()
         x = self.proj(x)

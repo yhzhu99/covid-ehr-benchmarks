@@ -179,9 +179,8 @@ class AdaCare(nn.Module):
         self.relu = nn.ReLU()
         self.sigmoid = nn.Sigmoid()
         self.tanh = nn.Tanh()
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() == True else "cpu")
 
-    def forward(self, input, info=None):
+    def forward(self, input, device, info=None):
         """extra info is not used here"""
         # input shape [batch_size, timestep, feature_dim]
         batch_size = input.size(0)
@@ -208,7 +207,7 @@ class AdaCare(nn.Module):
             )
             cur_input = torch.cat((convse_res[:, :, -1], inputse_res[:, :, -1]), dim=-1)
 
-            cur_h = self.rnn(cur_input.to(device=self.device), cur_h.to(device=self.device))
+            cur_h = self.rnn(cur_input.to(device=device), cur_h.to(device=device))
             h.append(cur_h)
             convse_att.append(cur_convatt)
             inputse_att.append(cur_inputatt)

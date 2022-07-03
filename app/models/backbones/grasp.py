@@ -770,7 +770,7 @@ class MAPLE(nn.Module):
         # return opt, hidden_t
         return out
 
-    def forward(self, x, info):
+    def forward(self, x, device, info):
         batch_size, time_steps, _ = x.size()
         x = self.proj(x)
         out = torch.zeros((batch_size, time_steps, self.hidden_dim))

@@ -29,7 +29,7 @@ class LSTM(nn.Module):
             batch_first=True,
         )
 
-    def forward(self, x, info=None):
+    def forward(self, x, device, info=None):
         """extra info is not used here"""
         x = self.proj(x)
         # x = self.act(x)

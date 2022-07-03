@@ -12,10 +12,10 @@ class Model(nn.Module):
         self.backbone = backbone
         self.head = head
 
-    def forward(self, x, info):
+    def forward(self, x, device, info):
         """grasp model requires `info` (include current epoch message)"""
-        x = self.backbone(x, info)
-        x = self.head(x)
+        x = self.backbone(x, device, info)
+        x = self.head(x, device)
         return x
 
     # def forward(self, x):

@@ -115,9 +115,7 @@ class SingleAttention(nn.Module):
         self.sigmoid = nn.Sigmoid()
         self.relu = nn.ReLU()
 
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() == True else "cpu")
-
-    def forward(self, input, demo=None):
+    def forward(self, input, device, demo=None):
 
         (
             batch_size,
@@ -127,7 +125,7 @@ class SingleAttention(nn.Module):
 
         time_decays = (
             torch.tensor(range(time_step - 1, -1, -1), dtype=torch.float32)
-            .unsqueeze(-1).unsqueeze(0).to(device=self.device)
+            .unsqueeze(-1).unsqueeze(0).to(device=device)
         )  # 1*t*1
         b_time_decays = time_decays.repeat(batch_size, 1, 1) + 1  # b t 1
 
@@ -446,7 +444,6 @@ class ConCare(nn.Module):
         # self.output_dim = output_dim
         self.drop = drop
         self.demo_dim = demo_dim
-        # self.device = device
 
         # layers
         self.PositionalEncoding = PositionalEncoding(
@@ -503,9 +500,7 @@ class ConCare(nn.Module):
         self.sigmoid = nn.Sigmoid()
         self.relu = nn.ReLU()
 
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() == True else "cpu")
-
-    def concare_encoder(self, input, demo_input):
+    def concare_encoder(self, input, demo_input, device):
 
         # input shape [batch_size, timestep, feature_dim]
         demo_main = self.tanh(self.demo_proj_main(demo_input)).unsqueeze(
@@ -520,16 +515,16 @@ class ConCare(nn.Module):
 
         # forward
         GRU_embeded_input = self.GRUs[0](
-            input[:, :, 0].unsqueeze(-1).to(device=self.device),
+            input[:, :, 0].unsqueeze(-1).to(device=device),
             Variable(
                 torch.zeros(batch_size, self.hidden_dim)
-                .to(device=self.device)
+                .to(device=device)
                 .unsqueeze(0)
             ),
         )[
             0
         ]  # b t h
-        Attention_embeded_input = self.LastStepAttentions[0](GRU_embeded_input)[
+        Attention_embeded_input = self.LastStepAttentions[0](GRU_embeded_input, device)[
             0
         ].unsqueeze(
             1
@@ -540,13 +535,13 @@ class ConCare(nn.Module):
                 input[:, :, i + 1].unsqueeze(-1),
                 Variable(
                     torch.zeros(batch_size, self.hidden_dim)
-                    .to(device=self.device)
+                    .to(device=device)
                     .unsqueeze(0)
                 ),
             )[
                 0
             ]  # b 1 h
-            embeded_input = self.LastStepAttentions[i + 1](embeded_input)[0].unsqueeze(
+            embeded_input = self.LastStepAttentions[i + 1](embeded_input, device)[0].unsqueeze(
                 1
             )  # b 1 h
             Attention_embeded_input = torch.cat(
@@ -576,7 +571,7 @@ class ConCare(nn.Module):
         weighted_contexts = self.FinalAttentionQKV(contexts)[0]
         return weighted_contexts
 
-    def forward(self, x, info=None):
+    def forward(self, x, device, info=None):
         """extra info is not used here"""
         batch_size, time_steps, _ = x.size()
         demo_input = x[:, 0, : self.demo_dim]
@@ -589,6 +584,6 @@ class ConCare(nn.Module):
             if cur_time == 0:
                 out[:, cur_time, :] = self.demo_lab_proj(x[:, 0, :])
             else:
-                out[:, cur_time, :] = self.concare_encoder(cur_lab, demo_input)
+                out[:, cur_time, :] = self.concare_encoder(cur_lab, demo_input, device)
         # print()
         return out

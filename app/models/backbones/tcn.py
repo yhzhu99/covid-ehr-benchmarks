@@ -142,7 +142,7 @@ class TemporalConvNet(nn.Module):
 
         self.network = nn.Sequential(*layers)
 
-    def forward(self, x, info=None):
+    def forward(self, x, device, info=None):
         """extra info is not used here"""
         x = x.permute(0, 2, 1)  # Permute to channel first
         o = self.network(x)

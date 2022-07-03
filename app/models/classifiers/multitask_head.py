@@ -27,10 +27,8 @@ class MultitaskHead(nn.Module):
             nn.Dropout(drop),
         )
 
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() == True else "cpu")
-
-    def forward(self, x):
+    def forward(self, x, device):
         # x = self.act(x)
-        outcome = self.prediction_head_outcome(x.to(device=self.device))
-        los = self.prediction_head_los(x)
+        outcome = self.prediction_head_outcome(x.to(device=device))
+        los = self.prediction_head_los(x.to(device=device))
         return outcome, los

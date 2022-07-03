@@ -82,8 +82,6 @@ class Agent(nn.Module):
         self.tanh = nn.Tanh()
         self.relu = nn.ReLU()
 
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() == True else "cpu")
-
     def choose_action(self, observation, agent=1):
         observation = observation.detach()
 
@@ -117,7 +115,7 @@ class Agent(nn.Module):
 
         return actions.unsqueeze(-1)
 
-    def forward(self, x, info=None):
+    def forward(self, x, device, info=None):
         """extra info is not used here"""
         demo = x[:, 0, : self.demo_dim]
         labtest = x[:, :, self.demo_dim :]
@@ -202,8 +200,8 @@ class Agent(nn.Module):
         demo = torch.reshape(
             demo.repeat(1, self.max_visits),
             (batch_size, self.max_visits, self.demo_dim),
-        ).to(device=self.device)
-        out = torch.cat((demo, out.to(device=self.device)), dim=2)
+        ).to(device=device)
+        out = torch.cat((demo, out.to(device=device)), dim=2)
         out = self.fusion(out)
         out = self.relu(out)
         # output = self.output(cur_h)
