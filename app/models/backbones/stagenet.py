@@ -20,6 +20,8 @@ class StageNet(nn.Module):
     ):
         super(StageNet, self).__init__()
 
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() == True else "cpu")
+
         assert hidden_dim % levels == 0
         self.dropout = dropout
         self.dropconnect = dropconnect
@@ -32,12 +34,12 @@ class StageNet(nn.Module):
         self.levels = levels
         self.chunk_size = hidden_dim // levels
 
-        self.kernel = nn.Linear(int(input_dim + 1), int(hidden_dim * 4 + levels * 2))
+        self.kernel = nn.Linear(int(input_dim + 1), int(hidden_dim * 4 + levels * 2)).to(device=self.device)
         nn.init.xavier_uniform_(self.kernel.weight)
         nn.init.zeros_(self.kernel.bias)
         self.recurrent_kernel = nn.Linear(
             int(hidden_dim + 1), int(hidden_dim * 4 + levels * 2)
-        )
+        ).to(device=self.device)
         nn.init.orthogonal_(self.recurrent_kernel.weight)
         nn.init.zeros_(self.recurrent_kernel.bias)
 
@@ -67,29 +69,29 @@ class StageNet(nn.Module):
             return x
 
     def step(self, inputs, c_last, h_last, interval):
-        x_in = inputs
+        x_in = inputs.to(device=self.device)
 
         # Integrate inter-visit time intervals
-        interval = interval.unsqueeze(-1)
+        interval = interval.unsqueeze(-1).to(device=self.device)
         x_out1 = self.kernel(torch.cat((x_in, interval), dim=-1))
-        x_out2 = self.recurrent_kernel(torch.cat((h_last, interval), dim=-1))
+        x_out2 = self.recurrent_kernel(torch.cat((h_last.to(device=self.device), interval), dim=-1))
 
         if self.dropconnect:
             x_out1 = self.nn_dropconnect(x_out1)
             x_out2 = self.nn_dropconnect_r(x_out2)
         x_out = x_out1 + x_out2
         f_master_gate = self.cumax(x_out[:, : self.levels], "l2r")
-        f_master_gate = f_master_gate.unsqueeze(2)
+        f_master_gate = f_master_gate.unsqueeze(2).to(device=self.device)
         i_master_gate = self.cumax(x_out[:, self.levels : self.levels * 2], "r2l")
         i_master_gate = i_master_gate.unsqueeze(2)
         x_out = x_out[:, self.levels * 2 :]
         x_out = x_out.reshape(-1, self.levels * 4, self.chunk_size)
-        f_gate = torch.sigmoid(x_out[:, : self.levels])
-        i_gate = torch.sigmoid(x_out[:, self.levels : self.levels * 2])
+        f_gate = torch.sigmoid(x_out[:, : self.levels]).to(device=self.device)
+        i_gate = torch.sigmoid(x_out[:, self.levels : self.levels * 2]).to(device=self.device)
         o_gate = torch.sigmoid(x_out[:, self.levels * 2 : self.levels * 3])
-        c_in = torch.tanh(x_out[:, self.levels * 3 :])
-        c_last = c_last.reshape(-1, self.levels, self.chunk_size)
-        overlap = f_master_gate * i_master_gate
+        c_in = torch.tanh(x_out[:, self.levels * 3 :]).to(device=self.device)
+        c_last = c_last.reshape(-1, self.levels, self.chunk_size).to(device=self.device)
+        overlap = (f_master_gate * i_master_gate).to(device=self.device)
         c_out = (
             overlap * (f_gate * c_last + i_gate * c_in)
             + (f_master_gate - overlap) * c_last
@@ -125,8 +127,8 @@ class StageNet(nn.Module):
             )
             cur_distance_in = torch.mean(out[..., self.hidden_dim + self.levels :], -1)
             origin_h.append(out[..., : self.hidden_dim])
-            tmp_h = torch.cat((tmp_h[1:], out[..., : self.hidden_dim].unsqueeze(0)), 0)
-            tmp_dis = torch.cat((tmp_dis[1:], cur_distance.unsqueeze(0)), 0)
+            tmp_h = torch.cat((tmp_h[1:].to(device=self.device), out[..., : self.hidden_dim].unsqueeze(0).to(device=self.device)), 0)
+            tmp_dis = torch.cat((tmp_dis[1:].to(device=self.device), cur_distance.unsqueeze(0).to(device=self.device)), 0)
             distance.append(cur_distance)
 
             # Re-weighted convolution operation

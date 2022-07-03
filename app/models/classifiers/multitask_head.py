@@ -1,4 +1,5 @@
 from torch import nn
+import torch
 
 
 class MultitaskHead(nn.Module):
@@ -26,8 +27,10 @@ class MultitaskHead(nn.Module):
             nn.Dropout(drop),
         )
 
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() == True else "cpu")
+
     def forward(self, x):
         # x = self.act(x)
-        outcome = self.prediction_head_outcome(x)
+        outcome = self.prediction_head_outcome(x.to(device=self.device))
         los = self.prediction_head_los(x)
         return outcome, los

@@ -179,6 +179,7 @@ class AdaCare(nn.Module):
         self.relu = nn.ReLU()
         self.sigmoid = nn.Sigmoid()
         self.tanh = nn.Tanh()
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() == True else "cpu")
 
     def forward(self, input, info=None):
         """extra info is not used here"""
@@ -207,7 +208,7 @@ class AdaCare(nn.Module):
             )
             cur_input = torch.cat((convse_res[:, :, -1], inputse_res[:, :, -1]), dim=-1)
 
-            cur_h = self.rnn(cur_input, cur_h)
+            cur_h = self.rnn(cur_input.to(device=self.device), cur_h.to(device=self.device))
             h.append(cur_h)
             convse_att.append(cur_convatt)
             inputse_att.append(cur_inputatt)

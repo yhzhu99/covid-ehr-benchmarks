@@ -115,6 +115,8 @@ class SingleAttention(nn.Module):
         self.sigmoid = nn.Sigmoid()
         self.relu = nn.ReLU()
 
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() == True else "cpu")
+
     def forward(self, input, demo=None):
 
         (
@@ -125,8 +127,7 @@ class SingleAttention(nn.Module):
 
         time_decays = (
             torch.tensor(range(time_step - 1, -1, -1), dtype=torch.float32)
-            # .to(device="cuda")
-            .unsqueeze(-1).unsqueeze(0)
+            .unsqueeze(-1).unsqueeze(0).to(device=self.device)
         )  # 1*t*1
         b_time_decays = time_decays.repeat(batch_size, 1, 1) + 1  # b t 1
 
@@ -502,6 +503,8 @@ class ConCare(nn.Module):
         self.sigmoid = nn.Sigmoid()
         self.relu = nn.ReLU()
 
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() == True else "cpu")
+
     def concare_encoder(self, input, demo_input):
 
         # input shape [batch_size, timestep, feature_dim]
@@ -517,10 +520,10 @@ class ConCare(nn.Module):
 
         # forward
         GRU_embeded_input = self.GRUs[0](
-            input[:, :, 0].unsqueeze(-1),
+            input[:, :, 0].unsqueeze(-1).to(device=self.device),
             Variable(
                 torch.zeros(batch_size, self.hidden_dim)
-                # .to(device=self.device)
+                .to(device=self.device)
                 .unsqueeze(0)
             ),
         )[
@@ -537,7 +540,7 @@ class ConCare(nn.Module):
                 input[:, :, i + 1].unsqueeze(-1),
                 Variable(
                     torch.zeros(batch_size, self.hidden_dim)
-                    # .to(device=self.device)
+                    .to(device=self.device)
                     .unsqueeze(0)
                 ),
             )[

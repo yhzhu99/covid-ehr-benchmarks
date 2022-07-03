@@ -22,7 +22,9 @@ from torch.autograd import Variable
 from torch.nn import Parameter
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from torch.utils import data
+from zmq import device
 
+device = torch.device("cuda:0" if torch.cuda.is_available() == True else "cpu")
 
 def random_init(dataset, num_centers):
     num_points = dataset.size(0)
@@ -34,7 +36,7 @@ def random_init(dataset, num_centers):
         np.array(random.sample(range(num_points), k=num_centers)), dtype=torch.long
     )
 
-    centers = torch.gather(dataset, 0, indices.view(-1, 1).expand(-1, dimension))
+    centers = torch.gather(dataset, 0, indices.view(-1, 1).expand(-1, dimension).to(device=device))
     return centers
 
 
@@ -69,14 +71,14 @@ def compute_codes(dataset, centers):
 def update_centers(dataset, codes, num_centers):
     num_points = dataset.size(0)
     dimension = dataset.size(1)
-    centers = torch.zeros(num_centers, dimension, dtype=torch.float)
+    centers = torch.zeros(num_centers, dimension, dtype=torch.float).to(device=device)
     cnt = torch.zeros(num_centers, dtype=torch.float)
-    centers.scatter_add_(0, codes.view(-1, 1).expand(-1, dimension), dataset)
+    centers.scatter_add_(0, codes.view(-1, 1).expand(-1, dimension).to(device=device), dataset)
     cnt.scatter_add_(0, codes, torch.ones(num_points, dtype=torch.float))
     # Avoiding division by zero
     # Not necessary if there are no duplicates among the data points
     cnt = torch.where(cnt > 0.5, cnt, torch.ones(num_centers, dtype=torch.float))
-    centers /= cnt.view(-1, 1)
+    centers /= cnt.view(-1, 1).to(device=device)
     return centers
 
 
@@ -618,7 +620,7 @@ class GraphConvolution(nn.Module):
         self.out_features = out_features
         self.weight = Parameter(torch.Tensor(in_features, out_features).float())
         if bias:
-            self.bias = Parameter(torch.Tensor(out_features).float())
+            self.bias = Parameter(torch.Tensor(out_features).float()).to(device=device)
         else:
             self.register_parameter("bias", None)
         self.initialize_parameters()
@@ -699,7 +701,7 @@ class MAPLE(nn.Module):
         return -torch.log(-torch.log(U + eps) + eps)
 
     def gumbel_softmax_sample(self, logits, temperature):
-        y = logits + self.sample_gumbel(logits.size())
+        y = logits + self.sample_gumbel(logits.size()).to(device=device)
         return F.softmax(y / temperature, dim=-1)
 
     def gumbel_softmax(self, logits, temperature, hard=False):
@@ -744,7 +746,7 @@ class MAPLE(nn.Module):
                 include_self=False,
             ).toarray()
 
-        adj_mat = torch.tensor(A_mat)
+        adj_mat = torch.tensor(A_mat).to(device=device)
 
         e = self.relu(torch.matmul(hidden_t, centers.transpose(0, 1)))  # b clu_num
 
