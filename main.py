@@ -1,3 +1,5 @@
+import argparse
+
 import torch
 from omegaconf import OmegaConf
 
@@ -6,7 +8,13 @@ from app import create_app
 
 if __name__ == "__main__":
     print("===[Start]===")
-    my_pipeline = OmegaConf.load("configs/tj_multitask_gru_ep100_kf10_bs64_hid64.yaml")
+
+    parser = argparse.ArgumentParser("Covid-EMR training script", add_help=False)
+    parser.add_argument(
+        "--cfg", type=str, required=True, metavar="FILE", help="path to config file"
+    )
+    args = parser.parse_args()
+    my_pipeline = OmegaConf.load(args.cfg)
     device = torch.device("cuda:0" if torch.cuda.is_available() == True else "cpu")
     cfg = create_app(my_pipeline, device)
     print("===[End]===")
