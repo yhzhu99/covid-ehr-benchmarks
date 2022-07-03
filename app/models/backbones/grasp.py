@@ -22,11 +22,8 @@ from torch.autograd import Variable
 from torch.nn import Parameter
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from torch.utils import data
-from zmq import device
 
-device = torch.device("cuda:0" if torch.cuda.is_available() == True else "cpu")
-
-def random_init(dataset, num_centers):
+def random_init(dataset, num_centers, device):
     num_points = dataset.size(0)
     dimension = dataset.size(1)
     # print("random size", dataset.size())
@@ -68,7 +65,7 @@ def compute_codes(dataset, centers):
 
 
 # Compute new centers as means of the data points forming the clusters
-def update_centers(dataset, codes, num_centers):
+def update_centers(dataset, codes, num_centers, device):
     num_points = dataset.size(0)
     dimension = dataset.size(1)
     centers = torch.zeros(num_centers, dimension, dtype=torch.float).to(device=device)
@@ -82,15 +79,15 @@ def update_centers(dataset, codes, num_centers):
     return centers
 
 
-def cluster(dataset, num_centers):
-    centers = random_init(dataset, num_centers)
+def cluster(dataset, num_centers, device):
+    centers = random_init(dataset, num_centers, device)
     codes = compute_codes(dataset, centers)
     num_iterations = 0
     while True:
         #         sys.stdout.write('.')
         #         sys.stdout.flush()
         #         num_iterations += 1
-        centers = update_centers(dataset, codes, num_centers)
+        centers = update_centers(dataset, codes, num_centers, device)
         new_codes = compute_codes(dataset, centers)
         # Waiting until the clustering stops updating altogether
         # This is too strict in practice
@@ -305,7 +302,7 @@ class FinalAttentionQKV(nn.Module):
         self.softmax = nn.Softmax(dim=-1)
         self.sigmoid = nn.Sigmoid()
 
-    def forward(self, input):
+    def forward(self, input, device):
 
         (
             batch_size,
@@ -374,7 +371,7 @@ class PositionwiseFeedForward(nn.Module):  # new added
         self.w_2 = nn.Linear(d_ff, d_model)
         self.dropout = nn.Dropout(dropout)
 
-    def forward(self, x):
+    def forward(self, x, device):
         return self.w_2(self.dropout(F.relu(self.w_1(x)))), None
 
 
@@ -562,7 +559,7 @@ class vanilla_transformer_encoder(nn.Module):
 
         self.bn = nn.BatchNorm1d(self.hidden_dim)
 
-    def forward(self, input):
+    def forward(self, input, device):
 
         batch_size = input.size(0)
         time_step = input.size(1)
@@ -600,12 +597,12 @@ class vanilla_transformer_encoder(nn.Module):
         contexts = contexts[0]
 
         contexts = self.SublayerConnection(
-            contexts, lambda x: self.PositionwiseFeedForward(contexts)
+            contexts, lambda x: self.PositionwiseFeedForward(contexts, device)
         )[
             0
         ]  # # batch_size * d_input * hidden_dim
 
-        weighted_contexts = self.FinalAttentionQKV(contexts)[0]
+        weighted_contexts = self.FinalAttentionQKV(contexts, device)[0]
         output = self.output(self.dropout(self.bn(weighted_contexts)))  # b 1
         output = self.sigmoid(output)
 
@@ -620,7 +617,7 @@ class GraphConvolution(nn.Module):
         self.out_features = out_features
         self.weight = Parameter(torch.Tensor(in_features, out_features).float())
         if bias:
-            self.bias = Parameter(torch.Tensor(out_features).float()).to(device=device)
+            self.bias = Parameter(torch.Tensor(out_features).float())
         else:
             self.register_parameter("bias", None)
         self.initialize_parameters()
@@ -631,11 +628,11 @@ class GraphConvolution(nn.Module):
         if self.bias is not None:
             self.bias.data.uniform_(-std, std)
 
-    def forward(self, adj, x):
+    def forward(self, adj, x, device):
         y = torch.mm(x.float(), self.weight.float())
         output = torch.mm(adj.float(), y.float())
         if self.bias is not None:
-            return output + self.bias.float()
+            return output + self.bias.float().to(device=device)
         else:
             return output
 
@@ -700,17 +697,17 @@ class MAPLE(nn.Module):
 
         return -torch.log(-torch.log(U + eps) + eps)
 
-    def gumbel_softmax_sample(self, logits, temperature):
+    def gumbel_softmax_sample(self, logits, temperature, device):
         y = logits + self.sample_gumbel(logits.size()).to(device=device)
         return F.softmax(y / temperature, dim=-1)
 
-    def gumbel_softmax(self, logits, temperature, hard=False):
+    def gumbel_softmax(self, logits, temperature, device, hard=False):
         """
         ST-gumple-softmax
         input: [*, n_class]
         return: flatten --> [*, n_class] an one-hot vector
         """
-        y = self.gumbel_softmax_sample(logits, temperature)
+        y = self.gumbel_softmax_sample(logits, temperature, device)
 
         if not hard:
             return y.view(-1, self.cluster_num)
@@ -724,7 +721,7 @@ class MAPLE(nn.Module):
         y_hard = (y_hard - y).detach() + y
         return y_hard
 
-    def grasp_encoder(self, input, epoch):
+    def grasp_encoder(self, input, epoch, device):
         batch_size = input.size(0)
         time_step = input.size(1)
         feature_dim = input.size(2)
@@ -734,7 +731,7 @@ class MAPLE(nn.Module):
         hidden_t = torch.squeeze(hidden_t, 0)
         # print("hiddent", hidden_t.shape)
 
-        centers, codes = cluster(hidden_t, self.cluster_num)
+        centers, codes = cluster(hidden_t, self.cluster_num, device)
 
         if epoch == 0:
             A_mat = np.eye(self.cluster_num)
@@ -750,11 +747,11 @@ class MAPLE(nn.Module):
 
         e = self.relu(torch.matmul(hidden_t, centers.transpose(0, 1)))  # b clu_num
 
-        scores = self.gumbel_softmax(e, temperature=1, hard=True)
+        scores = self.gumbel_softmax(e, temperature=1, device=device, hard=True)
         digits = torch.argmax(scores, dim=-1)  #  b
 
-        h_prime = self.relu(self.GCN(adj_mat, centers))
-        h_prime = self.relu(self.GCN_2(adj_mat, h_prime))
+        h_prime = self.relu(self.GCN(adj_mat, centers, device))
+        h_prime = self.relu(self.GCN_2(adj_mat, h_prime, device))
 
         clu_appendix = torch.matmul(scores, h_prime)
 
@@ -777,5 +774,5 @@ class MAPLE(nn.Module):
         for cur_time in range(time_steps):
             cur_x = x[:, : cur_time + 1, :]
             # print("curx", cur_x.shape)
-            out[:, cur_time, :] = self.grasp_encoder(cur_x, info["epoch"])
+            out[:, cur_time, :] = self.grasp_encoder(cur_x, info["epoch"], device)
         return out
