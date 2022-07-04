@@ -1,5 +1,5 @@
-from torch import nn
 import torch
+from torch import nn
 
 
 class MultitaskHead(nn.Module):
@@ -15,6 +15,7 @@ class MultitaskHead(nn.Module):
         self.output_dim = (output_dim,)
         self.act = act_layer()
         self.prediction_head_outcome = nn.Sequential(
+            act_layer(),
             nn.Dropout(drop),
             nn.Linear(hidden_dim, output_dim),
             nn.Dropout(drop),
@@ -22,6 +23,7 @@ class MultitaskHead(nn.Module):
         )
 
         self.prediction_head_los = nn.Sequential(
+            act_layer(),
             nn.Dropout(drop),
             nn.Linear(hidden_dim, output_dim),
             nn.Dropout(drop),
