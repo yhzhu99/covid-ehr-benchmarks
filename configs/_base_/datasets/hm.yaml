@@ -2,5 +2,5 @@
 demo_dim: 2
 lab_dim: 97
 max_visits: 23
-thresholds: [6, 5.5, 5, 4.5, 4.26886, 4, 3.5, 3, 2.5, 2, 1.5, 1, 0.5]
+thresholds: [8,7,6,5,4.26886,4,3,2,1]
 large_los: 22.0
