@@ -1,5 +1,6 @@
-from torch import nn
 import torch
+from torch import nn
+
 
 class LosHead(nn.Module):
     def __init__(
