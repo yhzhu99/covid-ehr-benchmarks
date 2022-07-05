@@ -1,6 +1,6 @@
 # dataset settings
 demo_dim: 2
 lab_dim: 97
-max_visits: 23
-thresholds: [8,7,6,5,4.26886,4,3.5,3,2,1]
-large_los: 22.0
+max_visits: 24
+thresholds: [8,7,6,5,4.2955,4,3.5,3,2,1]
+large_los: 23.0
