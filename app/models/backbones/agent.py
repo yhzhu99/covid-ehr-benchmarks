@@ -66,7 +66,7 @@ class Agent(nn.Module):
 
         for name, param in self.rnn.named_parameters():
             if "bias" in name:
-                nn.init.constant(param, 0.0)
+                nn.init.constant_(param, 0.0)
             elif "weight" in name:
                 nn.init.orthogonal_(param)
 
