@@ -15,22 +15,24 @@ class MultitaskHead(nn.Module):
         self.output_dim = (output_dim,)
         self.act = act_layer()
         self.prediction_head_outcome = nn.Sequential(
+            nn.Linear(hidden_dim, 4 * hidden_dim),
             act_layer(),
             nn.Dropout(drop),
-            nn.Linear(hidden_dim, output_dim),
+            nn.Linear(4 * hidden_dim, output_dim),
             nn.Dropout(drop),
             nn.Sigmoid(),
         )
 
         self.prediction_head_los = nn.Sequential(
+            nn.Linear(hidden_dim, 4 * hidden_dim),
             act_layer(),
             nn.Dropout(drop),
-            nn.Linear(hidden_dim, output_dim),
+            nn.Linear(4 * hidden_dim, output_dim),
             nn.Dropout(drop),
         )
 
     def forward(self, x, device):
-        # x = self.act(x)
+        x = self.act(x)
         outcome = self.prediction_head_outcome(x.to(device=device))
         los = self.prediction_head_los(x.to(device=device))
         return outcome, los
