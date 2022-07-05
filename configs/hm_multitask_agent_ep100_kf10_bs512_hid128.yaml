@@ -1,5 +1,5 @@
 name: hm_multitask_agent_ep100_kf10_bs512_hid128
-model_type: dl
+model_type: ehr
 model: agent
 dataset: hm
 task: multitask

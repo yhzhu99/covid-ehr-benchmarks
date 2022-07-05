@@ -1,5 +1,5 @@
 name: tj_los_stagenet_ep100_kf10_bs64_hid128
-model_type: dl
+model_type: ehr
 model: stagenet
 dataset: tongji
 task: los
