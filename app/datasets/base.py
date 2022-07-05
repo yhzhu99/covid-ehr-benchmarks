@@ -1,5 +1,4 @@
 import pickle
-import pickle5 as pickle
 
 
 def load_data(dataset_type):
