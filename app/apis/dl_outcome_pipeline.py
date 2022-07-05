@@ -137,7 +137,10 @@ def start_pipeline(cfg, device):
 
         test_sampler = SubsetRandomSampler(test_idx)
         test_loader = DataLoader(
-            dataset, batch_size=cfg.batch_size, sampler=test_sampler
+            dataset,
+            batch_size=cfg.batch_size,
+            sampler=test_sampler,
+            num_workers=4,
         )
         sub_dataset = Dataset(
             dataset.x[train_and_val_idx],
@@ -153,9 +156,17 @@ def start_pipeline(cfg, device):
         train_sampler = SubsetRandomSampler(train_idx)
         val_sampler = SubsetRandomSampler(val_idx)
         train_loader = DataLoader(
-            dataset, batch_size=cfg.batch_size, sampler=train_sampler
+            dataset,
+            batch_size=cfg.batch_size,
+            sampler=train_sampler,
+            num_workers=4,
         )
-        val_loader = DataLoader(dataset, batch_size=cfg.batch_size, sampler=val_sampler)
+        val_loader = DataLoader(
+            dataset,
+            batch_size=cfg.batch_size,
+            sampler=val_sampler,
+            num_workers=4,
+        )
         model = build_model_from_cfg(cfg, device)
         optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
         criterion = predict_all_visits_bce_loss
