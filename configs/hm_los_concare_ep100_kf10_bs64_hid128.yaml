@@ -1,4 +1,4 @@
-name: hm_los_concare_ep100_kf10_bs512_hid64
+name: hm_los_concare_ep100_kf10_bs64_hid128
 model_type: ehr
 model: concare
 dataset: hm
@@ -6,8 +6,8 @@ task: los
 epochs: 100
 num_folds: 10
 train_fold: 1
-batch_size: 512
-hidden_dim: 64
+batch_size: 64
+hidden_dim: 128
 
 MHD_num_head: 4
 
