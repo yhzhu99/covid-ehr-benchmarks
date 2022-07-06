@@ -12,14 +12,20 @@ if __name__ == "__main__":
         "--cfg", type=str, required=True, metavar="FILE", help="path to config file"
     )
     parser.add_argument(
-        "--cuda", type=str, required=True, metavar="CUDA NUMBER", help="gpu to train"
+        "--cuda",
+        type=int,
+        required=False,
+        metavar="CUDA NUMBER",
+        help="gpu to train",
     )
     args = parser.parse_args()
-    print(f"--------------------   {args.cfg}    --------------------")
+    print(f"===[{args.cfg}]===")
     my_pipeline = OmegaConf.load(args.cfg)
-    device = torch.device(
-        f"cuda:{args.cuda}" if torch.cuda.is_available() == True else "cpu"
-    )
-    # device = torch.device("cpu")
+
+    # train on cpu by default
+    device = torch.device("cpu")
+    if args.cuda is not None:
+        device = torch.device(f"cuda:{args.cuda}")
+
     cfg = create_app(my_pipeline, device)
     print("===[End]===")
