@@ -9,6 +9,11 @@ catboost
 matplotlib
 seaborn
 numpyencoder
+sqlalchemy
+
+# if use mysql
 # sudo apt-get install -y python3-mysqldb
 mysqlclient
-sqlalchemy
+
+# if use postgresql
+psycopg2-binary
