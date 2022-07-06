@@ -1,5 +1,5 @@
 name: hm_multitask_retain_ep100_kf10_bs512_hid64
-model_type: dl
+model_type: ehr
 model: retain
 dataset: hm
 task: multitask

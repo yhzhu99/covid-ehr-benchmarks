@@ -1,5 +1,5 @@
 name: hm_los_adacare_ep100_kf10_bs512_hid128
-model_type: dl
+model_type: ehr
 model: adacare
 dataset: hm
 task: los

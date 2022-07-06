@@ -1,5 +1,5 @@
 name: hm_multitask_concare_ep100_kf10_bs512_hid128
-model_type: dl
+model_type: ehr
 model: concare
 dataset: hm
 task: multitask
