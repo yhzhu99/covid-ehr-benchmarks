@@ -9,14 +9,15 @@ from sqlalchemy.orm import Session, relationship, sessionmaker
 
 db_cfg = OmegaConf.load("configs/_base_/db.yaml")
 
-username, password, host, port, database = (
+engine, username, password, host, port, database = (
+    db_cfg.engine,
     db_cfg.username,
     db_cfg.password,
     db_cfg.host,
     db_cfg.port,
     db_cfg.database,
 )
-SQLALCHEMY_DATABASE_URL = f"mysql://{username}:{password}@{host}:{port}/{database}"
+SQLALCHEMY_DATABASE_URL = f"{engine}://{username}:{password}@{host}:{port}/{database}"
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
