@@ -220,5 +220,5 @@ def start_pipeline(cfg):
             rmse=test_rmse_list,
             mape=test_mape_list,
             verbose=1,
-            upload=True,
+            upload=cfg.db,
         )

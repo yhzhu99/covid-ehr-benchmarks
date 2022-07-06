@@ -18,14 +18,21 @@ if __name__ == "__main__":
         metavar="CUDA NUMBER",
         help="gpu to train",
     )
+    parser.add_argument(
+        "--db",
+        type=bool,
+        default=False,
+    )
+
     args = parser.parse_args()
     print(f"===[{args.cfg}]===")
-    my_pipeline = OmegaConf.load(args.cfg)
+    conf = OmegaConf.load(args.cfg)
+    conf.db = args.db
 
     # train on cpu by default
     device = torch.device("cpu")
     if args.cuda is not None:
         device = torch.device(f"cuda:{args.cuda}")
 
-    cfg = create_app(my_pipeline, device)
+    create_app(conf, device)
     print("===[End]===")

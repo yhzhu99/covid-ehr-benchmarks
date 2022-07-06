@@ -24,4 +24,3 @@ def create_app(my_pipeline, device):
     elif cfg.model_type in ["dl", "ehr"] and cfg.task == "multitask":
         apis.dl_multitask_pipeline.start_pipeline(cfg, device)
         # apis.dl_multitask_pipeline.start_inference(cfg, device)
-    return cfg

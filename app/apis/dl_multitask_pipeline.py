@@ -420,7 +420,7 @@ def start_pipeline(cfg, device):
         early_prediction_score=test_early_prediction_list,
         multitask_prediction_score=test_multitask_los_list,
         verbose=1,
-        upload=True,
+        upload=cfg.db,
     )
 
 
