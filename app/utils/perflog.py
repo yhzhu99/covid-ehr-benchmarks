@@ -7,19 +7,6 @@ from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, create_engi
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, relationship, sessionmaker
 
-db_cfg = OmegaConf.load("configs/_base_/db.yaml")
-
-engine, username, password, host, port, database = (
-    db_cfg.engine,
-    db_cfg.username,
-    db_cfg.password,
-    db_cfg.host,
-    db_cfg.port,
-    db_cfg.database,
-)
-SQLALCHEMY_DATABASE_URL = f"{engine}://{username}:{password}@{host}:{port}/{database}"
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
@@ -141,6 +128,22 @@ def process_and_upload_performance(
         verbose=verbose,
     )
     if upload:
+        db_cfg = OmegaConf.load("configs/_base_/db.yaml")
+
+        engine, username, password, host, port, database = (
+            db_cfg.engine,
+            db_cfg.username,
+            db_cfg.password,
+            db_cfg.host,
+            db_cfg.port,
+            db_cfg.database,
+        )
+        SQLALCHEMY_DATABASE_URL = (
+            f"{engine}://{username}:{password}@{host}:{port}/{database}"
+        )
+        engine = create_engine(SQLALCHEMY_DATABASE_URL)
+        SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
         db = SessionLocal()
         create_perflog(db=db, cfg=cfg, perf=perf)
         db.close()
