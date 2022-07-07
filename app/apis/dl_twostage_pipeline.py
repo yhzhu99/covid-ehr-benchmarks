@@ -171,6 +171,8 @@ def start_pipeline(cfg, device):
         torch.load(f"checkpoints/{cfg.name.replace('twostage', 'los')}.pth")
     )
 
+    cfg.task = "twostage"
+
     criterion = get_multi_task_loss
 
     all_history = {}
