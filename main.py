@@ -32,7 +32,9 @@ if __name__ == "__main__":
     # train on cpu by default
     device = torch.device("cpu")
     if args.cuda is not None:
-        device = torch.device(f"cuda:{args.cuda}")
+        device = torch.device(
+            f"cuda:{args.cuda}" if torch.cuda.is_available() else "cpu"
+        )
 
     create_app(conf, device)
     print("===[End]===")
