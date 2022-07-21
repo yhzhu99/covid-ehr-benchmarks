@@ -198,9 +198,11 @@ def start_pipeline(cfg, device):
     skf = kfold_test.split(np.arange(len(dataset)), dataset.y[:, 0, 0])
     for fold_test in range(train_fold):
         outcome_model.load_state_dict(
-            torch.load(f"checkpoints/{cfg.outcome_model_name}.pth")
+            torch.load(f"checkpoints/{cfg.outcome_model_name}_{fold_test + 1}.pth")
         )
-        los_model.load_state_dict(torch.load(f"checkpoints/{cfg.los_model_name}.pth"))
+        los_model.load_state_dict(
+            torch.load(f"checkpoints/{cfg.los_model_name}_{fold_test + 1}.pth")
+        )
         x, y, x_lab_length = load_data(dataset_type)
         dataset = get_dataset(x, y, x_lab_length)
         train_and_val_idx, test_idx = next(skf)

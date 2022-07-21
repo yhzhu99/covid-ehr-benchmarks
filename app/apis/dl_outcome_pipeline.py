@@ -217,14 +217,16 @@ def start_pipeline(cfg, device):
             # if auroc is better, than set the best auroc, save the model, and test it on the test set
             if val_evaluation_scores["auprc"] > best_val_performance:
                 best_val_performance = val_evaluation_scores["auprc"]
-                torch.save(model.state_dict(), f"checkpoints/{cfg.name}.pth")
+                torch.save(
+                    model.state_dict(), f"checkpoints/{cfg.name}_{fold_test + 1}.pth"
+                )
         all_history["test_fold_{}".format(fold_test + 1)] = history
         print(
             f"Best performance on val set {fold_test+1}: \
             AUPRC = {best_val_performance}"
         )
         model = build_model_from_cfg(cfg, device)
-        model.load_state_dict(torch.load(f"checkpoints/{cfg.name}.pth"))
+        model.load_state_dict(torch.load(f"checkpoints/{cfg.name}_{fold_test + 1}.pth"))
         test_loss, test_evaluation_scores = val_epoch(
             model,
             device,
