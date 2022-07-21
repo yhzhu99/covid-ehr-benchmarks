@@ -8,3 +8,4 @@ large_los: 26.0
 epochs: 100
 num_folds: 10
 train_fold: 10
+bootstrap: False
