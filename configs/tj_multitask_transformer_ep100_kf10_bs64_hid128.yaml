@@ -3,9 +3,9 @@ model_type: dl
 model: transformer
 dataset: tongji
 task: multitask
-epochs: 100
-num_folds: 10
-train_fold: 10
+
+
+
 batch_size: 64
 hidden_dim: 128
 num_layers: 2

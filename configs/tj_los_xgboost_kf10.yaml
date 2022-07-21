@@ -4,5 +4,5 @@ model: xgboost
 mode: test # val / test
 dataset: tongji
 task: los
-num_folds: 10
-train_fold: 10
+
+

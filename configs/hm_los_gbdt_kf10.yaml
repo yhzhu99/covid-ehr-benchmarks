@@ -4,5 +4,5 @@ model: gbdt
 mode: test # val / test
 dataset: hm
 task: los
-num_folds: 10
-train_fold: 1
+
+

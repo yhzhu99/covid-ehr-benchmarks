@@ -3,9 +3,9 @@ model_type: ehr
 model: concare
 dataset: hm
 task: multitask
-epochs: 100
-num_folds: 10
-train_fold: 1
+
+
+
 batch_size: 64
 hidden_dim: 128
 

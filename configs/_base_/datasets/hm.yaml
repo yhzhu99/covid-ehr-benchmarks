@@ -4,3 +4,7 @@ lab_dim: 97
 max_visits: 24
 thresholds: [8,7,6,5,4.2955,4,3.5,3,2,1]
 large_los: 23.0
+
+epochs: 100
+num_folds: 10
+train_fold: 10

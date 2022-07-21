@@ -3,9 +3,9 @@ model_type: dl
 model: gru
 dataset: hm
 task: outcome
-epochs: 100
-num_folds: 10
-train_fold: 1
+
+
+
 batch_size: 512
 hidden_dim: 128
 output_dim: 1

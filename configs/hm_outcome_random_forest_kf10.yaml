@@ -4,5 +4,5 @@ model: random_forest
 mode: test
 dataset: hm
 task: outcome
-num_folds: 10
-train_fold: 1
+
+

@@ -4,5 +4,5 @@ model: xgboost
 mode: test # val / test
 dataset: hm
 task: outcome
-num_folds: 10
-train_fold: 1
+
+

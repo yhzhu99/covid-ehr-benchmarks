@@ -4,5 +4,5 @@ model: gbdt
 mode: test
 dataset: tongji
 task: outcome
-num_folds: 10
-train_fold: 10
+
+

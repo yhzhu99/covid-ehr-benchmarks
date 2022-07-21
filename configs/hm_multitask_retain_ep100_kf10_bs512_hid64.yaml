@@ -3,9 +3,9 @@ model_type: ehr
 model: retain
 dataset: hm
 task: multitask
-epochs: 100
-num_folds: 10
-train_fold: 1
+
+
+
 batch_size: 512
 hidden_dim: 64
 output_dim: 1

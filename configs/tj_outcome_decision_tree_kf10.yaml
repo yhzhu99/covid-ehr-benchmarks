@@ -4,5 +4,5 @@ model: decision_tree
 mode: test # val / test
 dataset: tongji
 task: outcome
-num_folds: 10
-train_fold: 10
+
+
