@@ -1,4 +1,5 @@
 import argparse
+import pathlib
 
 import torch
 from omegaconf import OmegaConf
@@ -6,6 +7,7 @@ from omegaconf import OmegaConf
 from app import create_app
 
 if __name__ == "__main__":
+    pathlib.Path("./checkpoints").mkdir(parents=True, exist_ok=True)
     print("===[Start]===")
     parser = argparse.ArgumentParser("Covid-EMR training script", add_help=False)
     parser.add_argument(
