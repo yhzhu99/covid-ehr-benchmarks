@@ -1,6 +1,6 @@
 name: tj_twostage_mlp_kf10
 model_type: ehr
-model: adacare
+model: mlp
 dataset: tongji
 task: twostage
 
