@@ -8,6 +8,7 @@ import pandas as pd
 import torch
 import torch.nn.functional as F
 import torch.nn.utils.rnn as rnn_utils
+from omegaconf import OmegaConf
 from sklearn.model_selection import (
     KFold,
     StratifiedKFold,
@@ -157,21 +158,20 @@ def start_pipeline(cfg, device):
     x, y, x_lab_length = load_data(dataset_type)
     dataset = get_dataset(x, y, x_lab_length)
 
-    outcome_cfg = cfg
-    outcome_cfg.task = "outcome"
+    # Load dataset
+    dataset_cfg = OmegaConf.load(f"configs/_base_/datasets/{cfg.dataset}.yaml")
+
+    # Merge config
+    outcome_cfg = OmegaConf.merge(
+        dataset_cfg, OmegaConf.load(f"configs/{cfg.outcome_model_name}.yaml")
+    )
     outcome_model = build_model_from_cfg(outcome_cfg, device)
-    outcome_model.load_state_dict(
-        torch.load(f"checkpoints/{cfg.name.replace('twostage', 'outcome')}.pth")
-    )
 
-    los_cfg = cfg
-    los_cfg.task = "los"
+    # Merge config
+    los_cfg = OmegaConf.merge(
+        dataset_cfg, OmegaConf.load(f"configs/{cfg.los_model_name}.yaml")
+    )
     los_model = build_model_from_cfg(los_cfg, device)
-    los_model.load_state_dict(
-        torch.load(f"checkpoints/{cfg.name.replace('twostage', 'los')}.pth")
-    )
-
-    cfg.task = "twostage"
 
     criterion = get_multi_task_loss
 
@@ -197,6 +197,10 @@ def start_pipeline(cfg, device):
         )
     skf = kfold_test.split(np.arange(len(dataset)), dataset.y[:, 0, 0])
     for fold_test in range(train_fold):
+        outcome_model.load_state_dict(
+            torch.load(f"checkpoints/{cfg.outcome_model_name}.pth")
+        )
+        los_model.load_state_dict(torch.load(f"checkpoints/{cfg.los_model_name}.pth"))
         x, y, x_lab_length = load_data(dataset_type)
         dataset = get_dataset(x, y, x_lab_length)
         train_and_val_idx, test_idx = next(skf)
