@@ -14,7 +14,7 @@ import torch
 RANDOM_SEED = 42
 
 
-def init_random():
+def init_random(RANDOM_SEED):
     np.random.seed(RANDOM_SEED)  # numpy
     random.seed(RANDOM_SEED)
     torch.manual_seed(RANDOM_SEED)  # cpu
