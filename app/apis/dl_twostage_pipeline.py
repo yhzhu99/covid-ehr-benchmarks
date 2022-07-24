@@ -191,10 +191,6 @@ def start_pipeline(cfg, device):
     kfold_test = StratifiedKFold(
         n_splits=num_folds, shuffle=True, random_state=RANDOM_SEED
     )
-    if cfg.bootstrap == True:
-        kfold_test = StratifiedShuffleSplit(
-            n_splits=num_folds, test_size=1 / num_folds, random_state=RANDOM_SEED
-        )
     skf = kfold_test.split(np.arange(len(dataset)), dataset.y[:, 0, 0])
     for fold_test in range(train_fold):
         outcome_model.load_state_dict(

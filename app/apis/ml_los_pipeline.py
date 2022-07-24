@@ -109,11 +109,6 @@ def start_pipeline(cfg):
     kfold_test = StratifiedKFold(
         n_splits=num_folds, shuffle=True, random_state=RANDOM_SEED
     )
-    if cfg.bootstrap == True:
-        kfold_test = StratifiedShuffleSplit(
-            n_splits=num_folds, test_size=1 / num_folds, random_state=RANDOM_SEED
-        )
-
     skf = kfold_test.split(np.arange(len(x)), y_outcome)
     for fold_test in range(train_fold):
         train_and_val_idx, test_idx = next(skf)
