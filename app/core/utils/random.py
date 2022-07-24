@@ -11,13 +11,11 @@ import re
 import numpy as np
 import torch
 
-RANDOM_SEED = 42
 
-
-def init_random(RANDOM_SEED):
-    np.random.seed(RANDOM_SEED)  # numpy
-    random.seed(RANDOM_SEED)
-    torch.manual_seed(RANDOM_SEED)  # cpu
-    torch.cuda.manual_seed(RANDOM_SEED)  # gpu
+def init_random(seed):
+    np.random.seed(seed)  # numpy
+    random.seed(seed)
+    torch.manual_seed(seed)  # cpu
+    torch.cuda.manual_seed(seed)  # gpu
     torch.backends.cudnn.deterministic = True  # cudnn
     np.set_printoptions(threshold=np.inf, precision=2, suppress=True)
