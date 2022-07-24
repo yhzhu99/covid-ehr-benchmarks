@@ -8,3 +8,5 @@ large_los: 26.0
 epochs: 100
 num_folds: 10
 train_fold: 10
+dataset_split_seed: 42
+model_init_seed: [42]
