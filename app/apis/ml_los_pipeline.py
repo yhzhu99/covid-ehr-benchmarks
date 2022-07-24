@@ -71,7 +71,7 @@ def train(x, y, method, cfg):
             verbose=None,
             silent=True,
             allow_writing_files=False,
-            loss_function='CrossEntropy'
+            loss_function='MAE'
         )
         model.fit(x, y)
     return model
