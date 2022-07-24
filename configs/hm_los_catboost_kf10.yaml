@@ -1,8 +1,0 @@
-name: hm_los_catboost_kf10
-model_type: ml
-model: catboost
-mode: test # val / test
-dataset: hm
-task: los
-
-

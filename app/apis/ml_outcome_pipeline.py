@@ -32,33 +32,49 @@ from app.models import (
 from app.utils import perflog
 
 
-def train(x, y, method):
+def train(x, y, method, cfg):
     y = y[:, 0]
 
     if method == "xgboost":
         model = xgb.XGBClassifier(
-            verbosity=0, n_estimators=1000, learning_rate=0.3, use_label_encoder=False
+            objective='binary:logistic', eval_metric='error', verbosity=0, 
+            learning_rate=cfg.learning_rate,
+            max_depth=cfg.max_depth,
+            min_child_weight=cfg.min_child_weight,
+            n_estimators=1000, use_label_encoder=False, random_state=RANDOM_SEED
         )
         model.fit(x, y, eval_metric="auc")
     elif method == "gbdt":
         method = GradientBoostingClassifier(
-            n_estimators=100, learning_rate=1.0, max_depth=1, random_state=RANDOM_SEED
+            random_state=RANDOM_SEED,
+            learning_rate=cfg.learning_rate,
+            n_estimators=cfg.n_estimators,
+            subsample=cfg.subsample
         )
         model = method.fit(x, y)
     elif method == "random_forest":
-        method = RandomForestClassifier(random_state=RANDOM_SEED, max_depth=100)
+        method = RandomForestClassifier(
+            random_state=RANDOM_SEED, 
+            max_depth=cfg.max_depth,
+            min_samples_split=cfg.min_samples_split,
+            n_estimators=cfg.n_estimators
+        )
         model = method.fit(x, y)
     elif method == "decision_tree":
-        model = DecisionTreeClassifier(random_state=RANDOM_SEED)
+        model = DecisionTreeClassifier(
+            random_state=RANDOM_SEED,
+            max_depth=cfg.max_depth
+        )
         model.fit(x, y)
     elif method == "catboost":
         model = CatBoostClassifier(
-            iterations=50,  # performance is better when iterations = 100
-            learning_rate=0.5,
-            depth=3,
+            iterations=cfg.iterations,  # performance is better when iterations = 100
+            learning_rate=cfg.learning_rate,
+            depth=cfg.depth,
             verbose=None,
             silent=True,
             allow_writing_files=False,
+            loss_function='CrossEntropy'
         )
         model.fit(x, y)
     return model
@@ -128,7 +144,7 @@ def start_pipeline(cfg):
         x_test, y_test = flatten_dataset(x, y, test_idx, x_lab_length, case="outcome")
         all_history["test_fold_{}".format(fold_test + 1)] = {}
 
-        model = train(x_train, y_train, method)
+        model = train(x_train, y_train, method, cfg)
 
         if mode == "val":
             history = {
