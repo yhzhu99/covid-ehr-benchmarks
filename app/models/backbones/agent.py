@@ -5,11 +5,6 @@ from torch import nn
 from torch.autograd import Variable
 from torch.utils import data
 
-RANDOM_SEED = 12345
-torch.manual_seed(RANDOM_SEED)
-torch.cuda.manual_seed(RANDOM_SEED)
-torch.backends.cudnn.deterministic = True
-
 
 class Agent(nn.Module):
     def __init__(
