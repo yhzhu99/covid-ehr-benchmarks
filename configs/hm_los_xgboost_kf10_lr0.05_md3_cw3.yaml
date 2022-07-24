@@ -1,0 +1,9 @@
+name: hm_los_xgboost_kf10_lr0.05_md3_cw3
+model_type: ml
+model: xgboost
+mode: val
+dataset: hm
+task: los
+learning_rate: 0.05
+max_depth: 3
+min_child_weight: 3

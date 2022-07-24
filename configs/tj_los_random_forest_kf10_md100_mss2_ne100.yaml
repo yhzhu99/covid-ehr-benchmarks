@@ -1,0 +1,9 @@
+name: tj_los_random_forest_kf10_md100_mss2_ne100
+model_type: ml
+model: random_forest
+mode: val
+dataset: tongji
+task: los
+max_depth: 100
+min_samples_split: 2
+n_estimators: 100

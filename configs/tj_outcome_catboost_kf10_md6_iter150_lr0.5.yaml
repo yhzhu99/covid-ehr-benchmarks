@@ -1,0 +1,9 @@
+name: tj_outcome_catboost_kf10_md6_iter150_lr0.5
+model_type: ml
+model: catboost
+mode: val
+dataset: tongji
+task: outcome
+depth: 6
+iterations: 150
+learning_rate: 0.5
