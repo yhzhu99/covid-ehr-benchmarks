@@ -1,0 +1,8 @@
+name: hm_twostage_agent_kf10
+model_type: ehr
+model: agent
+dataset: hm
+task: twostage
+
+outcome_model_name: hm_outcome_agent_ep100_kf10_bs64_hid128
+los_model_name: hm_los_agent_ep100_kf10_bs64_hid64
