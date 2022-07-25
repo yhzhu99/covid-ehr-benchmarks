@@ -249,6 +249,12 @@ def start_pipeline(cfg, device):
                         f"checkpoints/{cfg.name}_{fold_test + 1}_seed{seed}.pth",
                     )
                     print("[best!!]", epoch)
+                    es = 0
+                else:
+                    es += 1
+                    if es >= 10:
+                        print(f"Early stopping break at epoch {epoch}")
+                        break
             print(
                 f"Best performance on val set {fold_test+1}: \
                 MAE = {best_val_performance}"
