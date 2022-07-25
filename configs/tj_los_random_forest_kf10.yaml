@@ -1,8 +1,0 @@
-name: tj_los_random_forest_kf10
-model_type: ml
-model: random_forest
-mode: test # val / test
-dataset: tongji
-task: los
-
-

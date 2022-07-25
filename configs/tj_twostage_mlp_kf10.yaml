@@ -1,8 +1,8 @@
 name: tj_twostage_mlp_kf10
-model_type: ehr
+model_type: dl
 model: mlp
 dataset: tongji
 task: twostage
 
-outcome_model_name: tj_outcome_mlp_ep100_kf10_bs64_hid128
-los_model_name: tj_los_mlp_ep100_kf10_bs64_hid64
+outcome_model_name: tj_outcome_mlp_ep100_kf10_bs64_hid64
+los_model_name: tj_los_mlp_ep100_kf10_bs64_hid128

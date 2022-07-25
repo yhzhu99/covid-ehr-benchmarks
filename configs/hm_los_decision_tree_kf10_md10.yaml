@@ -1,0 +1,7 @@
+name: hm_los_decision_tree_kf10_md10
+model_type: ml
+model: decision_tree
+mode: val
+dataset: hm
+task: los
+max_depth: 10

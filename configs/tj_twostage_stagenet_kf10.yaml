@@ -1,0 +1,8 @@
+name: tj_twostage_stagenet_kf10
+model_type: ehr
+model: stagenet
+dataset: tongji
+task: twostage
+
+outcome_model_name: tj_outcome_stagenet_ep100_kf10_bs64_hid64
+los_model_name: tj_los_stagenet_ep100_kf10_bs64_hid64

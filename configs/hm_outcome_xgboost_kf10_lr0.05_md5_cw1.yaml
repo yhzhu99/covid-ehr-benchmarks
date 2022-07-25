@@ -1,0 +1,9 @@
+name: hm_outcome_xgboost_kf10_lr0.05_md5_cw1
+model_type: ml
+model: xgboost
+mode: val
+dataset: hm
+task: outcome
+learning_rate: 0.05
+max_depth: 5
+min_child_weight: 1

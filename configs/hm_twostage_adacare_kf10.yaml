@@ -1,0 +1,8 @@
+name: hm_twostage_adacare_kf10
+model_type: ehr
+model: adacare
+dataset: hm
+task: twostage
+
+outcome_model_name: hm_outcome_adacare_ep100_kf10_bs64_hid64
+los_model_name: hm_los_adacare_ep100_kf10_bs64_hid128

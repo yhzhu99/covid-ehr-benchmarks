@@ -1,0 +1,9 @@
+name: hm_outcome_catboost_kf10_md9_iter50_lr0.1
+model_type: ml
+model: catboost
+mode: val
+dataset: hm
+task: outcome
+depth: 9
+iterations: 50
+learning_rate: 0.1

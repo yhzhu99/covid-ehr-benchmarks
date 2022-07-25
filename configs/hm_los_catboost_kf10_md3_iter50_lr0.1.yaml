@@ -1,0 +1,9 @@
+name: hm_los_catboost_kf10_md3_iter50_lr0.1
+model_type: ml
+model: catboost
+mode: val
+dataset: hm
+task: los
+depth: 3
+iterations: 50
+learning_rate: 0.1

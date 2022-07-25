@@ -1,8 +1,0 @@
-name: tj_los_xgboost_kf10
-model_type: ml
-model: xgboost
-mode: test # val / test
-dataset: tongji
-task: los
-
-

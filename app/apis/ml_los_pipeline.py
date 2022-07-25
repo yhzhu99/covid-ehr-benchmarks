@@ -31,31 +31,49 @@ from app.models import (
 from app.utils import perflog
 
 
-def train(x, y, method, seed=42):
+def train(x, y, method, cfg, seed=42):
     if method == "xgboost":
         model = xgb.XGBRegressor(
-            verbosity=0, n_estimators=1000, learning_rate=0.01, random_state=seed
+            objective="reg:squarederror",
+            eval_metric="error",
+            verbosity=0,
+            learning_rate=cfg.learning_rate,
+            max_depth=cfg.max_depth,
+            min_child_weight=cfg.min_child_weight,
+            n_estimators=1000,
+            use_label_encoder=False,
+            random_state=seed,
         )
-        model.fit(x, y, eval_metric="auc")
+        model.fit(x, y, eval_metric="mae")
     elif method == "gbdt":
-        method = GradientBoostingRegressor(random_state=seed)
+        method = GradientBoostingRegressor(
+            random_state=seed,
+            learning_rate=cfg.learning_rate,
+            n_estimators=cfg.n_estimators,
+            subsample=cfg.subsample,
+        )
         model = method.fit(x, y)
     elif method == "random_forest":
-        method = RandomForestRegressor(random_state=seed, max_depth=100)
+        method = RandomForestRegressor(
+            random_state=seed,
+            max_depth=cfg.max_depth,
+            min_samples_split=cfg.min_samples_split,
+            n_estimators=cfg.n_estimators,
+        )
         model = method.fit(x, y)
     elif method == "decision_tree":
-        model = DecisionTreeRegressor(random_state=seed)
+        model = DecisionTreeRegressor(random_state=seed, max_depth=cfg.max_depth)
         model.fit(x, y)
     elif method == "catboost":
         model = CatBoostRegressor(
-            iterations=1000,  # performance is better when iterations = 100
-            learning_rate=0.02,
-            depth=5,
-            loss_function="MAE",
+            random_seed=seed,
+            iterations=cfg.iterations,  # performance is better when iterations = 100
+            learning_rate=cfg.learning_rate,
+            depth=cfg.depth,
             verbose=None,
             silent=True,
             allow_writing_files=False,
-            random_seed=seed,
+            loss_function="MAE",
         )
         model.fit(x, y)
     return model
@@ -151,7 +169,7 @@ def start_pipeline(cfg):
         history = {"val_mad": [], "val_mse": [], "val_mape": [], "val_rmse": []}
         for seed in cfg.model_init_seed:
             init_random(seed)
-            model = train(x_train, y_train, method)
+            model = train(x_train, y_train, method, cfg, seed)
             if mode == "val":
                 val_evaluation_scores = validate(x_val, y_val, model, los_statistics)
                 history["val_mad"].append(val_evaluation_scores["mad"])

@@ -1,0 +1,9 @@
+name: tj_outcome_random_forest_kf10_md100_mss50_ne10
+model_type: ml
+model: random_forest
+mode: val
+dataset: tongji
+task: outcome
+max_depth: 100
+min_samples_split: 50
+n_estimators: 10
