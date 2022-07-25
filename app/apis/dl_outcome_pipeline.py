@@ -222,7 +222,7 @@ def start_pipeline(cfg, device):
                     es = 0
                 else:
                     es += 1
-                    if es >= 10:
+                    if es >= 20:
                         print(f"Early stopping break at epoch {epoch}")
                         break
 
