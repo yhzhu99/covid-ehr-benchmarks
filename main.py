@@ -22,8 +22,8 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--db",
-        type=bool,
-        default=False,
+        action="store_true",
+        help="whether to connect database",
     )
 
     args = parser.parse_args()
