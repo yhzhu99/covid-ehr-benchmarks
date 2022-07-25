@@ -1,9 +1,0 @@
-name: tj_los_gbdt_kf10_lr1_sub1.0_ne15000
-model_type: ml
-model: gbdt
-mode: val
-dataset: tongji
-task: los
-learning_rate: 1
-subsample: 1.0
-n_estimators: 15000
