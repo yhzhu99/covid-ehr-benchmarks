@@ -18,7 +18,7 @@ from sklearn.model_selection import (
 from sklearn.tree import DecisionTreeRegressor
 
 from app.core.evaluation import eval_metrics
-from app.core.utils import RANDOM_SEED, init_random
+from app.core.utils import init_random
 from app.datasets.base import load_data
 from app.datasets.dl import Dataset
 from app.datasets.ml import flatten_dataset, numpy_dataset
@@ -31,18 +31,20 @@ from app.models import (
 from app.utils import perflog
 
 
-def train(x, y, method):
+def train(x, y, method, seed=42):
     if method == "xgboost":
-        model = xgb.XGBRegressor(verbosity=0, n_estimators=1000, learning_rate=0.01)
+        model = xgb.XGBRegressor(
+            verbosity=0, n_estimators=1000, learning_rate=0.01, random_state=seed
+        )
         model.fit(x, y, eval_metric="auc")
     elif method == "gbdt":
-        method = GradientBoostingRegressor(random_state=RANDOM_SEED)
+        method = GradientBoostingRegressor(random_state=seed)
         model = method.fit(x, y)
     elif method == "random_forest":
-        method = RandomForestRegressor(random_state=RANDOM_SEED, max_depth=100)
+        method = RandomForestRegressor(random_state=seed, max_depth=100)
         model = method.fit(x, y)
     elif method == "decision_tree":
-        model = DecisionTreeRegressor(random_state=RANDOM_SEED)
+        model = DecisionTreeRegressor(random_state=seed)
         model.fit(x, y)
     elif method == "catboost":
         model = CatBoostRegressor(
@@ -53,6 +55,7 @@ def train(x, y, method):
             verbose=None,
             silent=True,
             allow_writing_files=False,
+            random_seed=seed,
         )
         model.fit(x, y)
     return model
@@ -107,14 +110,16 @@ def start_pipeline(cfg):
     }
 
     kfold_test = StratifiedKFold(
-        n_splits=num_folds, shuffle=True, random_state=RANDOM_SEED
+        n_splits=num_folds, shuffle=True, random_state=cfg.dataset_split_seed
     )
     skf = kfold_test.split(np.arange(len(x)), y_outcome)
     for fold_test in range(train_fold):
         train_and_val_idx, test_idx = next(skf)
         print("====== Test Fold {} ======".format(fold_test + 1))
         sss = StratifiedShuffleSplit(
-            n_splits=1, test_size=1 / (num_folds - 1), random_state=RANDOM_SEED
+            n_splits=1,
+            test_size=1 / (num_folds - 1),
+            random_state=cfg.dataset_split_seed,
         )
         sub_x = x[train_and_val_idx]
         sub_x_lab_length = x_lab_length[train_and_val_idx]
@@ -143,38 +148,37 @@ def start_pipeline(cfg):
         y_test = zscore_los(y_test, los_statistics)
 
         all_history["test_fold_{}".format(fold_test + 1)] = {}
-
-        model = train(x_train, y_train, method)
-
-        if mode == "val":
-            history = {"val_mad": [], "val_mse": [], "val_mape": [], "val_rmse": []}
-            val_evaluation_scores = validate(x_val, y_val, model, los_statistics)
-            history["val_mad"].append(val_evaluation_scores["mad"])
-            history["val_mse"].append(val_evaluation_scores["mse"])
-            history["val_mape"].append(val_evaluation_scores["mape"])
-            history["val_rmse"].append(val_evaluation_scores["rmse"])
+        history = {"val_mad": [], "val_mse": [], "val_mape": [], "val_rmse": []}
+        for seed in cfg.model_init_seed:
+            init_random(seed)
+            model = train(x_train, y_train, method)
+            if mode == "val":
+                val_evaluation_scores = validate(x_val, y_val, model, los_statistics)
+                history["val_mad"].append(val_evaluation_scores["mad"])
+                history["val_mse"].append(val_evaluation_scores["mse"])
+                history["val_mape"].append(val_evaluation_scores["mape"])
+                history["val_rmse"].append(val_evaluation_scores["rmse"])
+                print(
+                    f"Performance on val set {fold_test+1}: \
+                    MAE = {val_evaluation_scores['mad']}, \
+                    MSE = {val_evaluation_scores['mse']}, \
+                    MAPE = {val_evaluation_scores['mape']},\
+                    RMSE = {val_evaluation_scores['rmse']}"
+                )
+            elif mode == "test":
+                test_evaluation_scores = validate(x_test, y_test, model, los_statistics)
+                test_performance["test_mad"].append(test_evaluation_scores["mad"])
+                test_performance["test_mse"].append(test_evaluation_scores["mse"])
+                test_performance["test_mape"].append(test_evaluation_scores["mape"])
+                test_performance["test_rmse"].append(test_evaluation_scores["rmse"])
+                print(
+                    f"Performance on test set {fold_test+1}: \
+                    MAE = {test_evaluation_scores['mad']}, \
+                    MSE = {test_evaluation_scores['mse']}, \
+                    MAPE = {test_evaluation_scores['mape']}, \
+                    RMSE = {test_evaluation_scores['rmse']}"
+                )
             all_history["test_fold_{}".format(fold_test + 1)] = history
-            print(
-                f"Performance on val set {fold_test+1}: \
-                MAE = {val_evaluation_scores['mad']}, \
-                MSE = {val_evaluation_scores['mse']}, \
-                MAPE = {val_evaluation_scores['mape']},\
-                RMSE = {val_evaluation_scores['rmse']}"
-            )
-
-        elif mode == "test":
-            test_evaluation_scores = validate(x_test, y_test, model, los_statistics)
-            test_performance["test_mad"].append(test_evaluation_scores["mad"])
-            test_performance["test_mse"].append(test_evaluation_scores["mse"])
-            test_performance["test_mape"].append(test_evaluation_scores["mape"])
-            test_performance["test_rmse"].append(test_evaluation_scores["rmse"])
-            print(
-                f"Performance on test set {fold_test+1}: \
-                MAE = {test_evaluation_scores['mad']}, \
-                MSE = {test_evaluation_scores['mse']}, \
-                MAPE = {test_evaluation_scores['mape']}, \
-                RMSE = {test_evaluation_scores['rmse']}"
-            )
     if mode == "val":
         # Calculate average performance on 10-fold val set
         val_mad_list = []

@@ -19,7 +19,7 @@ from sklearn.model_selection import (
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 from app.core.evaluation import covid_metrics, eval_metrics
-from app.core.utils import RANDOM_SEED, init_random
+from app.core.utils import init_random
 from app.datasets import get_dataset, load_data
 from app.datasets.dl import Dataset
 from app.datasets.ml import flatten_dataset, numpy_dataset
@@ -32,24 +32,28 @@ from app.models import (
 from app.utils import perflog
 
 
-def train(x, y, method):
+def train(x, y, method, seed=42):
     y = y[:, 0]
 
     if method == "xgboost":
         model = xgb.XGBClassifier(
-            verbosity=0, n_estimators=1000, learning_rate=0.3, use_label_encoder=False
+            verbosity=0,
+            n_estimators=1000,
+            learning_rate=0.3,
+            use_label_encoder=False,
+            random_state=seed,
         )
         model.fit(x, y, eval_metric="auc")
     elif method == "gbdt":
         method = GradientBoostingClassifier(
-            n_estimators=100, learning_rate=1.0, max_depth=1, random_state=RANDOM_SEED
+            n_estimators=100, learning_rate=1.0, max_depth=1, random_state=seed
         )
         model = method.fit(x, y)
     elif method == "random_forest":
-        method = RandomForestClassifier(random_state=RANDOM_SEED, max_depth=100)
+        method = RandomForestClassifier(random_state=seed, max_depth=100)
         model = method.fit(x, y)
     elif method == "decision_tree":
-        model = DecisionTreeClassifier(random_state=RANDOM_SEED)
+        model = DecisionTreeClassifier(random_state=seed)
         model.fit(x, y)
     elif method == "catboost":
         model = CatBoostClassifier(
@@ -59,6 +63,7 @@ def train(x, y, method):
             verbose=None,
             silent=True,
             allow_writing_files=False,
+            random_seed=seed,
         )
         model.fit(x, y)
     return model
@@ -99,14 +104,17 @@ def start_pipeline(cfg):
     }
 
     kfold_test = StratifiedKFold(
-        n_splits=num_folds, shuffle=True, random_state=RANDOM_SEED
+        n_splits=num_folds, shuffle=True, random_state=cfg.dataset_split_seed
     )
     skf = kfold_test.split(np.arange(len(x)), y_outcome)
     for fold_test in range(train_fold):
+
         train_and_val_idx, test_idx = next(skf)
         print("====== Test Fold {} ======".format(fold_test + 1))
         sss = StratifiedShuffleSplit(
-            n_splits=1, test_size=1 / (num_folds - 1), random_state=RANDOM_SEED
+            n_splits=1,
+            test_size=1 / (num_folds - 1),
+            random_state=cfg.dataset_split_seed,
         )
 
         sub_x = x[train_and_val_idx]
@@ -127,48 +135,46 @@ def start_pipeline(cfg):
         )
         x_test, y_test = flatten_dataset(x, y, test_idx, x_lab_length, case="outcome")
         all_history["test_fold_{}".format(fold_test + 1)] = {}
-
-        model = train(x_train, y_train, method)
-
-        if mode == "val":
-            history = {
-                "val_accuracy": [],
-                "val_auroc": [],
-                "val_auprc": [],
-                "val_early_prediction_score": [],
-            }
-            val_evaluation_scores = validate(x_val, y_val, model, cfg)
-
-            history["val_accuracy"].append(val_evaluation_scores["acc"])
-            history["val_auroc"].append(val_evaluation_scores["auroc"])
-            history["val_auprc"].append(val_evaluation_scores["auprc"])
-            history["val_early_prediction_score"].append(
-                val_evaluation_scores["early_prediction_score"]
-            )
-            all_history["test_fold_{}".format(fold_test + 1)] = history
-            print(
-                f"Performance on val set {fold_test+1}: \
-                ACC = {val_evaluation_scores['acc']}, \
-                AUROC = {val_evaluation_scores['auroc']}, \
-                AUPRC = {val_evaluation_scores['auprc']}, \
-                EarlyPredictionScore = {val_evaluation_scores['early_prediction_score']}"
-            )
-
-        elif mode == "test":
-            test_evaluation_scores = validate(x_test, y_test, model, cfg)
-            test_performance["test_accuracy"].append(test_evaluation_scores["acc"])
-            test_performance["test_auroc"].append(test_evaluation_scores["auroc"])
-            test_performance["test_auprc"].append(test_evaluation_scores["auprc"])
-            test_performance["test_early_prediction_score"].append(
-                test_evaluation_scores["early_prediction_score"]
-            )
-            print(
-                f"Performance on test set {fold_test+1}: \
-                ACC = {test_evaluation_scores['acc']}, \
-                AUROC = {test_evaluation_scores['auroc']}, \
-                AUPRC = {test_evaluation_scores['auprc']}, \
-                EarlyPredictionScore = {test_evaluation_scores['early_prediction_score']}"
-            )
+        history = {
+            "val_accuracy": [],
+            "val_auroc": [],
+            "val_auprc": [],
+            "val_early_prediction_score": [],
+        }
+        for seed in cfg.model_init_seed:
+            init_random(seed)
+            model = train(x_train, y_train, method, seed)
+            if mode == "val":
+                val_evaluation_scores = validate(x_val, y_val, model, cfg)
+                history["val_accuracy"].append(val_evaluation_scores["acc"])
+                history["val_auroc"].append(val_evaluation_scores["auroc"])
+                history["val_auprc"].append(val_evaluation_scores["auprc"])
+                history["val_early_prediction_score"].append(
+                    val_evaluation_scores["early_prediction_score"]
+                )
+                print(
+                    f"Performance on val set {fold_test+1}: \
+                    ACC = {val_evaluation_scores['acc']}, \
+                    AUROC = {val_evaluation_scores['auroc']}, \
+                    AUPRC = {val_evaluation_scores['auprc']}, \
+                    EarlyPredictionScore = {val_evaluation_scores['early_prediction_score']}"
+                )
+            elif mode == "test":
+                test_evaluation_scores = validate(x_test, y_test, model, cfg)
+                test_performance["test_accuracy"].append(test_evaluation_scores["acc"])
+                test_performance["test_auroc"].append(test_evaluation_scores["auroc"])
+                test_performance["test_auprc"].append(test_evaluation_scores["auprc"])
+                test_performance["test_early_prediction_score"].append(
+                    test_evaluation_scores["early_prediction_score"]
+                )
+                print(
+                    f"Performance on test set {fold_test+1}: \
+                    ACC = {test_evaluation_scores['acc']}, \
+                    AUROC = {test_evaluation_scores['auroc']}, \
+                    AUPRC = {test_evaluation_scores['auprc']}, \
+                    EarlyPredictionScore = {test_evaluation_scores['early_prediction_score']}"
+                )
+        all_history["test_fold_{}".format(fold_test + 1)] = history
     if mode == "val":
         # Calculate average performance on 10-fold val set
         val_accuracy_list = []

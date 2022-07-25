@@ -29,7 +29,7 @@ from torch.utils.data import (
 )
 
 from app.core.evaluation import eval_metrics
-from app.core.utils import RANDOM_SEED
+from app.core.utils import init_random
 from app.datasets import get_dataset, load_data
 from app.datasets.dl import Dataset
 from app.datasets.ml import flatten_dataset, numpy_dataset
@@ -138,8 +138,6 @@ def start_pipeline(cfg, device):
     # Load data
     x, y, x_lab_length = load_data(dataset_type)
     dataset = get_dataset(x, y, x_lab_length)
-    model = build_model_from_cfg(cfg, device)
-    print(model)
     all_history = {}
     test_performance = {
         "test_loss": [],
@@ -149,7 +147,7 @@ def start_pipeline(cfg, device):
         "test_rmse": [],
     }
     kfold_test = StratifiedKFold(
-        n_splits=num_folds, shuffle=True, random_state=RANDOM_SEED
+        n_splits=num_folds, shuffle=True, random_state=cfg.dataset_split_seed
     )
     skf = kfold_test.split(np.arange(len(dataset)), dataset.y[:, 0, 0])
     for fold_test in range(train_fold):
@@ -158,7 +156,9 @@ def start_pipeline(cfg, device):
         train_and_val_idx, test_idx = next(skf)
         print("====== Test Fold {} ======".format(fold_test + 1))
         sss = StratifiedShuffleSplit(
-            n_splits=1, test_size=1 / (num_folds - 1), random_state=RANDOM_SEED
+            n_splits=1,
+            test_size=1 / (num_folds - 1),
+            random_state=cfg.dataset_split_seed,
         )
         sub_dataset = Dataset(
             dataset.x[train_and_val_idx],
@@ -166,11 +166,17 @@ def start_pipeline(cfg, device):
             dataset.x_lab_length[train_and_val_idx],
         )
         all_history["test_fold_{}".format(fold_test + 1)] = {}
-
+        history = {
+            "train_loss": [],
+            "val_loss": [],
+            "val_mad": [],
+            "val_mse": [],
+            "val_mape": [],
+            "val_rmse": [],
+        }
         train_idx, val_idx = next(
             sss.split(np.arange(len(train_and_val_idx)), sub_dataset.y[:, 0, 0])
         )
-
         # apply z-score transform los
         los_statistics = calculate_los_statistics(sub_dataset, train_idx)
         print(los_statistics)
@@ -199,81 +205,79 @@ def start_pipeline(cfg, device):
             sampler=val_sampler,
             num_workers=4,
         )
-        model = build_model_from_cfg(cfg, device)
-        optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
-        criterion = predict_all_visits_mse_loss
-        history = {
-            "train_loss": [],
-            "val_loss": [],
-            "val_mad": [],
-            "val_mse": [],
-            "val_mape": [],
-            "val_rmse": [],
-        }
-        best_val_performance = 1e8
-        for epoch in range(cfg.epochs):
-            info["epoch"] = epoch + 1
-            train_loss = train_epoch(
-                model,
-                device,
-                train_loader,
-                criterion,
-                optimizer,
-                info=info,
+        for seed in cfg.model_init_seed:
+            init_random(seed)
+            model = build_model_from_cfg(cfg, device)
+            optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+            criterion = predict_all_visits_mse_loss
+            best_val_performance = 1e8
+            for epoch in range(cfg.epochs):
+                info["epoch"] = epoch + 1
+                train_loss = train_epoch(
+                    model,
+                    device,
+                    train_loader,
+                    criterion,
+                    optimizer,
+                    info=info,
+                )
+                val_loss, val_evaluation_scores = val_epoch(
+                    model,
+                    device,
+                    val_loader,
+                    criterion,
+                    los_statistics,
+                    info=val_info,
+                )
+                # save performance history on validation set
+                print(
+                    "Epoch:{}/{} AVG Training Loss:{:.3f} AVG Val Loss:{:.3f}".format(
+                        epoch + 1, cfg.epochs, train_loss, val_loss
+                    )
+                )
+                history["train_loss"].append(train_loss)
+                history["val_loss"].append(val_loss)
+                history["val_mad"].append(val_evaluation_scores["mad"])
+                history["val_mse"].append(val_evaluation_scores["mse"])
+                history["val_mape"].append(val_evaluation_scores["mape"])
+                history["val_rmse"].append(val_evaluation_scores["rmse"])
+                # if mad is lower, than set the best mad, save the model, and test it on the test set
+                if val_evaluation_scores["mad"] < best_val_performance:
+                    best_val_performance = val_evaluation_scores["mad"]
+                    torch.save(
+                        model.state_dict(),
+                        f"checkpoints/{cfg.name}_{fold_test + 1}_seed{seed}.pth",
+                    )
+                    print("[best!!]", epoch)
+            print(
+                f"Best performance on val set {fold_test+1}: \
+                MAE = {best_val_performance}"
             )
-            val_loss, val_evaluation_scores = val_epoch(
+            model = build_model_from_cfg(cfg, device)
+            model.load_state_dict(
+                torch.load(f"checkpoints/{cfg.name}_{fold_test + 1}_seed{seed}.pth")
+            )
+            test_loss, test_evaluation_scores = val_epoch(
                 model,
                 device,
-                val_loader,
+                test_loader,
                 criterion,
                 los_statistics,
                 info=val_info,
             )
-            # save performance history on validation set
+            test_performance["test_loss"].append(test_loss)
+            test_performance["test_mad"].append(test_evaluation_scores["mad"])
+            test_performance["test_mse"].append(test_evaluation_scores["mse"])
+            test_performance["test_mape"].append(test_evaluation_scores["mape"])
+            test_performance["test_rmse"].append(test_evaluation_scores["rmse"])
             print(
-                "Epoch:{}/{} AVG Training Loss:{:.3f} AVG Val Loss:{:.3f}".format(
-                    epoch + 1, cfg.epochs, train_loss, val_loss
-                )
+                f"Performance on test set {fold_test+1}: \
+                MAE = {test_evaluation_scores['mad']}, \
+                MSE = {test_evaluation_scores['mse']}, \
+                MAPE = {test_evaluation_scores['mape']}, \
+                RMSE = {test_evaluation_scores['rmse']}"
             )
-            history["train_loss"].append(train_loss)
-            history["val_loss"].append(val_loss)
-            history["val_mad"].append(val_evaluation_scores["mad"])
-            history["val_mse"].append(val_evaluation_scores["mse"])
-            history["val_mape"].append(val_evaluation_scores["mape"])
-            history["val_rmse"].append(val_evaluation_scores["rmse"])
-            # if mad is lower, than set the best mad, save the model, and test it on the test set
-            if val_evaluation_scores["mad"] < best_val_performance:
-                best_val_performance = val_evaluation_scores["mad"]
-                torch.save(
-                    model.state_dict(), f"checkpoints/{cfg.name}_{fold_test + 1}.pth"
-                )
         all_history["test_fold_{}".format(fold_test + 1)] = history
-        print(
-            f"Best performance on val set {fold_test+1}: \
-            MAE = {best_val_performance}"
-        )
-        model = build_model_from_cfg(cfg, device)
-        model.load_state_dict(torch.load(f"checkpoints/{cfg.name}_{fold_test + 1}.pth"))
-        test_loss, test_evaluation_scores = val_epoch(
-            model,
-            device,
-            test_loader,
-            criterion,
-            los_statistics,
-            info=val_info,
-        )
-        test_performance["test_loss"].append(test_loss)
-        test_performance["test_mad"].append(test_evaluation_scores["mad"])
-        test_performance["test_mse"].append(test_evaluation_scores["mse"])
-        test_performance["test_mape"].append(test_evaluation_scores["mape"])
-        test_performance["test_rmse"].append(test_evaluation_scores["rmse"])
-        print(
-            f"Performance on test set {fold_test+1}: \
-            MAE = {test_evaluation_scores['mad']}, \
-            MSE = {test_evaluation_scores['mse']}, \
-            MAPE = {test_evaluation_scores['mape']}, \
-            RMSE = {test_evaluation_scores['rmse']}"
-        )
     # Calculate average performance on 10-fold test set
     test_mad_list = np.array(test_performance["test_mad"])
     test_mse_list = np.array(test_performance["test_mse"])
