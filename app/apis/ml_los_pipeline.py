@@ -18,7 +18,7 @@ from sklearn.model_selection import (
 from sklearn.tree import DecisionTreeRegressor
 
 from app.core.evaluation import eval_metrics
-from app.core.utils import RANDOM_SEED, init_random
+from app.core.utils import init_random
 from app.datasets.base import load_data
 from app.datasets.dl import Dataset
 from app.datasets.ml import flatten_dataset, numpy_dataset
@@ -31,47 +31,49 @@ from app.models import (
 from app.utils import perflog
 
 
-def train(x, y, method, cfg):
+def train(x, y, method, cfg, seed=42):
     if method == "xgboost":
         model = xgb.XGBRegressor(
-            objective='reg:squarederror', eval_metric='error', verbosity=0, 
+            objective="reg:squarederror",
+            eval_metric="error",
+            verbosity=0,
             learning_rate=cfg.learning_rate,
             max_depth=cfg.max_depth,
             min_child_weight=cfg.min_child_weight,
-            n_estimators=1000, use_label_encoder=False, random_state=RANDOM_SEED
+            n_estimators=1000,
+            use_label_encoder=False,
+            random_state=seed,
         )
         model.fit(x, y, eval_metric="mae")
     elif method == "gbdt":
         method = GradientBoostingRegressor(
-            random_state=RANDOM_SEED,
+            random_state=seed,
             learning_rate=cfg.learning_rate,
             n_estimators=cfg.n_estimators,
-            subsample=cfg.subsample
+            subsample=cfg.subsample,
         )
         model = method.fit(x, y)
     elif method == "random_forest":
         method = RandomForestRegressor(
-            random_state=RANDOM_SEED, 
+            random_state=seed,
             max_depth=cfg.max_depth,
             min_samples_split=cfg.min_samples_split,
-            n_estimators=cfg.n_estimators
+            n_estimators=cfg.n_estimators,
         )
         model = method.fit(x, y)
     elif method == "decision_tree":
-        model = DecisionTreeRegressor(
-            random_state=RANDOM_SEED,
-            max_depth=cfg.max_depth
-        )
+        model = DecisionTreeRegressor(random_state=seed, max_depth=cfg.max_depth)
         model.fit(x, y)
     elif method == "catboost":
         model = CatBoostRegressor(
+            random_seed=seed,
             iterations=cfg.iterations,  # performance is better when iterations = 100
             learning_rate=cfg.learning_rate,
             depth=cfg.depth,
             verbose=None,
             silent=True,
             allow_writing_files=False,
-            loss_function='MAE'
+            loss_function="MAE",
         )
         model.fit(x, y)
     return model
@@ -126,14 +128,16 @@ def start_pipeline(cfg):
     }
 
     kfold_test = StratifiedKFold(
-        n_splits=num_folds, shuffle=True, random_state=RANDOM_SEED
+        n_splits=num_folds, shuffle=True, random_state=cfg.dataset_split_seed
     )
     skf = kfold_test.split(np.arange(len(x)), y_outcome)
     for fold_test in range(train_fold):
         train_and_val_idx, test_idx = next(skf)
         print("====== Test Fold {} ======".format(fold_test + 1))
         sss = StratifiedShuffleSplit(
-            n_splits=1, test_size=1 / (num_folds - 1), random_state=RANDOM_SEED
+            n_splits=1,
+            test_size=1 / (num_folds - 1),
+            random_state=cfg.dataset_split_seed,
         )
         sub_x = x[train_and_val_idx]
         sub_x_lab_length = x_lab_length[train_and_val_idx]
@@ -162,38 +166,37 @@ def start_pipeline(cfg):
         y_test = zscore_los(y_test, los_statistics)
 
         all_history["test_fold_{}".format(fold_test + 1)] = {}
-
-        model = train(x_train, y_train, method, cfg)
-
-        if mode == "val":
-            history = {"val_mad": [], "val_mse": [], "val_mape": [], "val_rmse": []}
-            val_evaluation_scores = validate(x_val, y_val, model, los_statistics)
-            history["val_mad"].append(val_evaluation_scores["mad"])
-            history["val_mse"].append(val_evaluation_scores["mse"])
-            history["val_mape"].append(val_evaluation_scores["mape"])
-            history["val_rmse"].append(val_evaluation_scores["rmse"])
+        history = {"val_mad": [], "val_mse": [], "val_mape": [], "val_rmse": []}
+        for seed in cfg.model_init_seed:
+            init_random(seed)
+            model = train(x_train, y_train, method, cfg, seed)
+            if mode == "val":
+                val_evaluation_scores = validate(x_val, y_val, model, los_statistics)
+                history["val_mad"].append(val_evaluation_scores["mad"])
+                history["val_mse"].append(val_evaluation_scores["mse"])
+                history["val_mape"].append(val_evaluation_scores["mape"])
+                history["val_rmse"].append(val_evaluation_scores["rmse"])
+                print(
+                    f"Performance on val set {fold_test+1}: \
+                    MAE = {val_evaluation_scores['mad']}, \
+                    MSE = {val_evaluation_scores['mse']}, \
+                    MAPE = {val_evaluation_scores['mape']},\
+                    RMSE = {val_evaluation_scores['rmse']}"
+                )
+            elif mode == "test":
+                test_evaluation_scores = validate(x_test, y_test, model, los_statistics)
+                test_performance["test_mad"].append(test_evaluation_scores["mad"])
+                test_performance["test_mse"].append(test_evaluation_scores["mse"])
+                test_performance["test_mape"].append(test_evaluation_scores["mape"])
+                test_performance["test_rmse"].append(test_evaluation_scores["rmse"])
+                print(
+                    f"Performance on test set {fold_test+1}: \
+                    MAE = {test_evaluation_scores['mad']}, \
+                    MSE = {test_evaluation_scores['mse']}, \
+                    MAPE = {test_evaluation_scores['mape']}, \
+                    RMSE = {test_evaluation_scores['rmse']}"
+                )
             all_history["test_fold_{}".format(fold_test + 1)] = history
-            print(
-                f"Performance on val set {fold_test+1}: \
-                MAE = {val_evaluation_scores['mad']}, \
-                MSE = {val_evaluation_scores['mse']}, \
-                MAPE = {val_evaluation_scores['mape']},\
-                RMSE = {val_evaluation_scores['rmse']}"
-            )
-
-        elif mode == "test":
-            test_evaluation_scores = validate(x_test, y_test, model, los_statistics)
-            test_performance["test_mad"].append(test_evaluation_scores["mad"])
-            test_performance["test_mse"].append(test_evaluation_scores["mse"])
-            test_performance["test_mape"].append(test_evaluation_scores["mape"])
-            test_performance["test_rmse"].append(test_evaluation_scores["rmse"])
-            print(
-                f"Performance on test set {fold_test+1}: \
-                MAE = {test_evaluation_scores['mad']}, \
-                MSE = {test_evaluation_scores['mse']}, \
-                MAPE = {test_evaluation_scores['mape']}, \
-                RMSE = {test_evaluation_scores['rmse']}"
-            )
     if mode == "val":
         # Calculate average performance on 10-fold val set
         val_mad_list = []

@@ -30,7 +30,7 @@ from torch.utils.data import (
 )
 
 from app.core.evaluation import covid_metrics, eval_metrics
-from app.core.utils import RANDOM_SEED
+from app.core.utils import init_random
 from app.datasets import get_dataset, load_data
 from app.datasets.dl import Dataset
 from app.datasets.ml import flatten_dataset, numpy_dataset
@@ -175,7 +175,6 @@ def start_pipeline(cfg, device):
 
     criterion = get_multi_task_loss
 
-    all_history = {}
     test_performance = {
         "test_loss": [],
         "test_mad": [],
@@ -189,73 +188,86 @@ def start_pipeline(cfg, device):
         "test_multitask_los_score": [],
     }
     kfold_test = StratifiedKFold(
-        n_splits=num_folds, shuffle=True, random_state=RANDOM_SEED
+        n_splits=num_folds, shuffle=True, random_state=cfg.dataset_split_seed
     )
     skf = kfold_test.split(np.arange(len(dataset)), dataset.y[:, 0, 0])
     for fold_test in range(train_fold):
-        outcome_model.load_state_dict(
-            torch.load(f"checkpoints/{cfg.outcome_model_name}_{fold_test + 1}.pth")
-        )
-        los_model.load_state_dict(
-            torch.load(f"checkpoints/{cfg.los_model_name}_{fold_test + 1}.pth")
-        )
-        x, y, x_lab_length = load_data(dataset_type)
-        dataset = get_dataset(x, y, x_lab_length)
-        train_and_val_idx, test_idx = next(skf)
-        print("====== Test Fold {} ======".format(fold_test + 1))
-        sss = StratifiedShuffleSplit(
-            n_splits=1, test_size=1 / (num_folds - 1), random_state=RANDOM_SEED
-        )
+        for seed in cfg.model_init_seed:
+            init_random(seed)
+            outcome_model.load_state_dict(
+                torch.load(
+                    f"checkpoints/{cfg.outcome_model_name}_{fold_test + 1}_seed{seed}.pth"
+                )
+            )
+            los_model.load_state_dict(
+                torch.load(
+                    f"checkpoints/{cfg.los_model_name}_{fold_test + 1}_seed{seed}.pth"
+                )
+            )
+            x, y, x_lab_length = load_data(dataset_type)
+            dataset = get_dataset(x, y, x_lab_length)
+            train_and_val_idx, test_idx = next(skf)
+            print("====== Test Fold {} ======".format(fold_test + 1))
+            sss = StratifiedShuffleSplit(
+                n_splits=1,
+                test_size=1 / (num_folds - 1),
+                random_state=cfg.dataset_split_seed,
+            )
 
-        sub_dataset = Dataset(
-            dataset.x[train_and_val_idx],
-            dataset.y[train_and_val_idx],
-            dataset.x_lab_length[train_and_val_idx],
-        )
-        all_history["test_fold_{}".format(fold_test + 1)] = {}
+            sub_dataset = Dataset(
+                dataset.x[train_and_val_idx],
+                dataset.y[train_and_val_idx],
+                dataset.x_lab_length[train_and_val_idx],
+            )
 
-        train_idx, val_idx = next(
-            sss.split(np.arange(len(train_and_val_idx)), sub_dataset.y[:, 0, 0])
-        )
+            train_idx, val_idx = next(
+                sss.split(np.arange(len(train_and_val_idx)), sub_dataset.y[:, 0, 0])
+            )
 
-        # apply z-score transform los
-        los_statistics = calculate_los_statistics(sub_dataset, train_idx)
-        print(los_statistics)
-        sub_dataset = zscore_los(sub_dataset, los_statistics)
-        dataset = zscore_los(dataset, los_statistics)
+            # apply z-score transform los
+            los_statistics = calculate_los_statistics(sub_dataset, train_idx)
+            print(los_statistics)
+            sub_dataset = zscore_los(sub_dataset, los_statistics)
+            dataset = zscore_los(dataset, los_statistics)
 
-        (
-            test_loss,
-            test_outcome_evaluation_scores,
-            test_los_evaluation_scores,
-            test_covid_evaluation_scores,
-        ) = twostage_inference(
-            outcome_model,
-            los_model,
-            device,
-            dataset[test_idx],
-            criterion,
-            los_statistics,
-            info=val_info,
-        )
+            (
+                test_loss,
+                test_outcome_evaluation_scores,
+                test_los_evaluation_scores,
+                test_covid_evaluation_scores,
+            ) = twostage_inference(
+                outcome_model,
+                los_model,
+                device,
+                dataset[test_idx],
+                criterion,
+                los_statistics,
+                info=val_info,
+            )
 
-        test_performance["test_loss"].append(test_loss)
-        test_performance["test_mad"].append(test_los_evaluation_scores["mad"])
-        test_performance["test_mse"].append(test_los_evaluation_scores["mse"])
-        test_performance["test_mape"].append(test_los_evaluation_scores["mape"])
-        test_performance["test_rmse"].append(test_los_evaluation_scores["rmse"])
-        test_performance["test_accuracy"].append(test_outcome_evaluation_scores["acc"])
-        test_performance["test_auroc"].append(test_outcome_evaluation_scores["auroc"])
-        test_performance["test_auprc"].append(test_outcome_evaluation_scores["auprc"])
-        test_performance["test_early_prediction_score"].append(
-            test_covid_evaluation_scores["early_prediction_score"]
-        )
-        test_performance["test_multitask_los_score"].append(
-            test_covid_evaluation_scores["multitask_los_score"]
-        )
-        print(
-            f"Performance on test set {fold_test+1}: MAE = {test_los_evaluation_scores['mad']}, MSE = {test_los_evaluation_scores['mse']}, RMSE = {test_los_evaluation_scores['rmse']}, MAPE = {test_los_evaluation_scores['mape']}, ACC = {test_outcome_evaluation_scores['acc']}, AUROC = {test_outcome_evaluation_scores['auroc']}, AUPRC = {test_outcome_evaluation_scores['auprc']},  EarlyPredictionScore = {test_covid_evaluation_scores['early_prediction_score']}, MultitaskPredictionScore = {test_covid_evaluation_scores['multitask_los_score']}"
-        )
+            test_performance["test_loss"].append(test_loss)
+            test_performance["test_mad"].append(test_los_evaluation_scores["mad"])
+            test_performance["test_mse"].append(test_los_evaluation_scores["mse"])
+            test_performance["test_mape"].append(test_los_evaluation_scores["mape"])
+            test_performance["test_rmse"].append(test_los_evaluation_scores["rmse"])
+            test_performance["test_accuracy"].append(
+                test_outcome_evaluation_scores["acc"]
+            )
+            test_performance["test_auroc"].append(
+                test_outcome_evaluation_scores["auroc"]
+            )
+            test_performance["test_auprc"].append(
+                test_outcome_evaluation_scores["auprc"]
+            )
+            test_performance["test_early_prediction_score"].append(
+                test_covid_evaluation_scores["early_prediction_score"]
+            )
+            test_performance["test_multitask_los_score"].append(
+                test_covid_evaluation_scores["multitask_los_score"]
+            )
+            print(
+                f"Performance on test set {fold_test+1}: MAE = {test_los_evaluation_scores['mad']}, MSE = {test_los_evaluation_scores['mse']}, RMSE = {test_los_evaluation_scores['rmse']}, MAPE = {test_los_evaluation_scores['mape']}, ACC = {test_outcome_evaluation_scores['acc']}, AUROC = {test_outcome_evaluation_scores['auroc']}, AUPRC = {test_outcome_evaluation_scores['auprc']},  EarlyPredictionScore = {test_covid_evaluation_scores['early_prediction_score']}, MultitaskPredictionScore = {test_covid_evaluation_scores['multitask_los_score']}"
+            )
     # Calculate average performance on 10-fold test set
     test_mad_list = np.array(test_performance["test_mad"])
     test_mse_list = np.array(test_performance["test_mse"])

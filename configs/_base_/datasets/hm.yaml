@@ -7,4 +7,6 @@ large_los: 23.0
 
 epochs: 100
 num_folds: 10
-train_fold: 5
+train_fold: 1
+dataset_split_seed: 42
+model_init_seed: [0, 31, 42, 131, 1331] # init all seeds every iteration
