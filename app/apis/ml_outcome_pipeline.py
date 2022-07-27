@@ -47,7 +47,7 @@ def train(x, y, method, cfg, seed=42):
             use_label_encoder=False,
             random_state=seed,
         )
-        model.fit(x, y, eval_metric="auc")
+        model.fit(x, y, eval_metric="aucpr")
     elif method == "gbdt":
         method = GradientBoostingClassifier(
             random_state=seed,
