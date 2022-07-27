@@ -38,7 +38,7 @@ def train(x, y, method, cfg, seed=42):
     if method == "xgboost":
         model = xgb.XGBClassifier(
             objective="binary:logistic",
-            eval_metric="error",
+            # eval_metric="error",
             verbosity=0,
             learning_rate=cfg.learning_rate,
             max_depth=cfg.max_depth,
