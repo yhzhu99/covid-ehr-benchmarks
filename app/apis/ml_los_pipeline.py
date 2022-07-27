@@ -217,6 +217,15 @@ def start_pipeline(cfg):
         print("MSE: {:.3f} ({:.3f})".format(val_mse_list.mean(), val_mse_list.std()))
         print("MAPE: {:.3f} ({:.3f})".format(val_mape_list.mean(), val_mape_list.std()))
         print("RMSE: {:.3f} ({:.3f})".format(val_rmse_list.mean(), val_rmse_list.std()))
+        perflog.process_and_upload_performance(
+            cfg,
+            mae=val_mad_list,
+            mse=val_mse_list,
+            rmse=val_rmse_list,
+            mape=val_mape_list,
+            verbose=1,
+            upload=cfg.db,
+        )
     elif mode == "test":
         # Calculate average performance on 10-fold test set
         test_mad_list = np.array(test_performance["test_mad"])

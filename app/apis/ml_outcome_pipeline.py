@@ -224,6 +224,16 @@ def start_pipeline(cfg):
                 val_early_prediction_list.std(axis=0),
             ),
         )
+        print("=========================================================")
+        perflog.process_and_upload_performance(
+            cfg,
+            acc=val_accuracy_list,
+            auroc=val_auroc_list,
+            auprc=val_auprc_list,
+            early_prediction_score=val_early_prediction_list,
+            verbose=1,
+            upload=cfg.db,
+        )
     elif mode == "test":
         # Calculate average performance on 10-fold test set
         test_accuracy_list = np.array(test_performance["test_accuracy"])
