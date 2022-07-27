@@ -1,0 +1,9 @@
+name: hm_outcome_gbdt_kf10_lr0.1_ss1_ne100
+model_type: ml
+model: gbdt
+mode: val
+dataset: hm
+task: outcome
+learning_rate: 0.1
+subsample: 1
+n_estimators: 100

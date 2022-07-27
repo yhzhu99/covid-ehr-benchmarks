@@ -1,0 +1,9 @@
+name: hm_outcome_random_forest_kf10_md20_mss2_ne100
+model_type: ml
+model: random_forest
+mode: val
+dataset: hm
+task: outcome
+max_depth: 20
+min_samples_split: 2
+n_estimators: 100

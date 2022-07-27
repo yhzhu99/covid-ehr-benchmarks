@@ -1,9 +1,0 @@
-name: tj_outcome_gbdt_kf10_lr1_sub0.6_ne1000
-model_type: ml
-model: gbdt
-mode: val
-dataset: tongji
-task: outcome
-learning_rate: 1
-subsample: 0.6
-n_estimators: 1000

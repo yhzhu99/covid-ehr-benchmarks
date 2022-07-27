@@ -1,0 +1,9 @@
+name: hm_los_random_forest_kf10_md5_mss10_ne10
+model_type: ml
+model: random_forest
+mode: val
+dataset: hm
+task: los
+max_depth: 5
+min_samples_split: 10
+n_estimators: 10

@@ -1,9 +1,0 @@
-name: hm_los_gbdt_kf10_lr0.1_sub0.6_ne1000
-model_type: ml
-model: gbdt
-mode: val
-dataset: hm
-task: los
-learning_rate: 0.1
-subsample: 0.6
-n_estimators: 1000
