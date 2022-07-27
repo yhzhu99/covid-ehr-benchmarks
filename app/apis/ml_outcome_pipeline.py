@@ -38,7 +38,7 @@ def train(x, y, method, cfg, seed=42):
     if method == "xgboost":
         model = xgb.XGBClassifier(
             objective="binary:logistic",
-            # eval_metric="error",
+            eval_metric="aucpr",
             verbosity=0,
             learning_rate=cfg.learning_rate,
             max_depth=cfg.max_depth,
@@ -47,7 +47,7 @@ def train(x, y, method, cfg, seed=42):
             use_label_encoder=False,
             random_state=seed,
         )
-        model.fit(x, y, eval_metric="aucpr")
+        model.fit(x, y)
     elif method == "gbdt":
         method = GradientBoostingClassifier(
             random_state=seed,
