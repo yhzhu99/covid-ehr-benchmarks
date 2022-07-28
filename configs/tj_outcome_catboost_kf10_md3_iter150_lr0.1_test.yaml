@@ -1,7 +1,7 @@
-name: tj_outcome_catboost_kf10_md3_iter150_lr0.1
+name: tj_outcome_catboost_kf10_md3_iter150_lr0.1_test
 model_type: ml
 model: catboost
-mode: val
+mode: test
 dataset: tongji
 task: outcome
 depth: 3
