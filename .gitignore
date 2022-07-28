@@ -142,3 +142,4 @@ test.ipynb
 checkpoints/
 db.yaml
 scripts/
+*.zip
