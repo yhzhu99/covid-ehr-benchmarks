@@ -1,0 +1,7 @@
+name: hm_los_decision_tree_kf10_md10_test
+model_type: ml
+model: decision_tree
+mode: test
+dataset: hm
+task: los
+max_depth: 10
