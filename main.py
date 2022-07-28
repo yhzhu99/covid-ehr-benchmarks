@@ -6,7 +6,6 @@ from omegaconf import OmegaConf
 
 from app import create_app
 
-
 if __name__ == "__main__":
     pathlib.Path("./checkpoints").mkdir(parents=True, exist_ok=True)
     print("===[Start]===")
