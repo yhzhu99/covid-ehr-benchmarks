@@ -111,6 +111,8 @@ class TemporalConvNet(nn.Module):
         dropout=0.0,
     ):
         super(TemporalConvNet, self).__init__()
+        self.num_channels = num_channels
+
         layers = []
 
         # We compute automatically the depth based on the desired seq_length.
@@ -144,7 +146,12 @@ class TemporalConvNet(nn.Module):
 
     def forward(self, x, device, info=None):
         """extra info is not used here"""
-        x = x.permute(0, 2, 1)  # Permute to channel first
-        o = self.network(x)
-        o = o.permute(0, 2, 1)  # Permute to channel last
-        return o
+        batch_size, time_steps, _ = x.size()
+        out = torch.zeros((batch_size, time_steps, self.num_channels))
+        for cur_time in range(time_steps):
+            cur_x = x[:, : cur_time + 1, :]
+            cur_x = cur_x.permute(0, 2, 1)  # Permute to channel first
+            o = self.network(cur_x)
+            o = o.permute(0, 2, 1)  # Permute to channel last
+            out[:, cur_time, :] = torch.mean(o, dim=1)
+        return out
