@@ -4,5 +4,5 @@ model: tcn
 dataset: hm
 task: twostage
 
-outcome_model_name: hm_outcome_tcn_ep100_kf10_bs512_hid128
+outcome_model_name: hm_outcome_tcn_ep100_kf10_bs512_hid64
 los_model_name: hm_los_tcn_ep100_kf10_bs512_hid128
