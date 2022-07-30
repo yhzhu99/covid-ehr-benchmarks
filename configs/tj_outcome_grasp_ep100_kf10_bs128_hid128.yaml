@@ -1,12 +1,12 @@
-name: tj_multitask_grasp_ep100_kf10_bs64_hid128
+name: tj_outcome_grasp_ep100_kf10_bs128_hid128
 model_type: ehr
 model: grasp
 dataset: tongji
-task: multitask
+task: outcome
 
 
 
-batch_size: 64
+batch_size: 128
 hidden_dim: 128
 
 cluster_num: 24
