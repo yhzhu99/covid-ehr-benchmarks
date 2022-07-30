@@ -1,0 +1,15 @@
+name: tj_los_grasp_ep100_kf10_bs64_hid128
+model_type: ehr
+model: grasp
+dataset: tongji
+task: los
+
+
+
+batch_size: 64
+hidden_dim: 128
+
+cluster_num: 24
+
+output_dim: 1
+drop: 0.0
