@@ -157,6 +157,9 @@ def start_pipeline(cfg):
         for seed in cfg.model_init_seed:
             init_random(seed)
             model = train(x_train, y_train, method, cfg, seed)
+            pd.to_pickle(
+                model, f"checkpoints/{cfg.name}_{fold_test + 1}_seed{seed}.pth"
+            )
             if mode == "val":
                 val_evaluation_scores = validate(x_val, y_val, model, cfg)
                 history["val_accuracy"].append(val_evaluation_scores["acc"])
