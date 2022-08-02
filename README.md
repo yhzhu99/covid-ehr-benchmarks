@@ -1,5 +1,10 @@
 # covid_emr
 
+## Prediction Tasks
+
+- [x] (Early) Mortality Outcome Prediction
+- [x] Leng-of-stay prediction
+
 ## Model Zoo
 
 ### Machine Learning Models
