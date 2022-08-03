@@ -42,7 +42,6 @@ def twostage_inference(x, y, outcome_model, los_model, cfg, los_statistics):
 
     y_los_pred = los_model.predict(x)
     y = reverse_zscore_los(y, los_statistics)
-    y_los_true = reverse_zscore_los(y_los_true, los_statistics)
     y_los_pred = reverse_zscore_los(y_los_pred, los_statistics)
 
     los_evaluation_scores = eval_metrics.print_metrics_regression(
