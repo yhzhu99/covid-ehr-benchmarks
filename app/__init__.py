@@ -25,4 +25,4 @@ def create_app(my_pipeline, device):
     elif cfg.model_type == "dl" and cfg.task == "twostage":
         apis.dl_twostage_pipeline.start_pipeline(cfg, device)
     elif cfg.model_type == "ml" and cfg.task == "twostage":
-        apis.ml_twostage_pipeline.start_pipeline(cfg, device)
+        apis.ml_twostage_pipeline.start_pipeline(cfg)
