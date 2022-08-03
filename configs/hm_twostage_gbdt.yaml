@@ -1,0 +1,7 @@
+name: hm_twostage_gbdt
+model_type: ml
+model: gbdt
+dataset: hm
+task: twostage
+outcome_model_name: hm_outcome_gbdt_kf10_lr0.1_ss0.6_ne100_test
+los_model_name: hm_los_gbdt_kf10_lr0.1_ss0.8_ne100_test

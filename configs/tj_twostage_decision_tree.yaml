@@ -1,0 +1,7 @@
+name: tj_twostage_decision_tree
+model_type: ml
+model: decision_tree
+dataset: tongji
+task: twostage
+outcome_model_name: tj_outcome_decision_tree_kf10_md10_test
+los_model_name: tj_los_decision_tree_kf10_md10_test

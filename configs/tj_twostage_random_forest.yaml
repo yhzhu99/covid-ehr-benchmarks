@@ -1,0 +1,7 @@
+name: tj_twostage_random_forest
+model_type: ml
+model: random_forest
+dataset: tongji
+task: twostage
+outcome_model_name: tj_outcome_random_forest_kf10_md20_mss2_ne10_test
+los_model_name: tj_los_random_forest_kf10_md20_mss5_ne100_test

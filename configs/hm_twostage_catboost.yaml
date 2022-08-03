@@ -1,0 +1,7 @@
+name: hm_twostage_catboost
+model_type: ml
+model: catboost
+dataset: hm
+task: twostage
+outcome_model_name: hm_outcome_catboost_kf10_md3_iter150_lr0.1_test
+los_model_name: hm_los_catboost_kf10_md6_iter150_lr0.1_test

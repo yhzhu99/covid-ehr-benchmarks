@@ -1,0 +1,7 @@
+name: hm_twostage_random_forest
+model_type: ml
+model: random_forest
+dataset: hm
+task: twostage
+outcome_model_name: hm_outcome_random_forest_kf10_md20_mss10_ne100_test
+los_model_name: hm_los_random_forest_kf10_md10_mss2_ne100_test

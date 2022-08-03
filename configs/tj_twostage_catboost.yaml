@@ -1,0 +1,7 @@
+name: tj_twostage_catboost
+model_type: ml
+model: catboost
+dataset: tongji
+task: twostage
+outcome_model_name: tj_outcome_catboost_kf10_md3_iter150_lr0.1_test
+los_model_name: tj_los_catboost_kf10_md3_iter150_lr0.1_test

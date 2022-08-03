@@ -1,0 +1,7 @@
+name: tj_twostage_xgboost
+model_type: ml
+model: xgboost
+dataset: tongji
+task: twostage
+outcome_model_name: tj_outcome_xgboost_kf10_lr0.1_md5_cw5_test
+los_model_name: tj_los_xgboost_kf10_lr0.01_md5_cw1_test

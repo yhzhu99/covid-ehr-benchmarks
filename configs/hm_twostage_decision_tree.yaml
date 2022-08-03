@@ -1,0 +1,7 @@
+name: hm_twostage_decision_tree
+model_type: ml
+model: decision_tree
+dataset: hm
+task: twostage
+outcome_model_name: hm_outcome_decision_tree_kf10_md10_test
+los_model_name: hm_los_decision_tree_kf10_md10_test
