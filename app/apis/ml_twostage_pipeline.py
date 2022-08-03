@@ -1,3 +1,4 @@
+import copy
 import math
 import pathlib
 import pickle
@@ -32,7 +33,8 @@ from app.models import (
 from app.utils import perflog
 
 
-def twostage_inference(x, y, outcome_model, los_model, cfg, los_statistics):
+def twostage_inference(x, y_raw, outcome_model, los_model, cfg, los_statistics):
+    y = copy.deepcopy(y_raw)
     y_outcome_pred = outcome_model.predict(x)
     y_outcome_true = y[:, 0]
     y_los_true = y[:, 1]
@@ -107,7 +109,6 @@ def start_pipeline(cfg):
 
     all_history = {}
     test_performance = {
-        "test_loss": [],
         "test_mad": [],
         "test_mse": [],
         "test_mape": [],
