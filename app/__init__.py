@@ -22,7 +22,7 @@ def create_app(my_pipeline, device):
     elif cfg.model_type in ["dl", "ehr"] and cfg.task == "multitask":
         apis.dl_multitask_pipeline.start_pipeline(cfg, device)
         # apis.dl_multitask_pipeline.start_inference(cfg, device)
-    elif cfg.model_type == "dl" and cfg.task == "twostage":
+    elif cfg.model_type in ["dl", "ehr"] and cfg.task == "twostage":
         apis.dl_twostage_pipeline.start_pipeline(cfg, device)
     elif cfg.model_type == "ml" and cfg.task == "twostage":
         apis.ml_twostage_pipeline.start_pipeline(cfg)
