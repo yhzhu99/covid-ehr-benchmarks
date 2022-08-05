@@ -81,6 +81,10 @@ def twostage_inference(
             y_true_all.extend(all_y[i][: batch_x_lab_length[i].long()].tolist())
     y_outcome_true = np.array(y_outcome_true)
     y_outcome_pred = np.array(y_outcome_pred)
+    pd.to_pickle(
+        {"outcome_true": y_outcome_true, "outcome_pred": y_outcome_pred},
+        f"./saved_pkl/{info['config'].dataset}_{info['config'].model}_outcome.pkl",
+    )
     y_true_all = np.array(y_true_all)
     y_los_true = np.array(y_los_true)
     y_los_pred = np.array(y_los_pred)
@@ -196,12 +200,14 @@ def start_pipeline(cfg, device):
             init_random(seed)
             outcome_model.load_state_dict(
                 torch.load(
-                    f"checkpoints/{cfg.outcome_model_name}_{fold_test + 1}_seed{seed}.pth"
+                    f"checkpoints/{cfg.outcome_model_name}_{fold_test + 1}_seed{seed}.pth",
+                    map_location=torch.device("cpu"),
                 )
             )
             los_model.load_state_dict(
                 torch.load(
-                    f"checkpoints/{cfg.los_model_name}_{fold_test + 1}_seed{seed}.pth"
+                    f"checkpoints/{cfg.los_model_name}_{fold_test + 1}_seed{seed}.pth",
+                    map_location=torch.device("cpu"),
                 )
             )
             x, y, x_lab_length = load_data(dataset_type)
