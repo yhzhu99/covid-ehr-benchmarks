@@ -271,3 +271,15 @@ hm_twostage_grasp_kf10.yaml
 ```
 
 </details>
+
+## Contributing
+
+We appreciate all contributions to improve covid-emr-benchmarks. Pull Requests amd Issues are welcomed!
+
+## Contributors
+
+[Yinghao Zhu](https://github.com/yhzhu99), [Wenqing Wang](https://github.com/ericaaaaaaaa)
+
+## License
+
+This project is released under the [GPL-2.0 license](LICENSE).
