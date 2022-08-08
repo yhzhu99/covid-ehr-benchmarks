@@ -35,8 +35,13 @@
 
 ## Configs
 
+Below is the configurations after hyperparameter selection.
+
+<details>
+
+<summary>ML models</summary>
+
 ```bash
-# ML models
 hm_los_catboost_kf10_md6_iter150_lr0.1_test
 hm_los_decision_tree_kf10_md10_test
 hm_los_gbdt_kf10_lr0.1_ss0.8_ne100_test
@@ -57,8 +62,14 @@ tj_outcome_decision_tree_kf10_md10_test
 tj_outcome_gbdt_kf10_lr0.1_ss0.6_ne100_test
 tj_outcome_random_forest_kf10_md20_mss2_ne10_test
 tj_outcome_xgboost_kf10_lr0.1_md5_cw5_test
+```
 
-## DL/EHR models
+</details>
+
+<details>
+<summary>DL/EHR models</summary>
+
+```bash
 tj_outcome_grasp_ep100_kf10_bs64_hid64
 tj_los_grasp_ep100_kf10_bs64_hid128
 tj_outcome_concare_ep100_kf10_bs64_hid128
@@ -131,8 +142,13 @@ hm_multitask_concare_ep100_kf10_bs64_hid128
 hm_multitask_stagenet_ep100_kf10_bs512_hid128
 hm_multitask_grasp_ep100_kf10_bs512_hid64
 hm_multitask_retain_ep100_kf10_bs512_hid128
+```
+</details>
 
-## Two-stage tasks
+<details>
+<summary>Two stage configs</summary>
+
+```bash
 tj_twostage_adacare_kf10.yaml
 tj_twostage_agent_kf10.yaml
 tj_twostage_concare_kf10.yaml
@@ -158,3 +174,5 @@ hm_twostage_tcn_kf10.yaml
 hm_twostage_transformer_kf10.yaml
 hm_twostage_grasp_kf10.yaml
 ```
+
+</details>
