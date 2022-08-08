@@ -76,6 +76,58 @@ The shape and meaning of the tensor fed to the models are as follows:
 
 Pre-processed data are stored in `datasets/tongji/processed_data/` folder.
 
+## Database preparation [Optional]
+
+Example `db.yaml` settings, put it in `configs/_base_/db.yaml`.
+
+```bash
+engine: postgresql # or mysql
+username: db_user
+password: db_password
+host: xx.xxx.com
+port: 5432
+database: db_name
+```
+
+Create `perflog` table in your database:
+
+```sql
+-- postgresql example
+create table perflog
+(
+	id serial
+		constraint perflog_pk
+			primary key,
+	record_time integer,
+	model_name text,
+	performance text,
+	hidden_dim integer,
+	dataset text,
+	model_type text,
+	config text,
+	task text
+);
+
+-- mysql example
+create table perflog
+(
+	id int auto_increment,
+	record_time int null,
+	model_name text null,
+	task text null,
+	performance text null,
+	hidden_dim int null,
+	dataset text null,
+	model_type text null,
+	config text null,
+	constraint perflog_id_uindex
+		unique (id)
+);
+
+alter table perflog
+	add primary key (id);
+```
+
 ## Configs
 
 Below is the configurations after hyperparameter selection.
