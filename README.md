@@ -1,4 +1,4 @@
-# covid_emr
+# Covid EMR Benchmarks
 
 ## Prediction Tasks
 
