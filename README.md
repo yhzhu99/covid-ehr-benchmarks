@@ -33,6 +33,49 @@
 - [x] ConCare
 - [x] GRASP
 
+## Requirements
+
+- Python 3.7+
+- PyTorch 1.10+
+- Cuda 10.2+ (If you plan to use GPU)
+
+Note:
+
+- Most models can be run quickly on CPU.
+- You are required to have a GPU with 12GB memory to run ConCare model on CDSL dataset.
+- TCN model may run much faster on CPU.
+
+## Usage
+
+- Install requirements.
+
+    ```bash
+    pip install -r requirements.txt [-i https://pypi.tuna.tsinghua.edu.cn/simple] # [xxx] is optional
+    ```
+
+- Download TJH dataset from [An interpretable mortality prediction model for COVID-19 patients](https://www.nature.com/articles/s42256-020-0180-7), unzip and put it in `datasets/tongji/raw_data/` folder.
+- Run preprocessing notebook. (You can skip this step if you have already done this in the later training process)
+- (The CDSL dataset is also the same process.) You need to apply for the CDSL dataset if necessary. [Covid Data Save Lives Dataset](https://www.hmhospitales.com/coronavirus/covid-data-save-lives/english-version)
+- Run following commands to train models.
+
+    ```bash
+    python main.py --cfg configs/xxx.yaml [--cuda CUDA_NUM] [--db]
+    # Note:
+    # 1) If you plan to use CUDA, use --cuda 0/1/2/...
+    # 2) If you have configured database settings, you can use --db to upload performance after training to the database.
+    ```
+
+## Data Format
+
+The shape and meaning of the tensor fed to the models are as follows:
+
+- `x.pkl`: (N, T, D) tensor, where N is the number of patients, T is the number of time steps, and D is the number of features. At $D$ dimention, the first $x$ features are demographic features, the next $y$ features are lab test features, where $x + y = D$
+- `y.pkl`: (N, T, 2) tensor, where the 2 values are [outcome, length-of-stay] for each time step.
+- `visits_length.pkl`: (N, ) tensor, where the value is the number of visits for each patient.
+- `missing_mask.pkl`: same shape as `x.pkl`, tell whether features are imputed. `1`: existing, `0`: missing.
+
+Pre-processed data are stored in `datasets/tongji/processed_data/` folder.
+
 ## Configs
 
 Below is the configurations after hyperparameter selection.
