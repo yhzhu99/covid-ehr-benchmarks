@@ -2,8 +2,9 @@
 
 ## Prediction Tasks
 
-- [x] (Early) Mortality Outcome Prediction
-- [x] Leng-of-stay prediction
+- [x] (Early) Mortality outcome prediction
+- [x] Length-of-stay prediction
+- [x] Multi-task/Two-stage prediction
 
 ## Model Zoo
 
