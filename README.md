@@ -1,4 +1,4 @@
-# Covid EMR Benchmarks
+# Covid-19 EHR Benchmarks
 
 ## Prediction Tasks
 
