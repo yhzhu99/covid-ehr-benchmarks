@@ -1,4 +1,6 @@
-# Covid-19 EHR Benchmarks
+# COVID-19 EHR Benchmarks
+
+> A Comprehensive Benchmark For COVID-19 Predictive Modeling Using Electronic Health Records
 
 ## Prediction Tasks
 
