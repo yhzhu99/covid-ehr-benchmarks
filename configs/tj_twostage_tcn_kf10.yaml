@@ -5,4 +5,4 @@ dataset: tongji
 task: twostage
 
 outcome_model_name: tj_outcome_tcn_ep100_kf10_bs64_hid128
-los_model_name: tj_los_tcn_ep100_kf10_bs64_hid64
+los_model_name: tj_los_tcn_ep100_kf10_bs64_hid128
