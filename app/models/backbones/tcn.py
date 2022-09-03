@@ -147,7 +147,7 @@ class TemporalConvNet(nn.Module):
     def forward(self, x, device, info=None):
         """extra info is not used here"""
         batch_size, time_steps, _ = x.size()
-        out = torch.zeros((batch_size, time_steps, self.num_channels))
+        out = torch.zeros((batch_size, time_steps, self.num_channels)).to(device)
         for cur_time in range(time_steps):
             cur_x = x[:, : cur_time + 1, :]
             cur_x = cur_x.permute(0, 2, 1)  # Permute to channel first
