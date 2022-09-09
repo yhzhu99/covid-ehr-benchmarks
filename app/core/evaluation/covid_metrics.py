@@ -92,6 +92,9 @@ def early_prediction_outcome_metric(
                     cur_patient_es_true, axis=0
                 )
                 c[c == np.inf] = 1
+                c[c < -1] = -1
+                # if c[0] < -1:
+                #     print(cur_patient_es_pred, cur_patient_es_true)
                 c = np.nan_to_num(c, nan=1)
             metric.append(c)
         # print()
@@ -101,6 +104,7 @@ def early_prediction_outcome_metric(
     result = np.array(metric)
     if verbose:
         print("Early Prediction Score:", result)
+    # print(result.mean(axis=0), result)
     return result.mean(axis=0)
 
 
