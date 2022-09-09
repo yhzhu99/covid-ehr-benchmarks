@@ -82,7 +82,7 @@ def train(x, y, method, cfg, seed=42):
     return model
 
 
-def validate(x, y, model, cfg):
+def validate(x, y, len_list, model, cfg):
     """val/test"""
     y_outcome_pred = model.predict(x)
     y_outcome_true = y[:, 0]
@@ -90,7 +90,7 @@ def validate(x, y, model, cfg):
         y_outcome_true, y_outcome_pred, verbose=0
     )
     early_prediction_score = covid_metrics.early_prediction_outcome_metric(
-        y, y_outcome_pred, cfg.thresholds, verbose=0
+        y, y_outcome_pred, len_list, cfg.thresholds, verbose=0
     )
     evaluation_scores["early_prediction_score"] = early_prediction_score
     return evaluation_scores
@@ -140,13 +140,15 @@ def start_pipeline(cfg):
             sss.split(np.arange(len(train_and_val_idx)), sub_y_outcome)
         )
 
-        x_train, y_train = flatten_dataset(
+        x_train, y_train, len_list_train = flatten_dataset(
             sub_x, sub_y, train_idx, sub_x_lab_length, case="outcome"
         )
-        x_val, y_val = flatten_dataset(
+        x_val, y_val, len_list_val = flatten_dataset(
             sub_x, sub_y, val_idx, sub_x_lab_length, case="outcome"
         )
-        x_test, y_test = flatten_dataset(x, y, test_idx, x_lab_length, case="outcome")
+        x_test, y_test, len_list_test = flatten_dataset(
+            x, y, test_idx, x_lab_length, case="outcome"
+        )
         all_history["test_fold_{}".format(fold_test + 1)] = {}
         history = {
             "val_accuracy": [],
@@ -161,7 +163,7 @@ def start_pipeline(cfg):
                 model, f"checkpoints/{cfg.name}_{fold_test + 1}_seed{seed}.pth"
             )
             if mode == "val":
-                val_evaluation_scores = validate(x_val, y_val, model, cfg)
+                val_evaluation_scores = validate(x_val, y_val, len_list_val, model, cfg)
                 history["val_accuracy"].append(val_evaluation_scores["acc"])
                 history["val_auroc"].append(val_evaluation_scores["auroc"])
                 history["val_auprc"].append(val_evaluation_scores["auprc"])
@@ -176,7 +178,9 @@ def start_pipeline(cfg):
                     EarlyPredictionScore = {val_evaluation_scores['early_prediction_score']}"
                 )
             elif mode == "test":
-                test_evaluation_scores = validate(x_test, y_test, model, cfg)
+                test_evaluation_scores = validate(
+                    x_test, y_test, len_list_test, model, cfg
+                )
                 test_performance["test_accuracy"].append(test_evaluation_scores["acc"])
                 test_performance["test_auroc"].append(test_evaluation_scores["auroc"])
                 test_performance["test_auprc"].append(test_evaluation_scores["auprc"])
