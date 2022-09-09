@@ -29,7 +29,18 @@ def theta(los_true, thresholds, case="tp"):
         return np.zeros((len(thresholds),))
 
 
-def early_prediction_outcome_metric(y_true, predictions, thresholds, verbose=0):
+def calculate_es(cur_out, cur_outcome_true, cur_los_true, thresholds):
+    if cur_out > 0.5 and cur_outcome_true == 1:  # predict: 1, gt: 1
+        return theta(los_true=cur_los_true, thresholds=thresholds, case="tp")
+    elif cur_out <= 0.5 and cur_outcome_true == 1:  # predict: 0, gt: 1
+        return theta(los_true=cur_los_true, thresholds=thresholds, case="fn")
+    else:
+        return theta(los_true=cur_los_true, thresholds=thresholds, case="tn|fp")
+
+
+def early_prediction_outcome_metric(
+    y_true, predictions, len_list, thresholds, verbose=0
+):
     """
     > predictions: np.ndarray
       shape (num_records, ) --> [outcome]
@@ -47,23 +58,46 @@ def early_prediction_outcome_metric(y_true, predictions, thresholds, verbose=0):
     """
     metric = []
     num_records = len(predictions)
-    for i in range(num_records):
-        cur_out = predictions[i]
-        cur_gt = y_true[i, :]
-        cur_outcome_true = cur_gt[0]
-        cur_los_true = cur_gt[1]
-        if cur_out > 0.5 and cur_outcome_true == 1:  # predict: 1, gt: 1
-            metric.append(
-                theta(los_true=cur_los_true, thresholds=thresholds, case="tp")
+    # print("len compare: ", num_records, len_list.sum())
+
+    i = 0
+    cur_patient_idx = 0
+    while i < num_records:
+        cur_patient_es_pred = []
+        cur_patient_es_true = []
+        outcome = 0
+        for j in range(i, i + len_list[cur_patient_idx]):
+            # print(j)
+            cur_out = predictions[j]
+            cur_gt = y_true[j, :]
+            cur_outcome_true = cur_gt[0]
+            outcome = cur_outcome_true
+            # print(cur_outcome_true, end=", ")
+            cur_los_true = cur_gt[1]
+            cur_patient_es_pred.append(
+                calculate_es(cur_out, cur_outcome_true, cur_los_true, thresholds)
             )
-        elif cur_out <= 0.5 and cur_outcome_true == 1:  # predict: 0, gt: 1
-            metric.append(
-                theta(los_true=cur_los_true, thresholds=thresholds, case="fn")
+            cur_patient_es_true.append(
+                calculate_es(
+                    cur_outcome_true, cur_outcome_true, cur_los_true, thresholds
+                )
             )
-        else:
-            metric.append(
-                theta(los_true=cur_los_true, thresholds=thresholds, case="tn|fp")
-            )
+        cur_patient_es_pred = np.array(cur_patient_es_pred)
+        cur_patient_es_true = np.array(cur_patient_es_true)
+
+        # print("len:", j, cur_patient_es_pred.shape, cur_patient_es_true.shape)
+        if outcome == 1:
+            with np.errstate(divide="ignore", invalid="ignore"):
+                c = np.sum(cur_patient_es_pred, axis=0) / np.sum(
+                    cur_patient_es_true, axis=0
+                )
+                c[c == np.inf] = 1
+                c = np.nan_to_num(c, nan=1)
+            metric.append(c)
+        # print()
+        i += len_list[cur_patient_idx]
+        cur_patient_idx += 1
+    # print("metric:", len(metric), len(metric[2]))
     result = np.array(metric)
     if verbose:
         print("Early Prediction Score:", result)
