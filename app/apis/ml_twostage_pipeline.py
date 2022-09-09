@@ -33,7 +33,9 @@ from app.models import (
 from app.utils import perflog
 
 
-def twostage_inference(x, y_raw, outcome_model, los_model, cfg, los_statistics):
+def twostage_inference(
+    x, y_raw, len_list, outcome_model, los_model, cfg, los_statistics
+):
     y = copy.deepcopy(y_raw)
     y_outcome_pred = outcome_model.predict(x)
     y_outcome_true = y[:, 0]
@@ -51,7 +53,7 @@ def twostage_inference(x, y_raw, outcome_model, los_model, cfg, los_statistics):
     )
 
     early_prediction_score = covid_metrics.early_prediction_outcome_metric(
-        y, y_outcome_pred, cfg.thresholds, verbose=0
+        y, y_outcome_pred, len_list, cfg.thresholds, verbose=0
     )
 
     multitask_los_score = covid_metrics.multitask_los_metric(
@@ -142,14 +144,16 @@ def start_pipeline(cfg):
             sss.split(np.arange(len(train_and_val_idx)), sub_y_outcome)
         )
 
-        x_train, y_train = flatten_dataset(
+        x_train, y_train, _ = flatten_dataset(
             sub_x, sub_y, train_idx, sub_x_lab_length, case="outcome"
         )
 
         los_statistics = calculate_los_statistics(y_train)
         print(los_statistics)
 
-        x_test, y_test = flatten_dataset(x, y, test_idx, x_lab_length, case="outcome")
+        (x_test, y_test, len_list_test) = flatten_dataset(
+            x, y, test_idx, x_lab_length, case="outcome"
+        )
         y_test = zscore_los(y_test, los_statistics)
 
         all_history["test_fold_{}".format(fold_test + 1)] = {}
@@ -165,7 +169,13 @@ def start_pipeline(cfg):
                 test_los_evaluation_scores,
                 test_covid_evaluation_scores,
             ) = twostage_inference(
-                x_test, y_test, outcome_model, los_model, cfg, los_statistics
+                x_test,
+                y_test,
+                len_list_test,
+                outcome_model,
+                los_model,
+                cfg,
+                los_statistics,
             )
 
             test_performance["test_mad"].append(test_los_evaluation_scores["mad"])
