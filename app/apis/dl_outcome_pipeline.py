@@ -71,6 +71,7 @@ def val_epoch(model, device, dataloader, loss_fn, info):
     y_pred = []
     y_true = []
     y_true_all = []
+    len_list = []
     model.eval()
     with torch.no_grad():
         for step, data in enumerate(dataloader):
@@ -86,6 +87,7 @@ def val_epoch(model, device, dataloader, loss_fn, info):
             output = model(batch_x, device, info)
             loss = loss_fn(output, batch_y, batch_x_lab_length)
             val_loss.append(loss.item())
+            len_list.extend(batch_x_lab_length.long().tolist())
             for i in range(len(batch_y)):
                 y_pred.extend(output[i][: batch_x_lab_length[i].long()].tolist())
                 y_true.extend(batch_y[i][: batch_x_lab_length[i].long()].tolist())
@@ -93,8 +95,14 @@ def val_epoch(model, device, dataloader, loss_fn, info):
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
     y_true_all = np.array(y_true_all)
+    len_list = np.array(len_list)
+    # print("len:", len(y_true), len_list.sum(), len_list)
     early_prediction_score = covid_metrics.early_prediction_outcome_metric(
-        y_true_all, y_pred, info["config"].thresholds, verbose=0
+        y_true_all,
+        y_pred,
+        len_list,
+        info["config"].thresholds,
+        verbose=0,
     )
     y_pred = np.stack([1 - y_pred, y_pred], axis=1)
     evaluation_scores = eval_metrics.print_metrics_binary(y_true, y_pred, verbose=0)
