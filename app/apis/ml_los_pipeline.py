@@ -149,7 +149,7 @@ def start_pipeline(cfg):
             sss.split(np.arange(len(train_and_val_idx)), sub_y_outcome)
         )
 
-        x_train, y_train = flatten_dataset(
+        x_train, y_train, _ = flatten_dataset(
             sub_x, sub_y, train_idx, sub_x_lab_length, case="los"
         )
 
@@ -157,12 +157,12 @@ def start_pipeline(cfg):
         print(los_statistics)
         y_train = zscore_los(y_train, los_statistics)
 
-        x_val, y_val = flatten_dataset(
+        x_val, y_val, _ = flatten_dataset(
             sub_x, sub_y, val_idx, sub_x_lab_length, case="los"
         )
         y_val = zscore_los(y_val, los_statistics)
 
-        x_test, y_test = flatten_dataset(x, y, test_idx, x_lab_length, case="los")
+        x_test, y_test, _ = flatten_dataset(x, y, test_idx, x_lab_length, case="los")
         y_test = zscore_los(y_test, los_statistics)
 
         all_history["test_fold_{}".format(fold_test + 1)] = {}
