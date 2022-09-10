@@ -158,10 +158,11 @@ def start_pipeline(cfg):
         }
         for seed in cfg.model_init_seed:
             init_random(seed)
-            model = train(x_train, y_train, method, cfg, seed)
-            pd.to_pickle(
-                model, f"checkpoints/{cfg.name}_{fold_test + 1}_seed{seed}.pth"
-            )
+            if cfg.train == True:
+                model = train(x_train, y_train, method, cfg, seed)
+                pd.to_pickle(
+                    model, f"checkpoints/{cfg.name}_{fold_test + 1}_seed{seed}.pth"
+                )
             if mode == "val":
                 val_evaluation_scores = validate(x_val, y_val, len_list_val, model, cfg)
                 history["val_accuracy"].append(val_evaluation_scores["acc"])
@@ -178,6 +179,9 @@ def start_pipeline(cfg):
                     EarlyPredictionScore = {val_evaluation_scores['early_prediction_score']}"
                 )
             elif mode == "test":
+                model = pd.read_pickle(
+                    f"checkpoints/{cfg.name}_{fold_test + 1}_seed{seed}.pth"
+                )
                 test_evaluation_scores = validate(
                     x_test, y_test, len_list_test, model, cfg
                 )

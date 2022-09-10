@@ -26,10 +26,17 @@ if __name__ == "__main__":
         help="whether to connect database",
     )
 
+    parser.add_argument(
+        "--train",
+        action="store_true",
+        help="whether to train model, only execute inference stage if not",
+    )
+
     args = parser.parse_args()
     print(f"===[{args.cfg}]===")
     conf = OmegaConf.load(args.cfg)
     conf.db = args.db
+    conf.train = args.train
 
     # train on cpu by default
     device = torch.device("cpu")

@@ -211,57 +211,62 @@ def start_pipeline(cfg, device):
             optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
             criterion = predict_all_visits_mse_loss
             best_val_performance = 1e8
-            for epoch in range(cfg.epochs):
-                info["epoch"] = epoch + 1
-                train_loss = train_epoch(
-                    model,
-                    device,
-                    train_loader,
-                    criterion,
-                    optimizer,
-                    info=info,
-                )
-                val_loss, val_evaluation_scores = val_epoch(
-                    model,
-                    device,
-                    val_loader,
-                    criterion,
-                    los_statistics,
-                    info=val_info,
-                )
-                # save performance history on validation set
+
+            if cfg.train == True:
+                for epoch in range(cfg.epochs):
+                    info["epoch"] = epoch + 1
+                    train_loss = train_epoch(
+                        model,
+                        device,
+                        train_loader,
+                        criterion,
+                        optimizer,
+                        info=info,
+                    )
+                    val_loss, val_evaluation_scores = val_epoch(
+                        model,
+                        device,
+                        val_loader,
+                        criterion,
+                        los_statistics,
+                        info=val_info,
+                    )
+                    # save performance history on validation set
+                    print(
+                        "Epoch:{}/{} AVG Training Loss:{:.3f} AVG Val Loss:{:.3f}".format(
+                            epoch + 1, cfg.epochs, train_loss, val_loss
+                        )
+                    )
+                    history["train_loss"].append(train_loss)
+                    history["val_loss"].append(val_loss)
+                    history["val_mad"].append(val_evaluation_scores["mad"])
+                    history["val_mse"].append(val_evaluation_scores["mse"])
+                    history["val_mape"].append(val_evaluation_scores["mape"])
+                    history["val_rmse"].append(val_evaluation_scores["rmse"])
+                    # if mad is lower, than set the best mad, save the model, and test it on the test set
+                    if val_evaluation_scores["mad"] < best_val_performance:
+                        best_val_performance = val_evaluation_scores["mad"]
+                        torch.save(
+                            model.state_dict(),
+                            f"checkpoints/{cfg.name}_{fold_test + 1}_seed{seed}.pth",
+                        )
+                        print("[best!!]", epoch)
+                        es = 0
+                    else:
+                        es += 1
+                        if es >= 20:
+                            print(f"Early stopping break at epoch {epoch}")
+                            break
                 print(
-                    "Epoch:{}/{} AVG Training Loss:{:.3f} AVG Val Loss:{:.3f}".format(
-                        epoch + 1, cfg.epochs, train_loss, val_loss
-                    )
+                    f"Best performance on val set {fold_test+1}: \
+                    MAE = {best_val_performance}"
                 )
-                history["train_loss"].append(train_loss)
-                history["val_loss"].append(val_loss)
-                history["val_mad"].append(val_evaluation_scores["mad"])
-                history["val_mse"].append(val_evaluation_scores["mse"])
-                history["val_mape"].append(val_evaluation_scores["mape"])
-                history["val_rmse"].append(val_evaluation_scores["rmse"])
-                # if mad is lower, than set the best mad, save the model, and test it on the test set
-                if val_evaluation_scores["mad"] < best_val_performance:
-                    best_val_performance = val_evaluation_scores["mad"]
-                    torch.save(
-                        model.state_dict(),
-                        f"checkpoints/{cfg.name}_{fold_test + 1}_seed{seed}.pth",
-                    )
-                    print("[best!!]", epoch)
-                    es = 0
-                else:
-                    es += 1
-                    if es >= 20:
-                        print(f"Early stopping break at epoch {epoch}")
-                        break
-            print(
-                f"Best performance on val set {fold_test+1}: \
-                MAE = {best_val_performance}"
-            )
             model = build_model_from_cfg(cfg, device)
             model.load_state_dict(
-                torch.load(f"checkpoints/{cfg.name}_{fold_test + 1}_seed{seed}.pth")
+                torch.load(
+                    f"checkpoints/{cfg.name}_{fold_test + 1}_seed{seed}.pth",
+                    map_location=torch.device("cpu"),
+                )
             )
             test_loss, test_evaluation_scores = val_epoch(
                 model,
