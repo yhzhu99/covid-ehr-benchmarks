@@ -55,6 +55,7 @@ def twostage_inference(
     y_los_pred = []
     y_los_true = []
     y_true_all = []
+    len_list = []
     with torch.no_grad():
         batch_x, batch_y, batch_x_lab_length = data
         batch_x, batch_y, batch_x_lab_length = (
@@ -71,6 +72,7 @@ def twostage_inference(
         val_loss.append(loss.item())
         los = torch.squeeze(los)
         batch_y_los = torch.squeeze(batch_y_los)
+        len_list.extend(batch_x_lab_length.long().tolist())
         for i in range(len(batch_y_outcome)):
             y_outcome_pred.extend(outcome[i][: batch_x_lab_length[i].long()].tolist())
             y_outcome_true.extend(
@@ -79,6 +81,7 @@ def twostage_inference(
             y_los_pred.extend(los[i][: batch_x_lab_length[i].long()].tolist())
             y_los_true.extend(batch_y_los[i][: batch_x_lab_length[i].long()].tolist())
             y_true_all.extend(all_y[i][: batch_x_lab_length[i].long()].tolist())
+    len_list = np.array(len_list)
     y_outcome_true = np.array(y_outcome_true)
     y_outcome_pred = np.array(y_outcome_pred)
     # pd.to_pickle(
@@ -92,7 +95,7 @@ def twostage_inference(
     y_los_true = reverse_zscore_los(y_los_true, los_statistics)
     y_los_pred = reverse_zscore_los(y_los_pred, los_statistics)
     early_prediction_score = covid_metrics.early_prediction_outcome_metric(
-        y_true_all, y_outcome_pred, info["config"].thresholds, verbose=0
+        y_true_all, y_outcome_pred, len_list, info["config"].thresholds, verbose=0
     )
     multitask_los_score = covid_metrics.multitask_los_metric(
         y_true_all,
