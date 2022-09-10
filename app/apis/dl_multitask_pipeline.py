@@ -73,6 +73,7 @@ def val_epoch(model, device, dataloader, loss_fn, los_statistics, info):
     y_los_pred = []
     y_los_true = []
     y_true_all = []
+    len_list = []
     model.eval()
     with torch.no_grad():
         for step, data in enumerate(dataloader):
@@ -91,6 +92,7 @@ def val_epoch(model, device, dataloader, loss_fn, los_statistics, info):
             )
             val_loss.append(loss.item())
             los = torch.squeeze(los)
+            len_list.extend(batch_x_lab_length.long().tolist())
             batch_y_los = torch.squeeze(batch_y_los)
             for i in range(len(batch_y_outcome)):
                 y_outcome_pred.extend(
@@ -104,6 +106,7 @@ def val_epoch(model, device, dataloader, loss_fn, los_statistics, info):
                     batch_y_los[i][: batch_x_lab_length[i].long()].tolist()
                 )
                 y_true_all.extend(all_y[i][: batch_x_lab_length[i].long()].tolist())
+    len_list = np.array(len_list)
     y_outcome_true = np.array(y_outcome_true)
     y_outcome_pred = np.array(y_outcome_pred)
     y_true_all = np.array(y_true_all)
@@ -113,7 +116,7 @@ def val_epoch(model, device, dataloader, loss_fn, los_statistics, info):
     y_los_true = reverse_zscore_los(y_los_true, los_statistics)
     y_los_pred = reverse_zscore_los(y_los_pred, los_statistics)
     early_prediction_score = covid_metrics.early_prediction_outcome_metric(
-        y_true_all, y_outcome_pred, info["config"].thresholds, verbose=0
+        y_true_all, y_outcome_pred, len_list, info["config"].thresholds, verbose=0
     )
     multitask_los_score = covid_metrics.multitask_los_metric(
         y_true_all,
