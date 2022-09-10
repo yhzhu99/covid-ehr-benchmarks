@@ -88,13 +88,15 @@ def early_prediction_outcome_metric(
         # print("len:", j, cur_patient_es_pred.shape, cur_patient_es_true.shape)
         if outcome == 1:
             with np.errstate(divide="ignore", invalid="ignore"):
-                c = np.sum(cur_patient_es_pred, axis=0) / np.sum(
-                    cur_patient_es_true, axis=0
+                c = np.sum(cur_patient_es_pred, axis=0) / np.absolute(
+                    np.sum(cur_patient_es_true, axis=0)
                 )
                 c[c == np.inf] = 1
                 c[c < -1] = -1
-                # if c[0] < -1:
-                #     print(cur_patient_es_pred, cur_patient_es_true)
+                # if c[0] < -1 or c[0] > 1:
+                #     print(c[0], cur_patient_es_pred, cur_patient_es_true)
+                #     for x in cur_patient_es_true[0]:
+                #         print("!@", x, sep=", ")
                 c = np.nan_to_num(c, nan=1)
             metric.append(c)
         # print()
