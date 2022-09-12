@@ -62,10 +62,11 @@ Note:
 - Run following commands to train models.
 
     ```bash
-    python main.py --cfg configs/xxx.yaml [--cuda CUDA_NUM] [--db]
+    python main.py --cfg configs/xxx.yaml [--train] [--cuda CUDA_NUM] [--db]
     # Note:
-    # 1) If you plan to use CUDA, use --cuda 0/1/2/...
-    # 2) If you have configured database settings, you can use --db to upload performance after training to the database.
+    # 1) use --train for training, only infererence stage if not
+    # 2) If you plan to use CUDA, use --cuda 0/1/2/...
+    # 3) If you have configured database settings, you can use --db to upload performance after training to the database.
     ```
 
 ## Data Format
@@ -281,7 +282,7 @@ We appreciate all contributions to improve covid-emr-benchmarks. Pull Requests a
 
 ## Contributors
 
-[Yinghao Zhu](https://github.com/yhzhu99), [Wenqing Wang](https://github.com/ericaaaaaaaa)
+[Yinghao Zhu](https://github.com/yhzhu99), [Wenqing Wang](https://github.com/ericaaaaaaaa), [Junyi Gao](https://github.com/v1xerunt)
 
 ## License
 
