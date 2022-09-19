@@ -284,6 +284,23 @@ We appreciate all contributions to improve covid-emr-benchmarks. Pull Requests a
 
 [Yinghao Zhu](https://github.com/yhzhu99), [Wenqing Wang](https://github.com/ericaaaaaaaa), [Junyi Gao](https://github.com/v1xerunt)
 
+## Citation
+
+If you find this project useful in your research, please consider cite:
+
+```BibTeX
+@misc{https://doi.org/10.48550/arxiv.2209.07805,
+  doi = {10.48550/ARXIV.2209.07805},
+  url = {https://arxiv.org/abs/2209.07805},
+  author = {Gao, Junyi and Zhu, Yinghao and Wang, Wenqing and Wang, Yasha and Tang, Wen and Ma, Liantao},
+  keywords = {Machine Learning (cs.LG), FOS: Computer and information sciences, FOS: Computer and information sciences},
+  title = {A Comprehensive Benchmark for COVID-19 Predictive Modeling Using Electronic Health Records in Intensive Care: Choosing the Best Model for COVID-19 Prognosis},
+  publisher = {arXiv},
+  year = {2022},
+  copyright = {arXiv.org perpetual, non-exclusive license}
+}
+```
+
 ## License
 
 This project is released under the [GPL-2.0 license](LICENSE).
