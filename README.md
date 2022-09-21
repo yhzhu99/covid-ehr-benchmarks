@@ -51,7 +51,7 @@ app/
         backbones/ # feature extractors
         classifiers/ # prediction heads
         losses/ # task related loss functions
-
+        build_model.py # concat backbones and heads
 configs/
     _base_/
     # common configs
