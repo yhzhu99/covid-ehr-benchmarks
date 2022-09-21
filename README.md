@@ -36,6 +36,36 @@
 - [x] ConCare
 - [x] GRASP
 
+## Code Description
+
+```shell
+app/
+    apis/
+        ml_{task}.py # machine learning pipelines
+        dl_{task}.py # deep learning pipelines
+    core/
+        evaluation/ # evaluation metrics
+        utils/
+    datasets/ # dataset loader scripts
+    models/
+        backbones/ # feature extractors
+        classifiers/ # prediction heads
+        losses/ # task related loss functions
+
+configs/
+    _base_/
+    # common configs
+        datasets/
+        # dataset basic info, training epochs and dataset split strategy
+            {dataset}.yaml
+        db.yaml # database settings (optional)
+    {config_name}.yaml # detailed model settings
+checkpoints/ # model checkpoints are stored here
+datasets/ # raw/processed dataset and pre-process script
+main.py # main entry point
+requirements.txt # code dependencies
+```
+
 ## Requirements
 
 - Python 3.7+
@@ -78,7 +108,7 @@ The shape and meaning of the tensor fed to the models are as follows:
 - `visits_length.pkl`: (N, ) tensor, where the value is the number of visits for each patient.
 - `missing_mask.pkl`: same shape as `x.pkl`, tell whether features are imputed. `1`: existing, `0`: missing.
 
-Pre-processed data are stored in `datasets/tongji/processed_data/` folder.
+Pre-processed data are stored in `datasets/{dataset}/processed_data/` folder.
 
 ## Database preparation [Optional]
 
@@ -273,7 +303,6 @@ hm_twostage_tcn_kf10.yaml
 hm_twostage_transformer_kf10.yaml
 hm_twostage_grasp_kf10.yaml
 ```
-
 </details>
 
 ## Contributing
