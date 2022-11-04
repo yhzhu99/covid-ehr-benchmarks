@@ -2,6 +2,10 @@
 
 > A Comprehensive Benchmark For COVID-19 Predictive Modeling Using Electronic Health Records
 
+![cover](assets/cover.png)
+
+TJH datasets and presentation slides are available in GitHub releases.
+
 ## Prediction Tasks
 
 - [x] (Early) Mortality outcome prediction
