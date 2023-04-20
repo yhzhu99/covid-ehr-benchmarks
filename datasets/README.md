@@ -14,10 +14,17 @@ datasets/
         raw_data/
             ...
         processed_data/
-            x.pkl
-            y.pkl
-            visits_length.pkl
-            missing_mask.pkl
+            fold_{i=0,1,2,...}/
+                train/
+                    x.pkl
+                    y.pkl
+                    statistics.csv
+                val/
+                    x.pkl
+                    y.pkl
+                test/
+                    x.pkl
+                    y.pkl
     hm/
         preprocess.py
         ...
