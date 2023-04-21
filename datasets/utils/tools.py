@@ -55,6 +55,7 @@ def forward_fill_pipeline(
 
     all_x = []
     all_y = []
+    all_pid = []
 
     for name, group in grouped:
         sorted_group = group.sort_values(by=["RecordTime"], ascending=True)
@@ -74,7 +75,8 @@ def forward_fill_pipeline(
             patient_x.append(x)
         all_x.append(patient_x)
         all_y.append(patient_y)
-    return all_x, all_y
+        all_pid.append(name)
+    return all_x, all_y, all_pid
 
 def normalize_dataframe(train_df, val_df, test_df, normalize_features):
     # Calculate the quantiles
