@@ -144,3 +144,4 @@ db.yaml
 scripts/
 *.zip
 *.pkl
+logs/
