@@ -6,7 +6,7 @@
 
 TJH datasets and presentation slides are available in GitHub releases.
 
-**This repo is not active. Please check our latest repo https://github.com/yhzhu99/pyehr/tree/main**
+**This repo is not active. Please check our latest repo https://github.com/yhzhu99/pyehr**
 
 ## Prediction Tasks
 
